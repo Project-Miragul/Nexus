@@ -405,9 +405,13 @@
     <!-- Pagination -->
     {% if page_obj.paginator.num_pages > 1 %}
     <nav class="rsh-pagination" aria-label="Pagination">
+        {% if page_obj.has_previous %}
         <a href="?q={{ q }}&circuit={{ circuit_id }}&from={{ date_from }}&to={{ date_to }}&page={{ page_obj.previous_page_number }}"
-           class="rsh-page-btn {% if not page_obj.has_previous %}disabled{% endif %}"
+           class="rsh-page-btn"
            aria-label="Previous page">&#8249;</a>
+        {% else %}
+        <span class="rsh-page-btn disabled" aria-label="Previous page" aria-disabled="true">&#8249;</span>
+        {% endif %}
 
         {% for num in page_obj.paginator.page_range %}
         {% if num == page_obj.number %}
@@ -420,9 +424,13 @@
         {% endif %}
         {% endfor %}
 
+        {% if page_obj.has_next %}
         <a href="?q={{ q }}&circuit={{ circuit_id }}&from={{ date_from }}&to={{ date_to }}&page={{ page_obj.next_page_number }}"
-           class="rsh-page-btn {% if not page_obj.has_next %}disabled{% endif %}"
+           class="rsh-page-btn"
            aria-label="Next page">&#8250;</a>
+        {% else %}
+        <span class="rsh-page-btn disabled" aria-label="Next page" aria-disabled="true">&#8250;</span>
+        {% endif %}
 
         <span class="rsh-page-info">
             Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
