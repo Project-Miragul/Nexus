@@ -63,7 +63,7 @@ def server_list(request):
     if request.method == "GET":
         servers = WorldServerRegistration.objects.all()
         cursor = connections['game_database'].cursor()
-        cursor.execute("SELECT count(*) FROM account WHERE `active` = '1' AND `mule` = '0';")
+        cursor.execute("SELECT count(*) FROM account WHERE `mule` = '0';")
         population = cursor.fetchone()[0]
         return render(request=request,
                       template_name="accounts/server_list.html",
@@ -493,7 +493,7 @@ def convert_to_trader(request):
     accounts_with_chars = list(
         Characters.objects.filter(
             account_id__in=user_account_ids,
-            is_deleted=0
+            deleted_at__isnull=True
         ).values_list('account_id', flat=True).distinct()
     )
 

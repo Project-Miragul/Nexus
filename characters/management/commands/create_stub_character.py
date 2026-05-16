@@ -56,9 +56,9 @@ STUB_DEFAULTS = {
     'endurance': 500,
     'hunger_level': 6000,
     'thirst_level': 6000,
-    'is_deleted': 0,
-    'showhelm': 1,
-    'firstlogon': 0,
+    'deleted_at': None,
+    'show_helm': 1,
+    'first_login': 0,
 }
 
 # Skills: (skill_id, value)
@@ -205,7 +205,7 @@ class Command(BaseCommand):
                     str, sta, cha, dex, `int`, agi, wis,
                     cur_hp, mana, endurance,
                     hunger_level, thirst_level,
-                    is_deleted, showhelm, firstlogon
+                    deleted_at, show_helm, first_login
                 ) VALUES (
                     %s, %s, %s, %s, %s,
                     %s, %s, %s, %s, %s, %s,
@@ -226,7 +226,7 @@ class Command(BaseCommand):
                 s['str'], s['sta'], s['cha'], s['dex'], s['int_stat'], s['agi'], s['wis'],
                 s['cur_hp'], s['mana'], s['endurance'],
                 s['hunger_level'], s['thirst_level'],
-                s['is_deleted'], s['showhelm'], s['firstlogon'],
+                s['deleted_at'], s['show_helm'], s['first_login'],
             ])
             char_id = cur.lastrowid
 

@@ -39,7 +39,7 @@ def get_user_characters(user):
 
     return Characters.objects.filter(
         account_id__in=list(account_ids),
-        is_deleted=0
+        deleted_at__isnull=True
     ).values_list('name', flat=True).order_by('name')
 
 

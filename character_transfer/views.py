@@ -22,7 +22,7 @@ def index(request):
             accounts = list()
             for account in game_accounts:
                 try:
-                    accounts.append(account.values('id', 'name', 'time_creation', 'active')[0])
+                    accounts.append(account.values('id', 'name', 'time_creation')[0])
                     game_account_id = account.values('id')[0]['id']
                 except IndexError:
                     continue

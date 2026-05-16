@@ -183,17 +183,15 @@ class AccountAdmin(admin.ModelAdmin):
     list_display = ["name", "id", "lsaccount_id", "charname", "status"]
     list_filter = ["name"]
     search_fields = ["id", "name", "lsaccount_id"]
-    readonly_fields = ["id", "active", "karma", "time_creation"]
+    readonly_fields = ["id", "karma", "time_creation"]
     fieldsets = [
         ("General Information", {
-            "fields": ["name", "charname", "lsaccount_id", "karma", "time_creation", "active"]
+            "fields": ["name", "charname", "ls_id", "lsaccount_id", "karma", "time_creation"]
         }),
         ("Flag Account as Mule/Trader", {"fields": ["mule"]}),
-        ("Expansion Setting (Controls what expansions the account owns)", {"fields": ["expansion"]}),
-        ("IP Exemptions", {"fields": ["ip_exemption_multiplier"]}),
         ("Administrative Actions",
          {"fields": ["revoked", "ban_reason", "suspendeduntil", "suspend_reason", "rulesflag"]}),
-        ("GM Settings", {"fields": ["status", "gmspeed", "hideme", "gminvul", "flymode", "ignore_tells"]}),
+        ("GM Settings", {"fields": ["status", "gmspeed", "hideme", "invulnerable", "flymode", "ignore_tells"]}),
     ]
 
 
