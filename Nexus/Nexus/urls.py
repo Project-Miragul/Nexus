@@ -1,5 +1,5 @@
 """
-URL configuration for EQMacEmu_Players project.
+URL configuration for the Nexus project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.0/topics/http/urls/

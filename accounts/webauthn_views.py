@@ -13,7 +13,7 @@ from django_otp_webauthn.views import (
 
 from .utils import get_client_ip
 
-logger = logging.getLogger('eqmacemu.security')
+logger = logging.getLogger('nexus.security')
 User = get_user_model()
 
 

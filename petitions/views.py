@@ -19,7 +19,7 @@ from .models import (
 )
 from .utils import get_user_characters, is_staff_member, notify_petitioner, notify_staff
 
-logger = logging.getLogger('eqmacemu.security')
+logger = logging.getLogger('nexus.security')
 
 PETITION_LIMIT = 5
 

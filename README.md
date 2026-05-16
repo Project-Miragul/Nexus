@@ -1,4 +1,4 @@
-# EQMacEmu Players Website
+# Nexus Website
 
 A self-contained Django web application for [EverQuest Emulator](https://www.eqemulator.org/) servers. A live instance runs at [www.eqarchives.com](https://www.eqarchives.com).
 
@@ -28,8 +28,8 @@ A self-contained Django web application for [EverQuest Emulator](https://www.eqe
 ### 1. Clone and install dependencies
 
 ```bash
-git clone https://github.com/your-org/EQMacEmu_Players.git
-cd EQMacEmu_Players
+git clone https://github.com/nazwadi/Nexus.git
+cd Nexus
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install -r requirements.txt

@@ -3,7 +3,7 @@ version: '3.6'
 services:
   ls_db:
     image: mysql:8.0.39-bookworm
-    container_name: eqmacemu_players_loginserver_db
+    container_name: nexus_loginserver_db
     restart: always
     volumes:
       - ./.docker/mysql/loginserver/init:/docker-entrypoint-initdb.d
@@ -21,7 +21,7 @@ services:
       retries: 10
   app_db:
     image: mysql:8.0.39-bookworm
-    container_name: eqmacemu_players_app_db
+    container_name: nexus_app_db
     restart: always
     volumes:
       - app_data:/var/lib/mysql
@@ -38,7 +38,7 @@ services:
       retries: 10
   game_db:
     image: mysql:8.0.39-bookworm
-    container_name: eqmacemu_players_game_db
+    container_name: nexus_game_db
     restart: always
     volumes:
       - .docker/mysql/worldserver/init:/docker-entrypoint-initdb.d
@@ -57,7 +57,7 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    container_name: eqmacemu_players_backend
+    container_name: nexus_backend
     command: sh -c "python3 manage.py makemigrations && python3 manage.py migrate --noinput && python3 manage.py collectstatic --noinput && python3 manage.py runserver 0.0.0.0:8000"
     restart: always
     user: appuser

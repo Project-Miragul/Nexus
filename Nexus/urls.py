@@ -1,5 +1,5 @@
 """
-URL configuration for EQMacEmu Accounts project.
+URL configuration for the Nexus project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/4.2/topics/http/urls/
@@ -30,7 +30,7 @@ from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from quests.views import NPCLookupView
 from django.http import HttpResponse
 
-admin.site.site_header = "EQMacEmu Accounts Administration"
+admin.site.site_header = "Nexus Accounts Administration"
 
 def robots_txt(request):
     lines = [

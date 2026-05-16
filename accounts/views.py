@@ -5,7 +5,7 @@ import logging
 import qrcode
 from datetime import datetime
 
-logger = logging.getLogger('eqmacemu.security')
+logger = logging.getLogger('nexus.security')
 
 
 def _rate_limit_key(group, request):

@@ -33,4 +33,4 @@ USER $USERNAME
 
 # During debugging, this entry point will be overridden.  Fo more information, please refer to https://aka.ms/vscode-docker-python-debug
 # Files wsgi.py was not found. Please enter the Python path to wsgi file.
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "eqmacemuplayers.wsgi"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "Nexus.wsgi"]
