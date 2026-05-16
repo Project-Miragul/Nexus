@@ -8,8 +8,8 @@ from collections import namedtuple
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connections
 
-from accounts.models import LoginServerAccounts
 from accounts.models import Account
+from accounts.utils import get_owned_login_account_ids
 from common.faction import FactionMods
 from common.models.characters import CharacterSkills
 from common.models.characters import CharacterSpells
@@ -114,9 +114,9 @@ def get_spell_information(character_id: int, class_id: int):
     return character_spells, spell_list
 
 
-def get_owned_characters(forum_name: str):
-    ls_accounts = LoginServerAccounts.objects.filter(ForumName=forum_name)
-    game_accounts = [Account.objects.filter(lsaccount_id=account.LoginServerID) for account in ls_accounts]
+def get_owned_characters(user_or_username):
+    owned_ids = get_owned_login_account_ids(user_or_username)
+    game_accounts = [Account.objects.filter(lsaccount_id=ls_id) for ls_id in owned_ids]
     characters = {}
     accounts = []
     for account in game_accounts:

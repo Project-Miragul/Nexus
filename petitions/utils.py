@@ -1,14 +1,13 @@
 import json
 import urllib.request
 
-from accounts.models import Account, LoginServerAccounts
+from accounts.models import Account
+from accounts.utils import get_owned_login_account_ids
 
 
 def get_staff_status(user):
     """Returns the highest game account status for this user, or 0 if not staff."""
-    ls_ids = LoginServerAccounts.objects.filter(
-        ForumName=user.username
-    ).values_list('LoginServerID', flat=True)
+    ls_ids = get_owned_login_account_ids(user)
 
     account = Account.objects.using('game_database').filter(
         lsaccount_id__in=list(ls_ids),
@@ -32,9 +31,7 @@ def get_user_characters(user):
     """Returns character names for a user's game accounts, for the petition form dropdown."""
     from common.models.characters import Characters
 
-    ls_ids = LoginServerAccounts.objects.filter(
-        ForumName=user.username
-    ).values_list('LoginServerID', flat=True)
+    ls_ids = get_owned_login_account_ids(user)
 
     account_ids = Account.objects.using('game_database').filter(
         lsaccount_id__in=list(ls_ids)

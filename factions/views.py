@@ -3,7 +3,7 @@ from django.db import connections
 
 from collections import namedtuple
 from factions.utils import get_specific_faction_information
-from accounts.models import LoginServerAccounts
+from accounts.utils import get_owned_login_account_ids
 
 
 def index_request(request):
@@ -141,8 +141,7 @@ def view_faction(request, faction_id):
             lower_faction_groups[row[2]].append(row)
 
         if request.user.is_authenticated:
-            ls_accounts = LoginServerAccounts.objects.filter(ForumName=request.user.username)
-            ls_account_ids = [ls_account.LoginServerID for ls_account in ls_accounts]
+            ls_account_ids = list(get_owned_login_account_ids(request.user))
             cursor = connections['game_database'].cursor()
             character_query = ("SELECT DISTINCT cd.id, cd.name, cd.race, cd.class, cd.deity "
                                "FROM account ac JOIN character_data cd ON ac.id = cd.account_id "

@@ -123,24 +123,27 @@ class Command(BaseCommand):
             return 0
 
         from django.contrib.auth import get_user_model
-        from accounts.models import Account, LoginServerAccounts
+        from accounts.models import Account, LoginAccounts
+        from accounts.utils import get_owned_login_account_ids
 
         User = get_user_model()
         if not User.objects.filter(username=web_user).exists():
             self.stdout.write(self.style.ERROR(f'Web user "{web_user}" not found in auth_user.'))
             raise SystemExit(1)
 
-        ls = LoginServerAccounts.objects.filter(ForumName=web_user).first()
-        if ls is None:
+        user = User.objects.get(username=web_user)
+        owned_ids = list(get_owned_login_account_ids(user))
+        if not owned_ids:
             self.stdout.write(self.style.ERROR(
-                f'No LoginServerAccount found for web user "{web_user}". '
-                f'The user must have logged in to the game server at least once.'
+                f'No login account found for web user "{web_user}". '
+                f'The user must have created a game account first.'
             ))
             raise SystemExit(1)
 
-        self.stdout.write(f'  Found LoginServerAccount: LoginServerID={ls.LoginServerID}, AccountName={ls.AccountName}')
+        ls = LoginAccounts.objects.filter(id=owned_ids[0]).first()
+        self.stdout.write(f'  Found login account: id={ls.id}, account_name={ls.account_name}')
 
-        account = Account.objects.filter(lsaccount_id=ls.LoginServerID).first()
+        account = Account.objects.filter(lsaccount_id=ls.id).first()
         if account:
             self.stdout.write(f'  Found existing game account: id={account.id}, name={account.name}')
             return account.id
@@ -151,10 +154,10 @@ class Command(BaseCommand):
             cur.execute(
                 "INSERT INTO account (name, lsaccount_id, status, gmspeed, revoked, minilogin_ip) "
                 "VALUES (%s, %s, %s, %s, %s, %s)",
-                [ls.AccountName, ls.LoginServerID, 0, 0, 0, '']
+                [ls.account_name, ls.id, 0, 0, 0, '']
             )
             account_id = cur.lastrowid
-        self.stdout.write(self.style.SUCCESS(f'  Created stub game account: id={account_id}, name={ls.AccountName}'))
+        self.stdout.write(self.style.SUCCESS(f'  Created stub game account: id={account_id}, name={ls.account_name}'))
         return account_id
 
     # ------------------------------------------------------------------

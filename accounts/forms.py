@@ -3,7 +3,7 @@ from django.forms import ModelForm
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 
-from .models import LoginServerAccounts
+from .models import LoginAccounts
 
 
 class NewUserForm(UserCreationForm):
@@ -23,18 +23,18 @@ class NewUserForm(UserCreationForm):
 
 
 class NewLSAccountForm(ModelForm):
-    AccountPassword = forms.CharField(widget=forms.PasswordInput())
+    account_password = forms.CharField(widget=forms.PasswordInput())
 
     class Meta:
-        model = LoginServerAccounts
-        fields = ('AccountName', 'AccountPassword', 'AccountEmail')
+        model = LoginAccounts
+        fields = ('account_name', 'account_password', 'account_email')
 
 
 class UpdateLSAccountForm(ModelForm):
 
     class Meta:
-        model = LoginServerAccounts
-        fields = ('AccountPassword', 'AccountEmail')
+        model = LoginAccounts
+        fields = ('account_password', 'account_email')
 
 
 class ContactForm(forms.Form):

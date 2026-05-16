@@ -675,7 +675,8 @@ def wishlist_add(request: HttpRequest) -> HttpResponse:
     :param request: The HTTP request object
     :return: Redirect to wishlist on success, or re-render form on error
     """
-    from accounts.models import Account, LoginServerAccounts
+    from accounts.models import Account
+    from accounts.utils import get_owned_login_account_ids
 
     def get_user_characters(username):
         """Return character names/levels for the logged-in user across all their accounts.
@@ -683,9 +684,7 @@ def wishlist_add(request: HttpRequest) -> HttpResponse:
         Each queryset is evaluated to a Python list before being passed to the next
         query — these span three separate databases and cannot be combined as subqueries.
         """
-        ls_ids = list(LoginServerAccounts.objects.filter(
-            ForumName=username
-        ).values_list('LoginServerID', flat=True))
+        ls_ids = list(get_owned_login_account_ids(username))
 
         account_ids = list(Account.objects.filter(
             lsaccount_id__in=ls_ids

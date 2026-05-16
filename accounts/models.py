@@ -13,33 +13,45 @@ class WebLoginHistory(models.Model):
         ordering = ['-timestamp']
 
 
-class LoginServerAccounts(models.Model):
+class LoginAccounts(models.Model):
     """
     This model should be tied to the database specified in the LoginServerRouter
     """
 
     def __str__(self):
-        return self.AccountName
+        return self.account_name
 
-    LoginServerID = models.AutoField(primary_key=True, null=False)
-    AccountName = models.CharField(max_length=30, null=False, unique=True)
-    AccountPassword = models.CharField(max_length=50, null=False)
-    AccountCreateDate = models.DateTimeField(auto_created=True, null=False, default=timezone.now)
-    AccountEmail = models.EmailField(max_length=100, null=False)
-    LastLoginDate = models.DateField(null=False, default=timezone.now)
-    LastIPAddress = models.GenericIPAddressField(max_length=15, null=False)
-    created_by = models.IntegerField(null=False, default=0)
-    client_unlock = models.SmallIntegerField(null=False)
-    creationIP = models.GenericIPAddressField(max_length=15, null=False)
-    ForumName = models.CharField(max_length=30, null=False)
-    max_accts = models.SmallIntegerField()
-    Num_IP_Bypass = models.SmallIntegerField(null=True)
-    lastpass_change = models.BigIntegerField(null=True)
+    id = models.AutoField(primary_key=True)
+    account_name = models.CharField(max_length=50, null=False, unique=True)
+    account_password = models.TextField(null=False)
+    account_email = models.CharField(max_length=100, null=False)
+    source_loginserver = models.CharField(max_length=64, null=True, default=None)
+    last_ip_address = models.CharField(max_length=80, null=False)
+    last_login_date = models.DateTimeField(null=False)
+    created_at = models.DateTimeField(null=True, blank=True)
+    updated_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
-        db_table = "tblLoginServerAccounts"
+        db_table = "login_accounts"
         verbose_name_plural = "Login Server Accounts"
         managed = False
+
+
+# Alias so existing imports throughout the project continue to work
+LoginServerAccounts = LoginAccounts
+
+
+class LoginAccountOwnership(models.Model):
+    """
+    Tracks which website User owns which login server accounts (one-to-many).
+    Lives in the default (Django) database — no cross-database FK required.
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_login_accounts')
+    login_account_id = models.IntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [('user', 'login_account_id')]
 
 
 class ServerAdminRegistration(models.Model):

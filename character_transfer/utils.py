@@ -1,32 +1,22 @@
-from accounts.models import Account
-from accounts.models import LoginServerAccounts
+from accounts.models import Account, LoginAccounts
+from accounts.utils import get_owned_login_account_ids
 from common.models.characters import Characters
 
 
-def valid_character_ownership(web_account: str, character_id: str) -> bool:
+def valid_character_ownership(user_or_username, character_id: str) -> bool:
     """
-    Returns True if the web account (ForumName) contains an account that
-    owns a character with the given character_id
-
-    :param web_account: web account name
-    :param character_id: character's unique id from the character_data table
-    :return: True if the character belongs to a game account managed by that web account
+    Returns True if the given user owns the character with the given character_id.
+    Accepts a User instance or a username string.
     """
-    ls_accounts = LoginServerAccounts.objects.filter(ForumName=web_account)
     target_character = Characters.objects.filter(id=character_id).first()
-    ls_account_names = list()
-    for account_name in ls_accounts.values('AccountName'):
-        ls_account_names.append(account_name['AccountName'])
-        game_account = Account.objects.filter(name=account_name['AccountName'])
-        if game_account.exists():
-            try:
-                game_account_id = game_account.values('id')[0]
-            except IndexError:
-                continue
+    if target_character is None:
+        return False
 
-            if game_account_id is not None:
-                characters = Characters.objects.filter(account_id=game_account_id['id'])
-                for character in characters:
-                    if character.id == target_character.id:
-                        return True
+    owned_ids = get_owned_login_account_ids(user_or_username)
+    for account_name in LoginAccounts.objects.filter(id__in=owned_ids).values('account_name'):
+        game_account = Account.objects.filter(name=account_name['account_name']).first()
+        if game_account is None:
+            continue
+        if Characters.objects.filter(account_id=game_account.id, id=target_character.id).exists():
+            return True
     return False

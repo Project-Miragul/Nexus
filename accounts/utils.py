@@ -43,6 +43,20 @@ def get_client_ip(request):
     return request.META.get('REMOTE_ADDR', '')
 
 
+def get_owned_login_account_ids(user_or_username):
+    """Returns a QuerySet of login_account_id values for the given user.
+    Accepts a User instance or a username string.
+    """
+    from .models import LoginAccountOwnership
+    if isinstance(user_or_username, str):
+        return LoginAccountOwnership.objects.filter(
+            user__username=user_or_username
+        ).values_list('login_account_id', flat=True)
+    return LoginAccountOwnership.objects.filter(
+        user=user_or_username
+    ).values_list('login_account_id', flat=True)
+
+
 def sha1_password(password: str) -> str:
     """Returns the sha1 hash of a plain text password
 

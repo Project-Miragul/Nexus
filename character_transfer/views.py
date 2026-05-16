@@ -6,7 +6,7 @@ from django.db import connections
 from django.shortcuts import render, redirect
 
 from accounts.models import Account
-from accounts.models import LoginServerAccounts
+from accounts.utils import get_owned_login_account_ids
 
 from common.utils import valid_game_account_owner
 from character_transfer.utils import valid_character_ownership
@@ -16,9 +16,8 @@ from character_transfer.utils import valid_character_ownership
 def index(request):
     if request.method == "GET":
         if request.user.is_authenticated:
-            forum_name = request.user.username
-            ls_accounts = LoginServerAccounts.objects.filter(ForumName=forum_name)
-            game_accounts = [Account.objects.filter(lsaccount_id=account.LoginServerID) for account in ls_accounts]
+            owned_ids = get_owned_login_account_ids(request.user)
+            game_accounts = [Account.objects.filter(lsaccount_id=ls_id) for ls_id in owned_ids]
             characters = dict()
             accounts = list()
             for account in game_accounts:
@@ -56,11 +55,10 @@ def index(request):
                                    "accounts": accounts, })
     if request.method == "POST":
         if request.user.is_authenticated:
-            forum_name = request.user.username
             account_id = request.POST.get("account")
             character_id = request.POST.get("character")
-            if (not valid_game_account_owner(forum_name, account_id) or
-                    not valid_character_ownership(forum_name, character_id)):
+            if (not valid_game_account_owner(request.user, account_id) or
+                    not valid_character_ownership(request.user, character_id)):
                 messages.error(request,
                                "Unsuccessful character transfer attempt. \
                                The target account either does not exist or doesn't belong to you.")

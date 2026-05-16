@@ -1,28 +1,23 @@
 import math
-from accounts.models import Account
-from accounts.models import LoginServerAccounts
+from accounts.models import Account, LoginAccounts
+from accounts.utils import get_owned_login_account_ids
 
 
-def valid_game_account_owner(web_account: str, game_account_id: str) -> bool:
+def valid_game_account_owner(user_or_username, game_account_id: str) -> bool:
     """
-    Returns True if the web account (ForumName) owns the game account
-
-    :param web_account:
-    :param game_account_id:
-    :return: bool
+    Returns True if the given user owns the game account.
+    Accepts a User instance or a username string.
     """
     game_account = Account.objects.filter(id=game_account_id).first()
-    ls_account = LoginServerAccounts.objects.filter(ForumName__iexact=web_account)
-
-    if game_account is None or ls_account is None:
+    if game_account is None:
         return False
 
-    # Ensure the requested game account belongs to the current user
-    ls_account_names = []
-    for account_name in ls_account.values('AccountName'):
-        ls_account_names.append(account_name['AccountName'].lower())
-
-    return game_account.name.lower() in ls_account_names
+    owned_ids = get_owned_login_account_ids(user_or_username)
+    owned_account_names = [
+        a['account_name'].lower()
+        for a in LoginAccounts.objects.filter(id__in=owned_ids).values('account_name')
+    ]
+    return game_account.name.lower() in owned_account_names
 
 
 def calculate_item_price(item_price: int):

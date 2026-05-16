@@ -1,15 +1,14 @@
 import django_tables2 as tables
 from django_tables2.export.views import ExportMixin
 from django_tables2.utils import Accessor
-from .models import LoginServerAccounts
+from .models import LoginAccounts
 
 
 class LoginServerAccountTable(ExportMixin, tables.Table):
-    AccountName = tables.TemplateColumn(
+    account_name = tables.TemplateColumn(
         template_name='accounts/account_name_column.html',
         verbose_name='Account Name'
     )
-    # AccountName = tables.LinkColumn("characters:list", args=[Accessor("AccountName")])
     update = tables.LinkColumn('accounts:update_account',
                                text="Update",
                                args=[Accessor('pk')],
@@ -17,8 +16,8 @@ class LoginServerAccountTable(ExportMixin, tables.Table):
                                orderable=False)
 
     class Meta:
-        model = LoginServerAccounts
+        model = LoginAccounts
         template_name = "django_tables2/bootstrap.html"
-        fields = ("AccountName", "AccountEmail", "AccountCreateDate", "LastLoginDate")
-        order_by = ("AccountName", "AccountCreateDate")
+        fields = ("account_name", "account_email", "created_at", "last_login_date")
+        order_by = ("account_name", "created_at")
         orderable = True

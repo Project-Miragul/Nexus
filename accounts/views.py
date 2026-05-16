@@ -47,9 +47,9 @@ from items.utils import build_stat_query, get_class_bitmask, get_item_effect, ge
 from django_ratelimit.decorators import ratelimit
 
 from .forms import NewLSAccountForm, NewUserForm, UpdateLSAccountForm
-from .models import Account, LoginServerAccounts, WebLoginHistory, WorldServerRegistration
+from .models import Account, LoginAccounts, LoginAccountOwnership, WebLoginHistory, WorldServerRegistration
 from common.models.characters import Characters
-from .utils import get_client_ip, sha1_password
+from .utils import get_client_ip, get_owned_login_account_ids, sha1_password
 
 
 def index_request(request):
@@ -291,15 +291,14 @@ def register_request(request):
 def accounts(request):
     from django.db.models import Case, When, IntegerField
 
-    # Get mule account IDs from the world server
+    owned_ids = get_owned_login_account_ids(request.user)
     mule_lsaccount_ids = Account.objects.filter(mule=1).values_list('lsaccount_id', flat=True)
 
-    # Create annotated queryset with mule status
-    queryset = LoginServerAccounts.objects.filter(
-        ForumName=request.user.username
+    queryset = LoginAccounts.objects.filter(
+        id__in=owned_ids
     ).annotate(
         is_mule=Case(
-            When(LoginServerID__in=list(mule_lsaccount_ids), then=1),
+            When(id__in=list(mule_lsaccount_ids), then=1),
             default=0,
             output_field=IntegerField()
         )
@@ -310,8 +309,8 @@ def accounts(request):
         response["Content-Disposition"] = 'attachment; filename="accounts.csv"'
         writer = csv.writer(response)
         writer.writerow(["Account Name", "Email", "Created", "Last Login"])
-        for acct in queryset.order_by('AccountName'):
-            writer.writerow([acct.AccountName, acct.AccountEmail, acct.AccountCreateDate, acct.LastLoginDate])
+        for acct in queryset.order_by('account_name'):
+            writer.writerow([acct.account_name, acct.account_email, acct.created_at, acct.last_login_date])
         return response
 
     mfa_enabled = TOTPDevice.objects.filter(user=request.user, confirmed=True).exists()
@@ -321,7 +320,7 @@ def accounts(request):
     return render(request,
                   "accounts/list_accounts.html",
                   {
-                      "accounts_list": queryset.order_by('AccountName'),
+                      "accounts_list": queryset.order_by('account_name'),
                       "mfa_enabled": mfa_enabled,
                       "passkey_count": passkey_count,
                       "account_count": account_count,
@@ -334,17 +333,11 @@ def create_account(request):
         form = NewLSAccountForm(request.POST)
         if form.is_valid():
             account = form.save(commit=False)
-
-            account.AccountPassword = sha1_password(form.cleaned_data['AccountPassword'])
-
-            account.LastIPAddress = get_client_ip(request)
-            account.client_unlock = 1
-            account.creationIP = get_client_ip(request)
-            account.max_accts = 10
-            account.Num_IP_Bypass = 1
-            account.ForumName = request.user.username
+            account.account_password = sha1_password(form.cleaned_data['account_password'])
+            account.last_ip_address = get_client_ip(request)
             account.save()
-            logger.info('ACCOUNT_CREATE user=%s ip=%s account=%s', request.user.username, get_client_ip(request), account.AccountName)
+            LoginAccountOwnership.objects.create(user=request.user, login_account_id=account.id)
+            logger.info('ACCOUNT_CREATE user=%s ip=%s account=%s', request.user.username, get_client_ip(request), account.account_name)
             messages.success(request, "Login Account Registration successful.")
             return redirect("accounts:list_accounts")
         messages.error(request, "Unsuccessful registration. Invalid information.")
@@ -359,26 +352,26 @@ def create_account(request):
 @login_required
 def update_account(request, pk):
     """Defines view for https://url.tld/accounts/update/<int:pk>"""
-    queryset = LoginServerAccounts.objects.filter(LoginServerID=pk, ForumName=request.user.username)
+    owned_ids = get_owned_login_account_ids(request.user)
+    queryset = LoginAccounts.objects.filter(id=pk, id__in=owned_ids)
     if queryset.exists():
         data = queryset.values()[0]
         if request.method == 'POST':
             form = UpdateLSAccountForm(request.POST)
             if form.is_valid():
-                queryset.update(AccountPassword=sha1_password(form.cleaned_data['AccountPassword']),
-                                AccountEmail=form.cleaned_data['AccountEmail'],
-                                LastIPAddress=get_client_ip(request))
+                queryset.update(account_password=sha1_password(form.cleaned_data['account_password']),
+                                account_email=form.cleaned_data['account_email'],
+                                last_ip_address=get_client_ip(request))
                 logger.info('ACCOUNT_UPDATE user=%s ip=%s pk=%s', request.user.username, get_client_ip(request), pk)
-                messages.success(request, "Update successful for " + data['AccountName'] + ".")
+                messages.success(request, "Update successful for " + data['account_name'] + ".")
                 return redirect("accounts:list_accounts")
             for key, value in form.errors.items():
                 messages.error(request, "Update unsuccessful. " + key + ", " + ''.join(value))
 
-        # For all other request methods that are not POST - including GET requests
-        form = UpdateLSAccountForm(initial={'AccountEmail': data['AccountEmail']})
+        form = UpdateLSAccountForm(initial={'account_email': data['account_email']})
         return render(request,
                       "accounts/update_account.html",
-                      {'form': form, 'AccountName': queryset.values()[0]["AccountName"]}
+                      {'form': form, 'AccountName': queryset.values()[0]["account_name"]}
                       )
 
     logger.warning('ACCOUNT_UPDATE_DENIED user=%s ip=%s pk=%s', request.user.username, get_client_ip(request), pk)
@@ -387,7 +380,8 @@ def update_account(request, pk):
 
 @login_required
 def delete_account(request, pk):
-    account = LoginServerAccounts.objects.filter(LoginServerID=pk, ForumName=request.user.username).first()
+    owned_ids = get_owned_login_account_ids(request.user)
+    account = LoginAccounts.objects.filter(id=pk, id__in=owned_ids).first()
 
     if not account:
         logger.warning('ACCOUNT_DELETE_DENIED user=%s ip=%s pk=%s', request.user.username, get_client_ip(request), pk)
@@ -396,10 +390,11 @@ def delete_account(request, pk):
 
     if request.method == "POST":
         typed_name = request.POST.get("account_name", "").strip()
-        if typed_name == account.AccountName:
+        if typed_name == account.account_name:
+            LoginAccountOwnership.objects.filter(user=request.user, login_account_id=account.id).delete()
             account.delete()
             logger.info('ACCOUNT_DELETE user=%s ip=%s pk=%s', request.user.username, get_client_ip(request), pk)
-            messages.success(request, f"Account '{account.AccountName}' deleted successfully.")
+            messages.success(request, f"Account '{account.account_name}' deleted successfully.")
             return redirect("accounts:list_accounts")
         else:
             messages.error(request, "Account name did not match. Please try again.")
@@ -466,12 +461,7 @@ def session_management(request):
 
 @login_required
 def convert_to_trader(request):
-    # Get user's login server accounts
-    user_ls_accounts = list(
-        LoginServerAccounts.objects.using('login_server_database').filter(
-            ForumName=request.user.username
-        ).values_list('LoginServerID', flat=True)
-    )
+    user_ls_accounts = list(get_owned_login_account_ids(request.user))
 
     if not user_ls_accounts:
         messages.info(request,
@@ -631,15 +621,8 @@ def inventory_search(request):
             container_slots = request.POST.get("container_slots")
             container_wr = request.POST.get("container_wr")
 
-            # 1) Get a list of loginserver accounts associated with the currently logged in forum name
-            forum_name = request.user.username
-
-            cursor = connections['login_server_database'].cursor()
-            cursor.execute("""
-                           SELECT LoginServerID
-                           FROM tblLoginServerAccounts
-                           WHERE ForumName = %s""", [forum_name])
-            ls_accounts_results = cursor.fetchall()
+            # 1) Get login server account IDs owned by the current user
+            ls_accounts_results = list(get_owned_login_account_ids(request.user))
 
             if not ls_accounts_results:
                 messages.info(request, "No login server accounts found for your forum account.")
@@ -671,7 +654,7 @@ def inventory_search(request):
                             LEFT JOIN spells_new AS click_s ON i.clickeffect = click_s.id"""
 
             base_query += " WHERE acc.lsaccount_id IN %s"
-            params_list.append(ls_accounts_results)
+            params_list.append(tuple(ls_accounts_results))
 
             if item_name:
                 where_conditions.append("LOWER(i.Name) LIKE %s")

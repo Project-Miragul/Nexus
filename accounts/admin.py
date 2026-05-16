@@ -8,7 +8,8 @@ from django.utils import timezone
 
 from .models import (
     Account,
-    LoginServerAccounts,
+    LoginAccounts,
+    LoginAccountOwnership,
     ServerAdminRegistration,
     ServerListType,
     WorldServerRegistration,
@@ -20,10 +21,10 @@ from .models import (
 # ---------------------------------------------------------------------------
 
 def _ls_ids_for_users(usernames):
+    user_ids = User.objects.filter(username__in=usernames).values_list('id', flat=True)
     return list(
-        LoginServerAccounts.objects.using('login_server_database')
-        .filter(ForumName__in=usernames)
-        .values_list('LoginServerID', flat=True)
+        LoginAccountOwnership.objects.filter(user_id__in=user_ids)
+        .values_list('login_account_id', flat=True)
     )
 
 
@@ -155,14 +156,12 @@ admin.site.register(User, CustomUserAdmin)
 # Existing admin registrations
 # ---------------------------------------------------------------------------
 
-class LoginServerAccountsAdmin(admin.ModelAdmin):
-    list_display = ["LoginServerID", "AccountName", "AccountEmail", "LastLoginDate", "ForumName"]
-    list_filter = ["ForumName"]
-    search_fields = ["AccountName", "ForumName"]
+class LoginAccountsAdmin(admin.ModelAdmin):
+    list_display = ["id", "account_name", "account_email", "last_login_date", "source_loginserver"]
+    search_fields = ["account_name", "account_email"]
     fieldsets = [
-        ("User Self-Registration", {"fields": ["AccountName", "AccountPassword", "AccountEmail", "ForumName"]}),
-        ("Admin Settings", {"fields": ["client_unlock", "max_accts", "Num_IP_Bypass"]}),
-        ("Location", {"fields": ["LastIPAddress", "creationIP"]}),
+        ("Account", {"fields": ["account_name", "account_password", "account_email"]}),
+        ("Login Info", {"fields": ["last_ip_address", "last_login_date", "source_loginserver"]}),
     ]
 
 
@@ -198,7 +197,7 @@ class AccountAdmin(admin.ModelAdmin):
     ]
 
 
-admin.site.register(LoginServerAccounts, LoginServerAccountsAdmin)
+admin.site.register(LoginAccounts, LoginAccountsAdmin)
 admin.site.register(ServerAdminRegistration, ServerAdminRegistrationAdmin)
 admin.site.register(ServerListType, ServerListTypeAdmin)
 admin.site.register(WorldServerRegistration, WorldServerRegistrationAdmin)
