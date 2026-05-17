@@ -124,6 +124,8 @@ This app connects to three MySQL databases:
 | `ALLOWED_HOSTS` | Comma-separated list of allowed hostnames (e.g. `myserver.com,www.myserver.com`) |
 | `CSRF_TRUSTED_ORIGINS` | Comma-separated list of trusted origins (e.g. `https://myserver.com`) |
 | `ADMIN_URL` | URL path for the Django admin (default: `admin/`) — change this in production |
+| `SITE_URL` | Full public URL of the site (e.g. `https://myserver.com`) — used in email links |
+| `SITE_NAME` | Display name shown throughout the site and in email subjects (default: `Nexus`) |
 
 ### Email
 

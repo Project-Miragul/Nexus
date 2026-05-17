@@ -1,560 +1,464 @@
 {% extends 'accounts/base.html' %}
+{% load static %}
 
-{% block title %}Accounts - EQ Archives{% endblock %}
+{% block title %}{{ site_name }} — Player Portal{% endblock %}
 
-{% load render_table from django_tables2 %}
-
-{% block content %}
-    <style>
-
+{% block extra_css %}
+<style>
+/* ── Page base ── */
 body {
     background-color: #0b0b10 !important;
-    background-image: repeating-linear-gradient(45deg,
+    background-image: repeating-linear-gradient(
+        45deg,
         transparent,
         transparent 2px,
-        rgba(255,255,255,0.02) 2px,
-        rgba(255,255,255,0.02) 4px
+        rgba(255,255,255,0.015) 2px,
+        rgba(255,255,255,0.015) 4px
     ) !important;
 }
 
-/* Hero Section - EQ-UI Colors */
+/* ── Hero ── */
 .hero-section {
-    background: linear-gradient(135deg, #1a1a20 0%, #2a2a35 100%) !important;
-    border-bottom: 3px solid #555555 !important;
-    padding: 80px 0;
-    position: relative;
+    padding: 70px 0 60px;
+    background: linear-gradient(135deg, #1a1a20 0%, #2a2a35 100%);
+    border-bottom: 2px solid #444;
+    overflow: hidden;
 }
 
 .hero-title {
-    color: #ffffff !important;
-    font-size: 3.5rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    font-family: 'menuetto', Georgia, serif;
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    letter-spacing: 3px;
+    background: linear-gradient(to bottom, #ffe066 0%, #fcc721 45%, #b8941f 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 8px rgba(252, 199, 33, 0.4));
+    margin-bottom: 0.5rem;
+    line-height: 1.1;
 }
 
 .hero-subtitle {
-    color: #cccccc !important;
-    font-size: 1.4rem;
+    color: #cccccc;
+    font-size: 1.15rem;
+    margin-bottom: 0.6rem;
+}
+
+.hero-tagline {
+    color: #999;
+    font-size: 0.95rem;
     margin-bottom: 2rem;
+    max-width: 480px;
 }
 
-.eq-logo-accent {
-    color: #8aa3ff !important;
-    font-weight: bold;
+.hero-spire {
+    max-height: 360px;
+    width: auto;
+    filter: drop-shadow(0 0 30px rgba(252, 199, 33, 0.25));
 }
 
-.lead {
-    color: #cccccc !important;
+/* Stats bar */
+.hero-stats {
+    display: flex;
+    gap: 2rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap;
+}
+.stat-item {
+    text-align: center;
+}
+.stat-number {
+    display: block;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #fcc721;
+    line-height: 1;
+}
+.stat-label {
+    font-size: 0.72rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #888;
 }
 
-/* Feature Cards - EQ-UI Colors */
+/* ── Shared section styles ── */
+.page-section {
+    padding: 60px 0;
+    background-color: #0b0b10;
+    border-bottom: 1px solid #2a2a35;
+}
+.section-header {
+    color: #8aa3ff;
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+.section-subtitle {
+    color: #999;
+    margin-bottom: 0;
+}
+
+/* ── Feature cards ── */
 .feature-card {
-    background: #1a1a20 !important;
-    border: 1px solid #555555 !important;
-    color: #ffffff !important;
+    background: #1a1a20;
+    border: 1px solid #333;
     border-radius: 10px;
-    padding: 2rem;
+    padding: 1.75rem;
     height: 100%;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
 .feature-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 8px 25px rgba(138, 163, 255, 0.15) !important;
+    transform: translateY(-6px);
+    box-shadow: 0 8px 28px rgba(138, 163, 255, 0.12);
+    border-color: #8aa3ff;
 }
-
 .feature-icon {
-    font-size: 3rem;
-    color: #8aa3ff !important;
-    margin-bottom: 1rem;
+    font-size: 2.4rem;
+    color: #8aa3ff;
+    margin-bottom: 0.9rem;
 }
-
 .feature-title {
-    color: #8aa3ff !important;
-    font-size: 1.4rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
+    color: #c8d6ff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
 }
-
 .feature-text {
-    color: #cccccc !important;
+    color: #aaa;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
 }
 
-/* Expansion Tags */
-.expansion-showcase {
-    padding: 60px 0;
-    border-bottom: 1px solid #becfe2;
-}
+/* ── Expansion pills ── */
 .expansion-tag {
     display: inline-block;
     margin: 0.5rem;
     transition: all 0.3s ease;
     cursor: pointer;
 }
-.expansion-tag:hover {
-    transform: scale(1.05);
-}
+.expansion-tag:hover { transform: scale(1.05); }
+.kunark span  { background: #2D4A1E; color: #A8D878; }
+.velious span { background: #4a4a5a; color: #c8ccd8; }
+.luclin span  { background: #1a1a5a; color: #a0a0f0; }
+.planes span  { background: #8B4500; color: #ffffff; }
+.ykesha span  { background: #4A6741; color: #C4D4A8; }
+.ldon span    { background: #8B4513; color: #F4A460; }
+.gates span   { background: #483D8B; color: #E6E6FA; }
+.omens span   { background: #8B0000; color: #FFB6C1; }
+.dragons span { background: #2F4F4F; color: #98FB98; }
 
-/* Section Backgrounds - EQ-UI Colors */
-.py-5[style*="background: var(--bg-primary)"],
-.expansion-showcase,
-.community-section
-{
-    background: #0b0b10 !important;
-    border-color: #555555 !important;
-}
-
-.section-header {
-    color: #8aa3ff !important;
-}
-
-.section-subtitle {
-    color: #cccccc !important;
-}
-
-/* Sections */
+/* ── Community / Discord ── */
+.community-section { background: #0f0f16; }
 .discord-card {
-    background: #1a1a20 !important;
-    border-color: #555555 !important;
-}
-/* Step Cards - EQ-UI Colors */
-.step-card {
-    background: #1a1a20 !important;
-    border: 1px solid #555555 !important;
-    color: #ffffff !important;
-    padding: 2rem;
+    background: #1a1a20;
+    border: 1px solid #333;
     border-radius: 10px;
+    padding: 2.5rem;
+    text-align: center;
 }
 
-.step-title {
-    color: #8aa3ff !important;
+/* ── Getting started / step cards ── */
+.step-card {
+    background: #1a1a20;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 1.75rem;
+    height: 100%;
+}
+.step-title { color: #8aa3ff; font-weight: 700; }
+
+/* ── Code block ── */
+pre {
+    background-color: #2a2a35 !important;
+    color: #e8e8f0 !important;
+    border: 1px solid #444 !important;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
 }
 
-/* Buttons - EQ-UI Colors */
+/* ── Buttons ── */
 .btn-primary {
-    background-color: var(--accent-color) !important;
-    border-color: var(--accent-color) !important;
-    color: var(--bg-dark) !important;
-    font-weight: bold;
+    background-color: var(--accent-color, #fcc721) !important;
+    border-color: var(--accent-color, #fcc721) !important;
+    color: #111 !important;
+    font-weight: 700;
 }
 .btn-primary:hover {
-    background-color: var(--hover-color) !important;
-    border-color: var(--hover-color) !important;
-    color: var(--text-primary) !important;
+    background-color: #ffe066 !important;
+    border-color: #ffe066 !important;
 }
-
-.btn-outline-primary
-{
-    border-color: #555555 !important;
-    color: #ffffff !important;
-    background: transparent !important;
+.btn-outline-secondary {
+    border-color: #555 !important;
+    color: #ccc !important;
 }
-.btn-outline-primary
-{
-    border-color: var(--border-color) !important;
-    color: var(--text-primary) !important;
-    background: transparent !important;
-}
-
-.btn-outline-primary:hover {
-    background-color: var(--accent-color) !important;
-    color: var(--bg-dark) !important;
-}
-
-
-.discord-btn {
-    background: #8aa3ff !important;
-    color: #000000 !important;
-}
-
-.discord-btn:hover {
-    background: #b8c5ff !important;
-}
-
-/* Pre blocks and code */
-pre {
-    {#background-color: var(--bg-tertiary) !important;#}
-    {#color: var(--text-primary) !important;#}
-    {#border-color: var(--border-color) !important;#}
-}
-pre {
+.btn-outline-secondary:hover {
     background-color: #2a2a35 !important;
-    color: #ffffff !important;
-    border-color: #555555 !important;
+    color: #fff !important;
 }
+.btn-discord {
+    background: #5865F2;
+    color: #fff;
+    font-weight: 700;
+    border: none;
+    padding: 0.55rem 1.5rem;
+    border-radius: 6px;
+    text-decoration: none;
+    display: inline-block;
+    transition: background 0.2s;
+}
+.btn-discord:hover { background: #4752c4; color: #fff; }
 
-/* List items in community section */
-.list-unstyled li {
-    color: #cccccc !important;
+/* ── Checklist ── */
+.check-list li {
+    color: #bbb;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
 }
-
-/* Container overrides to match EQ-UI theme */
-.container {
-    background-color: transparent !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-}
-
-/* Override any Bootstrap .bg-light classes */
-.bg-light,
-.section-bg-light {
-    background-color: #0b0b10 !important;
-}
-
-/* Make sure the .bg-light div in the code section uses dark colors */
-.bg-light.p-3.rounded {
-    background-color: #2a2a35 !important;
-    color: #ffffff !important;
-    border: 1px solid #555555 !important;
-}
-
-/* Override any remaining Bootstrap background utilities */
-.py-5:not(.hero-section) {
-    background-color: #0b0b10 !important;
-}
-
-/* Ensure all text in containers is readable */
-.container h2,
-.container h3,
-.container h4,
-.container h5,
-.container p,
-.container span,
-.container strong {
-    color: inherit !important;
-}
-
-.fas.fa-check-circle.text-primary-custom {
-    color: #8aa3ff !important;
-}
-
-/* Text utilities */
-.text-muted-custom,
-.text-muted {
-    color: #cccccc !important;
-}
-
-.text-primary-custom {
-    color: #8aa3ff !important;
-}
-
-.ykesha span, h2 .ykesha {
-    background: #4A6741;
-    color: #C4D4A8;
-}
-.ldon span, h2 .ldon {
-    background: #8B4513;
-    color: #F4A460;
-}
-.gates span, h2 .gates {
-    background: #483D8B;
-    color: #E6E6FA;
-}
-.omens span, h2 .omens {
-    background: #8B0000;
-    color: #FFB6C1;
-}
-.dragons span, h2 .dragons {
-    background: #2F4F4F;
-    color: #98FB98;
-}
+.check-list .fa-check-circle { color: #8aa3ff; margin-top: 3px; flex-shrink: 0; }
 </style>
-    <section class="hero-section">
-        <div class="container">
-            <div class="py-5 row justify-content-center text-center">
-                <div class="col-lg-10">
-                    <h1 class="hero-title">
-                        The <span class="eq-logo-accent">EQA</span> Project
-                    </h1>
-                    <p class="hero-subtitle">The Premier EverQuest Emulated Progression Server Experience</p>
-                    <p class="lead mb-4 text-muted-custom">Join a dedicated community of EverQuest veterans in Norrath's
-                        most authentic and
-                        feature-rich emulation server. Experience classic EverQuest the way it was meant to be
-                        played.</p>
-                    <div class="d-flex flex-column flex-md-row gap-3 justify-content-center">
-                        <a href="/accounts/register" class="btn btn-primary">
-                            <i class="fas fa-play-circle me-2"></i>Join EQA Free
-                        </a>
-                        <a href="https://discord.gg/9e5N8VAu7n">
-                            <button class="btn btn-outline-primary">
-                                <i class="fab fa-discord me-2"></i>Join Discord
-                            </button>
-                        </a>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══════════ HERO ══════════ -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center gy-4">
+
+            <!-- Left: text + CTAs + stats -->
+            <div class="col-lg-6 text-center text-lg-start">
+                <h1 class="hero-title">{{ site_name }}</h1>
+                <p class="hero-subtitle">EverQuest Progression — Free Trade, Tuned Raids, Legacy Items</p>
+                <p class="hero-tagline">Join a tight-knit EQEMU community rediscovering Norrath one expansion at a time.
+                    Gear is tradeable, raids are accessible, and legacy drops never disappear.</p>
+
+                <div class="d-flex flex-wrap gap-3 justify-content-center justify-content-lg-start">
+                    <a href="{% url 'accounts:register' %}" class="btn btn-primary px-4">
+                        <i class="fas fa-play-circle me-2"></i>Join Free
+                    </a>
+                    <a href="https://discord.gg/9e5N8VAu7n" target="_blank" rel="noopener noreferrer"
+                       class="btn btn-outline-secondary px-4">
+                        <i class="fab fa-discord me-2"></i>Join Discord
+                    </a>
+                </div>
+
+                {% if account_count or character_count %}
+                <div class="hero-stats">
+                    {% if account_count %}
+                    <div class="stat-item">
+                        <span class="stat-number">{{ account_count|stringformat:"d" }}</span>
+                        <span class="stat-label">Accounts</span>
                     </div>
+                    {% endif %}
+                    {% if character_count %}
+                    <div class="stat-item">
+                        <span class="stat-number">{{ character_count|stringformat:"d" }}</span>
+                        <span class="stat-label">Characters</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Right: spire image -->
+            <div class="col-lg-6 text-center">
+                <img src="{% static 'images/nexus-spire.png' %}"
+                     alt="{{ site_name }} Spire"
+                     class="hero-spire img-fluid">
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ══════════ FEATURES ══════════ -->
+<section class="page-section">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="section-header">What Makes {{ site_name }} Different?</h2>
+                <p class="section-subtitle">Classic EverQuest with modern conveniences</p>
+            </div>
+        </div>
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-exchange-alt"></i></div>
+                    <h4 class="feature-title">Free Trade Rules</h4>
+                    <p class="feature-text">Firiona Vie-style free trade means almost all items are tradeable.
+                        Build your character the way you want with unprecedented flexibility.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-gem"></i></div>
+                    <h4 class="feature-title">Legacy Items Preserved</h4>
+                    <p class="feature-text">Legacy item drops remain in game permanently at adjusted rarity.
+                        Your favorite items never get nerfed or removed.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-wrench"></i></div>
+                    <h4 class="feature-title">Raids Tuned for Smaller Teams</h4>
+                    <p class="feature-text">Raid targets are scaled for smaller groups.
+                        Open raids are scheduled throughout each week via Discord.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-database"></i></div>
+                    <h4 class="feature-title">Advanced Web Tools</h4>
+                    <p class="feature-text">Character viewer, account-wide inventory search, self-service
+                        transfers, DKP tracking, and a full database — all in your browser.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-puzzle-piece"></i></div>
+                    <h4 class="feature-title">Optional Client Mods</h4>
+                    <p class="feature-text">Zeal is permitted — a quality-of-life enhancement for the
+                        classic 2002-era TAKP client used by EQEmu players.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-sync-alt"></i></div>
+                    <h4 class="feature-title">Character Transfers</h4>
+                    <p class="feature-text">New players can transfer up to three characters from other servers,
+                        so you don't start from scratch.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-users"></i></div>
+                    <h4 class="feature-title">Group Experience Bonus</h4>
+                    <p class="feature-text">Extra XP for the 4th, 5th, and 6th group members actively
+                        encourages full groups over solo play.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-key"></i></div>
+                    <h4 class="feature-title">Keyrings Enabled</h4>
+                    <p class="feature-text">Available from launch — even Plane of Sky keys go straight to your
+                        keyring. No more juggling key inventory.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-globe"></i></div>
+                    <h4 class="feature-title">Server-Wide Channels</h4>
+                    <p class="feature-text">/ooc and /auction reach every zone, keeping the community
+                        connected no matter where your adventures take you.</p>
                 </div>
             </div>
         </div>
-    </section>
-    <!-- Features Section -->
-    <section class="py-5 hero-section">
-        <div class="container">
-            <div class="row text-center mb-5">
-                <div class="col-12">
-                    <h2 class="section-header">What Makes EQA Different?</h2>
-                    <p class="section-subtitle">Experience EverQuest with modern conveniences and classic gameplay</p>
-                </div>
+    </div>
+</section>
+
+<!-- ══════════ EXPANSION PROGRESSION ══════════ -->
+<section class="page-section" style="background: #0d0d14;">
+    <div class="container text-center">
+        <h2 class="section-header">Progression from Classic to Modern Era Expansions</h2>
+        <p class="section-subtitle mb-4">Experience the evolution of EverQuest as we progress through each expansion</p>
+        <div class="expansion-tags mb-4">
+            <div class="expansion-tag kunark"><span>Kunark</span></div>
+            <div class="expansion-tag velious"><span>Velious</span></div>
+            <div class="expansion-tag luclin"><span>Luclin</span></div>
+            <div class="expansion-tag planes"><span>Planes</span></div>
+            <div class="expansion-tag ykesha"><span>Ykesha</span></div>
+            <div class="expansion-tag ldon"><span>LDON</span></div>
+            <div class="expansion-tag gates"><span>Gates</span></div>
+            <div class="expansion-tag omens"><span>Omens</span></div>
+            <div class="expansion-tag dragons"><span>Dragons</span></div>
+        </div>
+        <p class="section-subtitle mt-4">New expansions unlock approximately 6 months after all raid targets are defeated</p>
+    </div>
+</section>
+
+<!-- ══════════ COMMUNITY ══════════ -->
+<section class="page-section community-section">
+    <div class="container">
+        <div class="row align-items-center gy-4">
+            <div class="col-lg-6">
+                <h2 class="section-header">Join Our Community</h2>
+                <p class="section-subtitle mb-4">{{ site_name }} is more than a server — it's a community
+                    where EQ veterans and newcomers alike can thrive.</p>
+                <ul class="list-unstyled check-list">
+                    <li><i class="fas fa-check-circle"></i><span>Server announcements and patch updates</span></li>
+                    <li><i class="fas fa-check-circle"></i><span>Strategy guides and class discussions</span></li>
+                    <li><i class="fas fa-check-circle"></i><span>Item auctions and open trading</span></li>
+                    <li><i class="fas fa-check-circle"></i><span>Voice chat during scheduled open raids</span></li>
+                    <li><i class="fas fa-check-circle"></i><span>Bug reports and direct staff feedback</span></li>
+                </ul>
             </div>
-            <div class="row g-4">
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-exchange-alt"></i>
-                        </div>
-                        <h4 class="feature-title">Free Trade Rules</h4>
-                        <p class="feature-text">Firiona Vie-style free trade means almost all items are tradeable! Build
-                            your character the way you want with unprecedented flexibility.</p>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-gem"></i>
-                        </div>
-                        <h4 class="feature-title">Legacy Items Preserved</h4>
-                        <p class="feature-text">Legacy item drops remain in game permanently at adjusted rarity. Your
-                            favorite items never get nerfed or removed!</p>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-wrench"></i>
-                        </div>
-                        <h4 class="feature-title">Raids Tuned for Smaller Teams</h4>
-                        <p class="feature-text">Raid targets are tuned for smaller teams. We schedule open raids
-                            throughout each week in Discord.</p>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-database"></i>
-                        </div>
-                        <h4 class="feature-title">Advanced Web Tools</h4>
-                        <p class="feature-text">Comprehensive character viewer, global inventory search, self-service
-                            transfers, and detailed database queries - all at your fingertips!</p>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-puzzle-piece"></i>
-                        </div>
-                        <h4 class="feature-title">Optional Client Mods</h4>
-                        <p class="feature-text">EQA allows use of Zeal - a QoL tool for the legacy 2002-era client used
-                            by TAKP EQEmu players.</p>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-sync-alt"></i>
-                        </div>
-                        <h4 class="feature-title">Character Transfers</h4>
-                        <p class="feature-text">New players can transfer up to three characters from other servers.</p>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <h4 class="feature-title">Group Experience Bonus</h4>
-                        <p class="feature-text">Experience bonuses for 4th, 5th, and 6th group members encourage social
-                            gameplay and group formation.</p>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-key"></i>
-                        </div>
-                        <h4 class="feature-title">Keyrings Enabled</h4>
-                        <p class="feature-text">Keyrings are available from launch with custom settings. No more
-                            juggling keys - even Plane of Sky keys go straight to your keyring!</p>
-                    </div>
-                </div>
-                <div class="col-lg-4 col-md-6">
-                    <div class="feature-card">
-                        <div class="feature-icon">
-                            <i class="fas fa-globe"></i>
-                        </div>
-                        <h4 class="feature-title">Server-Wide Channels</h4>
-                        <p class="feature-text">/ooc and /auction work across all zones, keeping the community connected
-                            no matter where your adventures take you.</p>
-                    </div>
+            <div class="col-lg-6">
+                <div class="discord-card">
+                    <i class="fab fa-discord" style="font-size: 3.5rem; color: #5865F2; margin-bottom: 1rem; display: block;"></i>
+                    <h4 style="color: #c8d6ff;" class="mb-2">Connect on Discord</h4>
+                    <p style="color: #999;" class="mb-4">Hundreds of players online daily — jump in and say hello.</p>
+                    <a href="https://discord.gg/9e5N8VAu7n" target="_blank" rel="noopener noreferrer"
+                       class="btn-discord">
+                        <i class="fab fa-discord me-2"></i>Join the Discord Server
+                    </a>
                 </div>
             </div>
         </div>
-    </section>
-    <!-- Expansion Showcase -->
-    <section class="expansion-showcase hero-section">
-        <div class="container text-center">
-            <h2 class="section-header">Progression from Classic to Modern Era Expansions</h2>
-            <p class="section-subtitle">Experience the evolution of EverQuest as we progress through each expansion</p>
-            <div class="expansion-tags mb-4">
-                <div class="expansion-tag kunark"><span>Kunark</span></div>
-                <div class="expansion-tag velious"><span>Velious</span></div>
-                <div class="expansion-tag luclin"><span>Luclin</span></div>
-                <div class="expansion-tag planes"><span>Planes</span></div>
-                <div class="expansion-tag ykesha"><span>Ykesha</span></div>
-                <div class="expansion-tag ldon"><span>LDON</span></div>
-                <div class="expansion-tag gates"><span>Gates</span></div>
-                <div class="expansion-tag omens"><span>Omens</span></div>
-                <div class="expansion-tag dragons"><span>Dragons</span></div>
-            </div>
-            <p class="text-muted-custom">New expansions unlock approximately 6 months after all raid targets are
-                defeated</p>
-        </div>
-    </section>
-    <!-- Community Section -->
-    <section class="community-section hero-section">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-6">
-                    <h2 class="section-header">Join Our Thriving Community</h2>
-                    <p class="section-subtitle mb-4">EQA is more than just a server - it's a community where both EQ
-                        newcomers
-                        and EQ veterans can thrive.</p>
-                    <ul class="list-unstyled">
-                        <li class="mb-3 d-flex align-items-center">
-                            <i class="fas fa-check-circle text-primary-custom me-3"></i>
-                            <span class="text-muted-custom">Server announcements and updates</span>
-                        </li>
-                        <li class="mb-3 d-flex align-items-center">
-                            <i class="fas fa-check-circle text-primary-custom me-3"></i>
-                            <span class="text-muted-custom">Strategy discussions and guides</span>
-                        </li>
-                        <li class="mb-3 d-flex align-items-center">
-                            <i class="fas fa-check-circle text-primary-custom me-3"></i>
-                            <span class="text-muted-custom">Item auctions and trading</span>
-                        </li>
-                        <li class="mb-3 d-flex align-items-center">
-                            <i class="fas fa-check-circle text-primary-custom me-3"></i>
-                            <span class="text-muted-custom">Voice chat during server raids</span>
-                        </li>
-                        <li class="mb-3 d-flex align-items-center">
-                            <i class="fas fa-check-circle text-primary-custom me-3"></i>
-                            <span class="text-muted-custom">Bug reports and feedback</span>
-                        </li>
-                    </ul>
-                </div>
-                <div class="col-lg-6">
-                    <div class="discord-card">
-                        <i class="fab fa-discord text-primary"
-                           style="font-size: 4rem; margin-bottom: 1rem; color: #7289da !important;"></i>
-                        <h4 class="text-primary-custom mb-3">Connect on Discord</h4>
-                        <p class="text-muted-custom mb-4">Join our active Discord community with hundreds of players
-                            online daily</p>
-                        <button class="btn discord-btn">
-                            <i class="fab fa-discord me-2"></i>Join Discord Server
-                        </button>
-                    </div>
-                </div>
+    </div>
+</section>
+
+<!-- ══════════ GETTING STARTED ══════════ -->
+<section class="page-section">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="section-header">Ready to Begin Your Journey?</h2>
+                <p class="section-subtitle">Three steps and you're in Norrath</p>
             </div>
         </div>
-    </section>
-    <!-- Getting Started Section -->
-    <section class="py-5 section-bg-light">
-        <div class="container">
-            <div class="row text-center mb-5">
-                <div class="col-12">
-                    <h2 class="section-header">Ready to Begin Your Journey?</h2>
-                    <p class="section-subtitle">Get started in just three simple steps</p>
-                </div>
-            </div>
-            <div class="row g-4">
-                <div class="col-lg-4">
-                    <div class="step-card">
-                        <h3 class="step-title h5">1. Download Client</h3>
-                        <p class="text-muted-custom mb-3">Get the client for Windows, Linux, or 32-bit macOS</p>
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="step-card">
+                    <h3 class="step-title h5 mb-3">1. Download the Client</h3>
+                    <p style="color:#999; font-size:0.9rem;" class="mb-3">
+                        Get the TAKP client for Windows, Linux, or 32-bit macOS.</p>
+                    <div class="d-flex flex-wrap gap-2">
                         <a href="https://www.dropbox.com/s/bppy4ebt7vl7hwk/TAKP%20PC%20V2.1c.zip?dl=0"
-                           class="btn btn-primary btn-sm">
-                            <i class="bi bi-download me-2"></i>Download Windows Client
+                           class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
+                            <i class="fas fa-download me-1"></i>Windows Client
                         </a>
                         <a href="https://wiki.takp.info/index.php/Getting_Started"
-                           class="btn btn-outline-primary btn-sm">
-                            <i class="bi bi-download me-2"></i>Read the Install Guide
-                        </a>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="step-card">
-                        <h3 class="step-title h5">2. Configure Connection</h3>
-                        <p class="text-muted-custom mb-3">Update your eqhost.txt file with our server details</p>
-                        <div class="bg-light p-3 rounded">
-                            <strong>Edit your eqhost.txt file:</strong>
-                            <pre class="mt-2 mb-0 small"><code>[Registration Servers]
-{
-"loginserver.eqarchives.com:6999"
-}
-[Login Servers]
-{
-"loginserver.eqarchives.com:6000"
-}</code></pre>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="step-card">
-                        <h3 class="step-title h5">3. Create Accounts</h3>
-                        <p class="text-muted-custom mb-3">Register for web account, then create your game account</p>
-                        <a href="/accounts/register" class="btn btn-primary btn-sm">
-                            <i class="bi bi-person-plus me-2"></i>Register Now
+                           class="btn btn-outline-secondary btn-sm" target="_blank" rel="noopener noreferrer">
+                            Install Guide
                         </a>
                     </div>
                 </div>
             </div>
+            <div class="col-lg-4">
+                <div class="step-card">
+                    <h3 class="step-title h5 mb-3">2. Point at Our Server</h3>
+                    <p style="color:#999; font-size:0.9rem;" class="mb-3">
+                        Update your <code>eqhost.txt</code> with our login server address.</p>
+                    <pre class="small mb-0"><code>[LoginServer]
+Host=login.projectmiragul.org:5999</code></pre>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="step-card">
+                    <h3 class="step-title h5 mb-3">3. Create Your Accounts</h3>
+                    <p style="color:#999; font-size:0.9rem;" class="mb-3">
+                        Register here, then create a game account to log in with.</p>
+                    <a href="{% url 'accounts:register' %}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-user-plus me-1"></i>Register Now
+                    </a>
+                </div>
+            </div>
         </div>
-    </section>
-    <script>
-        // Add some subtle interactive effects
-        document.addEventListener('DOMContentLoaded', function () {
-            // Smooth scrolling for anchor links
-            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-                anchor.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const target = document.querySelector(this.getAttribute('href'));
-                    if (target) {
-                        target.scrollIntoView({
-                            behavior: 'smooth'
-                        });
-                    }
-                });
-            });
+    </div>
+</section>
 
-            // Add hover effects to stats
-            const statNumbers = document.querySelectorAll('.stat-number');
-            statNumbers.forEach(stat => {
-                stat.addEventListener('mouseenter', function () {
-                    this.style.transform = 'scale(1.05)';
-                    this.style.transition = 'transform 0.3s ease';
-                });
-
-                stat.addEventListener('mouseleave', function () {
-                    this.style.transform = 'scale(1)';
-                });
-            });
-
-            // Add click handlers for CTA buttons (connect to your actual pages)
-            document.querySelectorAll('.cta-button').forEach(button => {
-                button.addEventListener('click', function () {
-                    // Replace with actual registration URL
-                    // window.location.href = '/accounts/register';
-                    console.log('Redirect to registration page');
-                });
-            });
-
-            // Discord button handler
-            document.querySelectorAll('.discord-btn, .btn-outline-primary-custom').forEach(button => {
-                if (button.textContent.includes('Discord')) {
-                    button.addEventListener('click', function () {
-                        // Replace with actual Discord URL
-                        window.open('https://discord.gg/9e5N8VAu7n', '_blank');
-                    });
-                }
-            });
-        });
-    </script>
 {% endblock %}

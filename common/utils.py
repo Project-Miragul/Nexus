@@ -12,7 +12,7 @@ def valid_game_account_owner(user_or_username, game_account_id: str) -> bool:
     if game_account is None:
         return False
 
-    owned_ids = get_owned_login_account_ids(user_or_username)
+    owned_ids = list(get_owned_login_account_ids(user_or_username))
     owned_account_names = [
         a['account_name'].lower()
         for a in LoginAccounts.objects.filter(id__in=owned_ids).values('account_name')

@@ -2,7 +2,7 @@
 {% load static %}
 {% load gravatar %}
 
-{% block title %}Game Accounts - EQ Archives{% endblock %}
+{% block title %}Game Accounts - {{ site_name }}{% endblock %}
 
 {% block content %}
 
@@ -144,19 +144,19 @@
                     {% for acct in accounts_list %}
                     <tr>
                         <td>
-                            <a href="{% url 'characters:list' acct.AccountName %}">
+                            <a href="{% url 'characters:list' acct.account_name %}">
                                 {% if acct.is_mule %}
                                 <i class="fas fa-coins text-warning me-1"
                                    title="Trader (Mule) Account"
                                    aria-label="Trader (Mule) Account"></i>
                                 {% endif %}
-                                {{ acct.AccountName }}
+                                {{ acct.account_name }}
                             </a>
                         </td>
-                        <td class="text-muted d-none d-sm-table-cell">{{ acct.AccountEmail }}</td>
-                        <td class="text-muted d-none d-md-table-cell" data-sort="{{ acct.AccountCreateDate|date:'Y-m-d' }}">{{ acct.AccountCreateDate|date:"M j, Y" }}</td>
-                        <td class="text-muted d-none d-md-table-cell" data-sort="{{ acct.LastLoginDate|date:'Y-m-d'|default:'0000-00-00' }}">
-                            {% if acct.LastLoginDate %}{{ acct.LastLoginDate|date:"M j, Y" }}{% else %}<span class="text-muted fst-italic">Never</span>{% endif %}
+                        <td class="text-muted d-none d-sm-table-cell">{{ acct.account_email }}</td>
+                        <td class="text-muted d-none d-md-table-cell" data-sort="{{ acct.created_at|date:'Y-m-d' }}">{{ acct.created_at|date:"M j, Y" }}</td>
+                        <td class="text-muted d-none d-md-table-cell" data-sort="{{ acct.last_login_date|date:'Y-m-d'|default:'0000-00-00' }}">
+                            {% if acct.last_login_date %}{{ acct.last_login_date|date:"M j, Y" }}{% else %}<span class="text-muted fst-italic">Never</span>{% endif %}
                         </td>
                         <td class="text-end">
                             <div class="d-flex gap-2 justify-content-end">
@@ -165,7 +165,7 @@
                                     <span class="d-none d-sm-inline ms-1">Edit</span>
                                 </a>
                                 <button type="button" class="btn btn-outline-danger btn-sm"
-                                        data-account-name="{{ acct.AccountName }}"
+                                        data-account-name="{{ acct.account_name }}"
                                         data-delete-url="{% url 'accounts:delete_account' acct.pk %}"
                                         onclick="confirmDelete(this)">
                                     <i class="fas fa-trash"></i>

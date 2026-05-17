@@ -2,9 +2,9 @@
 {% load static %}
 {% load data_utilities %}
 {% block extra_meta %}
-    <meta name="description" content="{{ character_name }}'s character profile on EQ Archives — view gear, stats, and progression.">
-    <meta property="og:title" content="{{ character_name }}'s Profile - EQ Archives">
-    <meta property="og:description" content="{{ character_name }}'s character profile on EQ Archives — view gear, stats, and progression.">
+    <meta name="description" content="{{ character_name }}'s character profile on {{ site_name }} — view gear, stats, and progression.">
+    <meta property="og:title" content="{{ character_name }}'s Profile - {{ site_name }}">
+    <meta property="og:description" content="{{ character_name }}'s character profile on {{ site_name }} — view gear, stats, and progression.">
     <meta property="og:type" content="profile">
     <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
 {% endblock %}

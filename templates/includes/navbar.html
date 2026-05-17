@@ -4,14 +4,14 @@
         <!-- Logo -->
         <div id="logo" class="d-flex">
             <span class="w-100 d-lg-none d-block"></span>
-            <a class="navbar-brand d-none d-lg-inline-block ps-4 pe-3" href="/">
-                <img
-                        src="{% static 'images/eqalogo.svg' %}"
-                        alt="EQ Archives"
-                        height="80"
-                        width="427"
-                        class="img-fluid"
-                />
+            <a class="navbar-brand d-none d-lg-inline-block ps-4 pe-3" href="/" aria-label="{{ site_name }}">
+                <span class="site-logo" aria-hidden="true">
+                    <img src="{% static 'images/nexus-spire.png' %}" alt="" height="64" class="site-logo-emblem"/>
+                    <span class="logo-text-group">
+                        <span class="logo-primary">{{ site_name }}</span>
+                        <span class="logo-secondary">Player Portal</span>
+                    </span>
+                </span>
             </a>
             <div class="w-100 text-end">
                 <button

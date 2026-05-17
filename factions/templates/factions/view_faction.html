@@ -4,9 +4,9 @@
 {% load humanize %}
 {% block title %}
     {% if faction_info.1 %}
-        {{ faction_info.1|clean_name }} - EQ Archives
+        {{ faction_info.1|clean_name }} - {{ site_name }}
     {% else %}
-        View Faction - EQ Archives
+        View Faction - {{ site_name }}
     {% endif %}
 {% endblock %}
 {% block content %}

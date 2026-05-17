@@ -1,6 +1,6 @@
 {% extends 'dkp/base.html' %}
 {% load dkp_tags %}
-{% block title %}{{ raid.labels|default:"Raid" }} — {{ raid.date|date:"M d, Y" }} — EQ Archives{% endblock %}
+{% block title %}{{ raid.labels|default:"Raid" }} — {{ raid.date|date:"M d, Y" }} — {{ site_name }}{% endblock %}
 
 {% block content %}
 <div class="container">

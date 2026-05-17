@@ -18,9 +18,9 @@
     <link href="https://cdn.datatables.net/v/bs5/dt-2.0.2/datatables.min.css" rel="stylesheet">
 
     {% if faction_name.1  %}
-        <title>{{ faction_name.1|clean_name }} - EQ Archives</title>
+        <title>{{ faction_name.1|clean_name }} - {{ site_name }}</title>
     {% else %}
-        <title>EQ Archives</title>
+        <title>{{ site_name }}</title>
     {% endif %}
 </head>
 <body>

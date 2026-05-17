@@ -1,6 +1,6 @@
 {% extends 'accounts/base.html' %}
 
-{% block title %}Delete {{ account.AccountName }} - EQ Archives{% endblock %}
+{% block title %}Delete {{ account.account_name }} - {{ site_name }}{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -9,7 +9,7 @@
 
             <div class="alert alert-danger d-flex gap-2" role="alert">
                 <i class="fas fa-exclamation-triangle mt-1 flex-shrink-0"></i>
-                <span>This will permanently delete <strong>{{ account.AccountName }}</strong> from the login server. You will no longer be able to log in to the game with this account. This cannot be undone.</span>
+                <span>This will permanently delete <strong>{{ account.account_name }}</strong> from the login server. You will no longer be able to log in to the game with this account. This cannot be undone.</span>
             </div>
 
             <div class="card shadow-sm">
@@ -28,7 +28,7 @@
                                    autocomplete="off"
                                    autofocus
                                    required>
-                            <div class="form-text">Type <strong>{{ account.AccountName }}</strong> to confirm.</div>
+                            <div class="form-text">Type <strong>{{ account.account_name }}</strong> to confirm.</div>
                         </div>
                         <div class="d-flex gap-2">
                             <button type="submit" class="btn btn-danger flex-grow-1">Delete Account</button>

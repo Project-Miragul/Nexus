@@ -12,7 +12,7 @@ def valid_character_ownership(user_or_username, character_id: str) -> bool:
     if target_character is None:
         return False
 
-    owned_ids = get_owned_login_account_ids(user_or_username)
+    owned_ids = list(get_owned_login_account_ids(user_or_username))
     for account_name in LoginAccounts.objects.filter(id__in=owned_ids).values('account_name'):
         game_account = Account.objects.filter(name=account_name['account_name']).first()
         if game_account is None:

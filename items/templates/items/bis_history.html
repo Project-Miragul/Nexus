@@ -1,7 +1,7 @@
 {% extends 'items/base.html' %}
 {% load static %}
 {% load markdown_extras %}
-{% block title %}BIS Edit History{% if selected_class %} — {{ selected_class }}{% endif %} - EQ Archives{% endblock %}
+{% block title %}BIS Edit History{% if selected_class %} — {{ selected_class }}{% endif %} - {{ site_name }}{% endblock %}
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/eq-ui.css' %}">

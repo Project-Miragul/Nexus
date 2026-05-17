@@ -1,3 +1,6 @@
+from django.conf import settings
+
+
 def navigation_context(request):
     """Add navigation context to all templates"""
     nav_section = 'database'  # default
@@ -13,4 +16,5 @@ def navigation_context(request):
     return {
         'nav_section': nav_section,
         'nav_page': request.resolver_match.url_name if request.resolver_match else None,
+        'site_name': settings.SITE_NAME,
     }

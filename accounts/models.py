@@ -46,12 +46,19 @@ class LoginAccountOwnership(models.Model):
     Tracks which website User owns which login server accounts (one-to-many).
     Lives in the default (Django) database — no cross-database FK required.
     """
+    id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_login_accounts')
     login_account_id = models.IntegerField()
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         unique_together = [('user', 'login_account_id')]
+        db_table = "accounts_loginaccountownership"  # optional but clear
+        # Force this model to always use the default database
+        app_label = 'accounts'
+
+    def __str__(self):
+        return f"User {self.user_id} owns login account {self.login_account_id}"
 
 
 class ServerAdminRegistration(models.Model):
@@ -153,7 +160,7 @@ class Account(models.Model):
     crc_eqgame = models.TextField(null=True, blank=True)
     crc_skillcaps = models.TextField(null=True, blank=True)
     crc_basedata = models.TextField(null=True, blank=True)
-    mule = models.SmallIntegerField(default=0, null=False)
+#    mule = models.SmallIntegerField(default=0, null=False)
 
     class Meta:
         db_table = "account"

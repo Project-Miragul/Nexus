@@ -651,13 +651,16 @@ def _ics_escape(text):
     return text
 
 
-def _build_ics(events, request, cal_name='EQ Archives Raid Schedule'):
+def _build_ics(events, request, cal_name=None):
     now_utc = datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')
 
+    from django.conf import settings
+    if cal_name is None:
+        cal_name = f'{settings.SITE_NAME} Raid Schedule'
     lines = [
         'BEGIN:VCALENDAR',
         'VERSION:2.0',
-        'PRODID:-//EQ Archives//Raid Scheduler//EN',
+        f'PRODID:-//{settings.SITE_NAME}//Raid Scheduler//EN',
         'CALSCALE:GREGORIAN',
         'METHOD:PUBLISH',
         f'X-WR-CALNAME:{_ics_escape(cal_name)}',
@@ -747,7 +750,7 @@ def calendar_feed(request):
         .filter(is_visible=True, status__in=(RaidEvent.STATUS_SCHEDULED, RaidEvent.STATUS_ACTIVE))
         .order_by('date', 'start_time')
     )
-    content = _build_ics(events, request, cal_name='EQ Archives — Raid Schedule')
+    content = _build_ics(events, request)
     response = HttpResponse(content, content_type='text/calendar; charset=utf-8')
     response['Content-Disposition'] = 'inline; filename="eq-raids.ics"'
     return response

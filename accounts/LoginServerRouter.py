@@ -2,10 +2,17 @@
 This is the database router class for operations relating to models belonging to
 the login server database.
 """
-from accounts.models import LoginServerAccounts
+from accounts.models import LoginAccounts
 from accounts.models import ServerAdminRegistration
 from accounts.models import ServerListType
 from accounts.models import WorldServerRegistration
+from accounts.models import (
+    LoginAccounts,
+    ServerAdminRegistration,
+    ServerListType,
+    WorldServerRegistration,
+    LoginAccountOwnership
+)
 
 
 class LoginServerRouter:
@@ -15,7 +22,7 @@ class LoginServerRouter:
     """
 
     route_app_labels = {"accounts"}
-    login_server_models = [LoginServerAccounts,
+    login_server_models = [LoginAccounts,
                            ServerAdminRegistration,
                            ServerListType,
                            WorldServerRegistration]
@@ -24,6 +31,9 @@ class LoginServerRouter:
         """
         Attempts to read LoginServer models go to the login server database.
         """
+        if model._meta.model_name == 'loginaccountownership':
+            return 'default'
+
         if ((model._meta.app_label in self.route_app_labels)
                 and (model in self.login_server_models)):
             return "login_server_database"
@@ -33,6 +43,9 @@ class LoginServerRouter:
         """
         Attempts to write LoginServer models go to the login server database.
         """
+        if model._meta.model_name == 'loginaccountownership':
+            return 'default'
+
         if ((model._meta.app_label in self.route_app_labels)
                 and (model in self.login_server_models)):
             return "login_server_database"
@@ -40,23 +53,20 @@ class LoginServerRouter:
 
     def allow_relation(self, obj1, obj2, **hints):
         """
-        Allow relations if a model in the accounts app is involved, and
-        the model belongs to the login server database.
+        Only allow relations between two login server models
         """
-        if ((obj1._meta.app_label in self.route_app_labels
-                or obj2._meta.app_label in self.route_app_labels)
-            and
-            (obj1 in self.login_server_models
-                and obj2 in self.login_server_models)
-        ):
-            return True
+        if (obj1._meta.app_label in self.route_app_labels and
+            obj2._meta.app_label in self.route_app_labels):
+            is_ls1 = obj1._meta.model_name in self.login_server_models
+            is_ls2 = obj2._meta.model_name in self.login_server_models
+            return is_ls1 and is_ls2
         return None
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
-        """
-        Make sure the accounts app LoginServer models only appear in the
-        login server database.
-        """
-        if (app_label in self.route_app_labels) and (model_name in self.login_server_models):
-            return db == "login_server_database"
+        if app_label in self.route_app_labels:
+            if model_name in self.login_server_models:
+                return db == 'login_server_database'
+            else:
+                # All other models in accounts app (including LoginAccountOwnership)
+                return db == 'default'
         return None

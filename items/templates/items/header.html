@@ -10,7 +10,7 @@
     <link rel="shortcut icon" type="image/png" href="{% static 'favicon.ico' %}"/>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
     {% if item.Name %}
-        <meta content="EQ Archives" property="og:site_name">
+        <meta content="{{ site_name }}" property="og:site_name">
         <meta content="article" property="og:type">
         <meta content="{{ item.Name|clean_name }}" property="og:title">
         <meta content="EQA Item information for {{ item.Name|clean_name }}" property="og:description">
@@ -32,11 +32,11 @@
     <link href="https://cdn.datatables.net/v/bs5/dt-2.0.2/datatables.min.css" rel="stylesheet">
 
     {% if item.Name %}
-        <title>{{ item.Name|clean_name }} - EQ Archives</title>
+        <title>{{ item.Name|clean_name }} - {{ site_name }}</title>
     {% elif selected_class %}
-        <title>Best in Slot - EQ Archives</title>
+        <title>Best in Slot - {{ site_name }}</title>
     {% else %}
-        <title>EQ Archives</title>
+        <title>{{ site_name }}</title>
     {% endif %}
     <style>
         /* Only the minimal necessary styles */

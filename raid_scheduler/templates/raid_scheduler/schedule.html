@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{% if editing_event %}Edit Raid{% else %}Schedule a Raid{% endif %} — EQ Archives{% endblock %}
+{% block title %}{% if editing_event %}Edit Raid{% else %}Schedule a Raid{% endif %} — {{ site_name }}{% endblock %}
 
 {% block extra_css %}
 <style>

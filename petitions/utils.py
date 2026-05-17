@@ -68,7 +68,7 @@ def notify_staff(petition, message, exclude_user=None):
             pref = user.staff_email_pref
             if pref.email_notifications and user.email:
                 send_mail(
-                    subject=f'[EQ Archives] Petition #{petition.pk}: {petition.subject}',
+                    subject=f'[{settings.SITE_NAME}] Petition #{petition.pk}: {petition.subject}',
                     message=f'{message}\n\n{site_url}/petitions/{petition.pk}/',
                     from_email=None,
                     recipient_list=[user.email],
@@ -98,7 +98,7 @@ def notify_petitioner(petition, message):
 
     if petition.user.email:
         send_mail(
-            subject=f'[EQ Archives] Your petition has been updated: {petition.subject}',
+            subject=f'[{settings.SITE_NAME}] Your petition has been updated: {petition.subject}',
             message=(
                 f'{message}\n\n'
                 f'View your petition: {site_url}/petitions/{petition.pk}/'

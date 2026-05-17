@@ -1,6 +1,6 @@
 {% extends 'accounts/base.html' %}
 
-{% block title %}Create Game Account - EQ Archives{% endblock %}
+{% block title %}Create Game Account - {{ site_name }}{% endblock %}
 
 {% block content %}
 <div class="container py-5">
@@ -11,7 +11,7 @@
                     <h1 class="mb-1">Create Game Account</h1>
                     <p class="text-muted mb-4">
                         This is a login server account used to connect to the game —
-                        not your EQ Archives login. You can create multiple accounts.
+                        not your {{ site_name }} login. You can create multiple accounts.
                     </p>
 
                     <form method="POST" id="create-account-form">
@@ -49,7 +49,7 @@
                                 <div class="invalid-feedback">{{ form.account_password.errors|join:", " }}</div>
                                 {% endif %}
                             </div>
-                            <div class="form-text">This is separate from your EQ Archives password.</div>
+                            <div class="form-text">This is separate from your {{ site_name }} password.</div>
                         </div>
 
                         <div class="mb-4">

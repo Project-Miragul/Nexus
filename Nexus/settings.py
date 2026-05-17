@@ -42,6 +42,7 @@ DJANGO_DEFAULT_FROM_EMAIL = os.environ.get("DJANGO_DEFAULT_FROM_EMAIL")
 PETITION_DISCORD_WEBHOOK_URL = os.environ.get("PETITION_DISCORD_WEBHOOK_URL", "")
 RAID_SCHEDULER_DISCORD_WEBHOOK_URL = os.environ.get("RAID_SCHEDULER_DISCORD_WEBHOOK_URL", "")
 SITE_URL = os.environ.get("SITE_URL", "http://localhost:8000")
+SITE_NAME = os.environ.get("SITE_NAME", "Nexus")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -118,12 +119,12 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'Nexus.middleware.SecurityHeadersMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django_otp.middleware.OTPMiddleware',
     'Nexus.middleware.StaffMFARequiredMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 

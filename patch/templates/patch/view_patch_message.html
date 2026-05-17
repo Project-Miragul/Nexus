@@ -3,7 +3,7 @@
 {% load humanize %}
 {% load markdown_extras %}
 {% block og_type %}article{% endblock %}
-{% block og_title %}{{ patch_message.title }} — EQ Archives{% endblock %}
+{% block og_title %}{{ patch_message.title }} — {{ site_name }}{% endblock %}
 {% block og_description %}{{ patch_message.body_plaintext|truncatechars:160 }}{% endblock %}
 {% block extra_meta %}
     <meta property="article:published_time" content="{{ patch_message.patch_date|date:'c' }}">

@@ -17,6 +17,7 @@ def _log_web_login(user, ip_address, keep=20):
     oldest_ids = WebLoginHistory.objects.filter(user=user).values_list('id', flat=True)[keep:]
     if oldest_ids:
         WebLoginHistory.objects.filter(id__in=list(oldest_ids)).delete()
+from django.conf import settings
 from django.utils import timezone
 from collections import namedtuple
 
@@ -53,17 +54,26 @@ from .utils import get_client_ip, get_owned_login_account_ids, sha1_password
 
 
 def index_request(request):
-    if request.method == "GET" or request.method == "POST":
-        if request.user.is_authenticated:
-            return render(request=request, template_name="accounts/index.html")
-    return render(request=request, template_name="accounts/index.html")
+    try:
+        account_count = LoginAccounts.objects.count()
+    except Exception:
+        account_count = None
+    try:
+        character_count = Characters.objects.count()
+    except Exception:
+        character_count = None
+    context = {
+        "account_count": account_count,
+        "character_count": character_count,
+    }
+    return render(request=request, template_name="accounts/index.html", context=context)
 
 
 def server_list(request):
     if request.method == "GET":
         servers = WorldServerRegistration.objects.all()
         cursor = connections['game_database'].cursor()
-        cursor.execute("SELECT count(*) FROM account WHERE `mule` = '0';")
+        cursor.execute("SELECT count(*) FROM account;")
         population = cursor.fetchone()[0]
         return render(request=request,
                       template_name="accounts/server_list.html",
@@ -281,7 +291,7 @@ def register_request(request):
             user = form.save()
             login(request, user)
             logger.info('REGISTER user=%s ip=%s', user.username, get_client_ip(request))
-            messages.success(request, "Registration successful! Welcome to EQArchives.")
+            messages.success(request, f"Registration successful! Welcome to {settings.SITE_NAME}.")
             return redirect("accounts:index")
         messages.error(request, "Registration unsuccessful. Please check the information and try again.")
     form = NewUserForm
@@ -291,18 +301,19 @@ def register_request(request):
 def accounts(request):
     from django.db.models import Case, When, IntegerField
 
-    owned_ids = get_owned_login_account_ids(request.user)
-    mule_lsaccount_ids = Account.objects.filter(mule=1).values_list('lsaccount_id', flat=True)
+    owned_ids_qs = get_owned_login_account_ids(request.user)
+    owned_ids = list(owned_ids_qs)  # ← This is the key fix
+    #mule_lsaccount_ids = Account.objects.filter(mule=1).values_list('lsaccount_id', flat=True)
 
     queryset = LoginAccounts.objects.filter(
         id__in=owned_ids
-    ).annotate(
-        is_mule=Case(
-            When(id__in=list(mule_lsaccount_ids), then=1),
-            default=0,
-            output_field=IntegerField()
-        )
-    )
+    )#.annotate(
+     #   is_mule=Case(
+     #       When(id__in=list(mule_lsaccount_ids), then=1),
+     #       default=0,
+     #       output_field=IntegerField()
+     #   )
+    #)
 
     if request.GET.get("_export") == "csv":
         response = HttpResponse(content_type="text/csv")
@@ -335,6 +346,11 @@ def create_account(request):
             account = form.save(commit=False)
             account.account_password = sha1_password(form.cleaned_data['account_password'])
             account.last_ip_address = get_client_ip(request)
+            account.last_login_date = timezone.now()
+            account.created_at = timezone.now()
+            from django.db.models import Max
+            max_id = LoginAccounts.objects.aggregate(Max('id'))['id__max'] or 0
+            account.id = max_id + 1
             account.save()
             LoginAccountOwnership.objects.create(user=request.user, login_account_id=account.id)
             logger.info('ACCOUNT_CREATE user=%s ip=%s account=%s', request.user.username, get_client_ip(request), account.account_name)
@@ -352,7 +368,7 @@ def create_account(request):
 @login_required
 def update_account(request, pk):
     """Defines view for https://url.tld/accounts/update/<int:pk>"""
-    owned_ids = get_owned_login_account_ids(request.user)
+    owned_ids = list(get_owned_login_account_ids(request.user))
     queryset = LoginAccounts.objects.filter(id=pk, id__in=owned_ids)
     if queryset.exists():
         data = queryset.values()[0]
@@ -380,7 +396,7 @@ def update_account(request, pk):
 
 @login_required
 def delete_account(request, pk):
-    owned_ids = get_owned_login_account_ids(request.user)
+    owned_ids = list(get_owned_login_account_ids(request.user))
     account = LoginAccounts.objects.filter(id=pk, id__in=owned_ids).first()
 
     if not account:

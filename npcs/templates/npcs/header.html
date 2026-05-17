@@ -22,9 +22,9 @@
     {% endif %}
 
     {% if npc_data.name %}
-        <title>{{ npc_data.name|clean_name }} - EQ Archives</title>
+        <title>{{ npc_data.name|clean_name }} - {{ site_name }}</title>
     {% else %}
-        <title>EQ Archives</title>
+        <title>{{ site_name }}</title>
     {% endif %}
     <style>
         /* Only the minimal necessary styles */

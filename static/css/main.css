@@ -1165,7 +1165,7 @@ p.text-muted {
 
 /* Footer wrapper — full-bleed, no border-radius, anchors the page bottom */
 .footer-wrapper {
-    background-color: var(--bg-secondary);
+    background-color: var(--bg-primary);
     border-top: 2px solid var(--border-color);
     border-radius: 0 !important;
     box-shadow: none !important;
@@ -2011,4 +2011,65 @@ small.form-text {
 ul.errorlist li {
     color: #ff6b6b !important;
     font-weight: 500;
+}
+
+/* Navbar logo */
+.site-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    line-height: 1;
+}
+
+.site-logo-emblem {
+    flex-shrink: 0;
+    height: 64px;
+    width: auto;
+}
+
+.logo-text-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.logo-primary {
+    font-family: 'menuetto', Georgia, serif;
+    font-size: 30px;
+    letter-spacing: 2px;
+    background: linear-gradient(to bottom, #ffe066 0%, #fcc721 45%, #b8941f 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 5px rgba(252, 199, 33, 0.5));
+    line-height: 1.1;
+}
+
+.logo-secondary {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--accent-brown-primary);
+    padding-left: 2px;
+}
+
+/* Bootstrap modal dark theme overrides */
+.modal-content {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.modal-header {
+    border-bottom-color: var(--border-color);
+}
+
+.modal-footer {
+    border-top-color: var(--border-color);
+}
+
+.modal-header .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
 }
