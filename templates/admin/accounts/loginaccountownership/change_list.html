@@ -1,6 +1,11 @@
 {% extends "admin/change_list.html" %}
 
 {% block object-tools-items %}
+  <li>
+    <a href="{{ ip_conflict_url }}" class="button" style="background:#417690; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">
+      IP Conflict Report
+    </a>
+  </li>
   {% if orphan_count %}
     <li>
       <a href="{{ cleanup_url }}" class="button" style="background:#ba2121; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">

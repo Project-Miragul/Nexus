@@ -1,0 +1,74 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+
+  <h2>IP Conflict Report</h2>
+  <p style="color:#aaa; margin-bottom:0.5em;">
+    Users whose owned login accounts were last seen from <strong>different IP addresses on the same calendar day</strong>.
+    This is an anomaly-detection tool for staff review — not a definitive violation report.
+  </p>
+  <p style="color:#888; font-size:0.9em; margin-bottom:1.5em;">
+    Common legitimate explanations include VPN use, ISP IP rotation, and NAT re-assignment.
+    Use this data to identify accounts worth closer investigation, particularly where the pattern
+    is consistent with circumventing box limits or cross-player account sharing.
+  </p>
+
+  {% if flagged_users %}
+    <p style="margin-bottom:1em;">
+      <strong>{{ flagged_count }}</strong> user–day combination{{ flagged_count|pluralize }} flagged.
+    </p>
+
+    {% regroup flagged_users by username as user_groups %}
+
+    {% for group in user_groups %}
+      <div style="margin-bottom:2em; border:1px solid #444; border-radius:4px; overflow:hidden;">
+        <div style="background:#2a3a4a; padding:8px 14px; font-size:1.05em; font-weight:bold;">
+          {{ group.grouper }}
+        </div>
+
+        {% for row in group.list %}
+          <div style="padding:10px 14px; border-top:1px solid #333;">
+            <div style="margin-bottom:6px; color:#aaa; font-size:0.9em;">
+              {{ row.date }}
+              &nbsp;·&nbsp;
+              {% for ip in row.ips %}
+                <span style="display:inline-block; background:#2a2a40; color:#a0a8ff; border-radius:3px; padding:1px 7px; margin-right:4px; font-family:monospace;">{{ ip }}</span>
+              {% endfor %}
+            </div>
+
+            <table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+              <thead>
+                <tr>
+                  <th style="text-align:left; padding:4px 10px; border-bottom:1px solid #444; color:#888;">Login Account</th>
+                  <th style="text-align:left; padding:4px 10px; border-bottom:1px solid #444; color:#888;">Last IP</th>
+                  <th style="text-align:left; padding:4px 10px; border-bottom:1px solid #444; color:#888;">Last Login (UTC)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for acct in row.accounts %}
+                <tr>
+                  <td style="padding:4px 10px; border-bottom:1px solid #2a2a2a;">{{ acct.account_name }}</td>
+                  <td style="padding:4px 10px; border-bottom:1px solid #2a2a2a; font-family:monospace; color:#e57373;">{{ acct.ip }}</td>
+                  <td style="padding:4px 10px; border-bottom:1px solid #2a2a2a; color:#aaa;">{{ acct.last_login_date }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+
+  {% else %}
+    <p style="color:#70bf2b; font-size:1.1em;">
+      ✓ No anomalies found. All login accounts owned by each user share the same last IP address per day.
+    </p>
+  {% endif %}
+
+  <p style="margin-top:1.5em;">
+    <a href="{{ changelist_url }}" class="button">Back to ownership list</a>
+  </p>
+
+</div>
+{% endblock %}

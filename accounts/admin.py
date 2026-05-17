@@ -245,6 +245,11 @@ class LoginAccountOwnershipAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.cleanup_orphaned_view),
                 name='accounts_loginaccountownership_cleanup',
             ),
+            path(
+                'ip-conflict-report/',
+                self.admin_site.admin_view(self.ip_conflict_report_view),
+                name='accounts_loginaccountownership_ip_conflicts',
+            ),
         ]
         return custom + urls
 
@@ -260,6 +265,7 @@ class LoginAccountOwnershipAdmin(admin.ModelAdmin):
         extra_context = extra_context or {}
         extra_context['orphan_count'] = orphan_count
         extra_context['cleanup_url'] = reverse('admin:accounts_loginaccountownership_cleanup')
+        extra_context['ip_conflict_url'] = reverse('admin:accounts_loginaccountownership_ip_conflicts')
         return super().changelist_view(request, extra_context=extra_context)
 
     def ls_account_status(self, obj):
@@ -306,6 +312,92 @@ class LoginAccountOwnershipAdmin(admin.ModelAdmin):
                 'title': 'Clean Up Orphaned Ownership Records',
                 'orphaned_list': orphaned_list,
                 'orphaned_count': len(orphaned_list),
+                'changelist_url': reverse('admin:accounts_loginaccountownership_changelist'),
+            },
+        )
+
+    def ip_conflict_report_view(self, request):
+        from collections import defaultdict
+
+        # Step 1: build ownership map {login_account_id: user}
+        ownerships = (
+            LoginAccountOwnership.objects
+            .select_related('user')
+            .values('login_account_id', 'user__id', 'user__username')
+        )
+        ownership_map = {
+            row['login_account_id']: {
+                'user_id': row['user__id'],
+                'username': row['user__username'],
+            }
+            for row in ownerships
+        }
+
+        if not ownership_map:
+            return TemplateResponse(
+                request,
+                'admin/accounts/loginaccountownership/ip_conflict_report.html',
+                {
+                    **self.admin_site.each_context(request),
+                    'title': 'IP Conflict Report',
+                    'flagged_users': [],
+                    'changelist_url': reverse('admin:accounts_loginaccountownership_changelist'),
+                },
+            )
+
+        # Step 2: fetch login account details from LS DB
+        ls_accounts = LoginAccounts.objects.using('login_server_database').filter(
+            id__in=list(ownership_map.keys())
+        ).values('id', 'account_name', 'last_ip_address', 'last_login_date')
+
+        # Step 3: group by (user_id, date) → collect distinct IPs + account rows
+        # {user_id: {date: {'username': ..., 'accounts': [...], 'ips': set()}}}
+        user_date_map = defaultdict(lambda: defaultdict(lambda: {'accounts': [], 'ips': set(), 'username': ''}))
+
+        for la in ls_accounts:
+            owner = ownership_map.get(la['id'])
+            if not owner:
+                continue
+            ip = (la['last_ip_address'] or '').strip()
+            login_dt = la['last_login_date']
+            if not ip or not login_dt:
+                continue
+            login_date = login_dt.date() if hasattr(login_dt, 'date') else None
+            if not login_date:
+                continue
+            bucket = user_date_map[owner['user_id']][login_date]
+            bucket['username'] = owner['username']
+            bucket['ips'].add(ip)
+            bucket['accounts'].append({
+                'account_name': la['account_name'],
+                'ip': ip,
+                'last_login_date': login_dt,
+            })
+
+        # Step 4: keep only buckets with more than one distinct IP
+        flagged_users = []
+        for user_id, date_buckets in user_date_map.items():
+            for dt, bucket in date_buckets.items():
+                if len(bucket['ips']) > 1:
+                    bucket['accounts'].sort(key=lambda a: a['last_login_date'])
+                    flagged_users.append({
+                        'user_id': user_id,
+                        'username': bucket['username'],
+                        'date': dt,
+                        'ips': sorted(bucket['ips']),
+                        'accounts': bucket['accounts'],
+                    })
+
+        flagged_users.sort(key=lambda r: (r['username'], r['date']))
+
+        return TemplateResponse(
+            request,
+            'admin/accounts/loginaccountownership/ip_conflict_report.html',
+            {
+                **self.admin_site.each_context(request),
+                'title': 'IP Conflict Report',
+                'flagged_users': flagged_users,
+                'flagged_count': len(flagged_users),
                 'changelist_url': reverse('admin:accounts_loginaccountownership_changelist'),
             },
         )
