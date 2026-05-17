@@ -24,14 +24,14 @@
                 </thead>
                 <tbody>
                 {% for server in servers %}
-                    {% if server.ServerListTypeID == 1 %}
+                    {% if server.login_server_list_type_id == 1 %}
                         <tr>
                             <td style="width: 50px;">
                                 <span style="color:green">{{ population }}</span>
                             </td>
                             <td style="width:150px;">[<a href="https://eqarchives.com/" target="_blank">View</a>]</td>
-                            <td style="width: auto;"><span style="color:orange">{{ server.ServerLongName }}</span></td>
-                            <td style="width: auto;">{{ server.ServerTagDescription }}</td>
+                            <td style="width: auto;"><span style="color:orange">{{ server.long_name }}</span></td>
+                            <td style="width: auto;">{{ server.tag_description }}</td>
                         </tr>
                     {% endif %}
                 {% empty %}

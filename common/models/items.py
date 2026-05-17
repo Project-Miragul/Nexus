@@ -9,81 +9,192 @@ class Items(models.Model):
     def __str__(self):
         return str(self.id)
 
+    # -----------------------------------------------------------------------
+    # Core identity
+    # -----------------------------------------------------------------------
     id = models.IntegerField(primary_key=True, null=False, default=0)
-    idfile = models.CharField(null=False, max_length=30)
     minstatus = models.SmallIntegerField(null=False, default=0)
-    Name = models.CharField(max_length=64, null=False, default=0)
-    aagi = models.IntegerField(null=False, default=0)
-    acha = models.IntegerField(null=False, default=0)
-    adex = models.IntegerField(null=False, default=0)
-    aint = models.IntegerField(null=False, default=0)
-    asta = models.IntegerField(null=False, default=0)
-    astr = models.IntegerField(null=False, default=0)
-    awis = models.IntegerField(null=False, default=0)
+    Name = models.CharField(max_length=64, null=False, default='')
+    idfile = models.CharField(max_length=30, null=False, default='')
+    lore = models.CharField(max_length=80, null=False, default='')
+    loregroup = models.IntegerField(null=False, default=0)
+    lore_file = models.CharField(max_length=32, null=False, default='', db_column='lorefile')
+    pendingloreflag = models.SmallIntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Classification
+    # -----------------------------------------------------------------------
+    item_class = models.IntegerField(null=False, default=0, db_column='itemclass')
+    item_type = models.IntegerField(null=False, default=0, db_column='itemtype')
+    subtype = models.IntegerField(null=False, default=0)
+    slots = models.IntegerField(null=False, default=0)
+    races = models.IntegerField(null=False, default=0)
+    classes = models.IntegerField(null=False, default=0)
+    deity = models.IntegerField(null=False, default=0)
+    size = models.IntegerField(null=False, default=0)
+    weight = models.IntegerField(null=False, default=0)
+    material = models.IntegerField(null=False, default=0)
+    herosforgemodel = models.IntegerField(null=False, default=0)
+    color = models.PositiveIntegerField(null=False, default=0)
+    light = models.IntegerField(null=False, default=0)
+    icon = models.IntegerField(null=False, default=0)
+    filename = models.CharField(max_length=32, null=False, default='')
+
+    # -----------------------------------------------------------------------
+    # Flags
+    # -----------------------------------------------------------------------
+    magic = models.IntegerField(null=False, default=0)
+    no_drop = models.IntegerField(null=False, default=0, db_column='nodrop')
+    no_rent = models.IntegerField(null=False, default=0, db_column='norent')
+    notransfer = models.IntegerField(null=False, default=0)
+    attuneable = models.IntegerField(null=False, default=0)
+    nopet = models.IntegerField(null=False, default=0)
+    fv_nodrop = models.IntegerField(null=False, default=0, db_column='fvnodrop')
+    artifactflag = models.SmallIntegerField(null=False, default=0)
+    summonedflag = models.SmallIntegerField(null=False, default=0)
+    quest_item_flag = models.IntegerField(null=False, default=0, db_column='questitemflag')
+    heirloom = models.IntegerField(null=False, default=0)
+    placeable = models.IntegerField(null=False, default=0)
+    epicitem = models.IntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Stats
+    # -----------------------------------------------------------------------
+    ac = models.IntegerField(null=False, default=0)
     hp = models.IntegerField(null=False, default=0)
     mana = models.IntegerField(null=False, default=0)
+    endur = models.IntegerField(null=False, default=0)
+    regen = models.IntegerField(null=False, default=0)
+    manaregen = models.IntegerField(null=False, default=0)
+    enduranceregen = models.IntegerField(null=False, default=0)
+    astr = models.IntegerField(null=False, default=0)
+    adex = models.IntegerField(null=False, default=0)
+    asta = models.IntegerField(null=False, default=0)
+    aagi = models.IntegerField(null=False, default=0)
+    aint = models.IntegerField(null=False, default=0)
+    awis = models.IntegerField(null=False, default=0)
+    acha = models.IntegerField(null=False, default=0)
     fr = models.IntegerField(null=False, default=0)
     dr = models.IntegerField(null=False, default=0)
     cr = models.IntegerField(null=False, default=0)
     mr = models.IntegerField(null=False, default=0)
     pr = models.IntegerField(null=False, default=0)
-    max_charges = models.IntegerField(null=False, default=0, db_column='maxcharges')
-    scroll_effect = models.IntegerField(null=False, default=0, db_column='scrolleffect')
-    scroll_type = models.IntegerField(null=False, default=0, db_column='scrolltype')
-    source = models.CharField(max_length=20, null=False)
-    icon = models.IntegerField(null=False, default=0)
-    price = models.IntegerField(null=False, default=0)
-    no_drop = models.IntegerField(null=False, default=0, db_column='nodrop')
-    no_rent = models.IntegerField(null=False, default=0, db_column='norent')
-    lore = models.CharField(max_length=80, null=False)
-    magic = models.IntegerField(null=False, default=0)
-    slots = models.IntegerField(null=False, default=0)
-    ac = models.IntegerField(null=False, default=0)
-    stackable = models.IntegerField(null=False, default=0)
-    click_effect = models.IntegerField(null=False, default=0, db_column='clickeffect')
-    click_type = models.IntegerField(null=False, default=0, db_column='clicktype')
-    worn_effect = models.IntegerField(null=False, default=0, db_column='worneffect')
-    worn_type = models.IntegerField(null=False, default=0, db_column='worntype')
-    worn_level = models.IntegerField(null=False, default=0, db_column='wornlevel')
-    worn_level2 = models.IntegerField(null=False, default=0, db_column='wornlevel2')
-    proc_type = models.IntegerField(null=False, default=0, db_column='proctype')
-    proc_level = models.IntegerField(null=False, default=0, db_column='proclevel')
-    proc_effect = models.IntegerField(null=False, default=0, db_column='proceffect')
-    cast_time = models.IntegerField(null=False, default=0, db_column='casttime')
-    focus_effect = models.IntegerField(null=False, default=0, db_column='focuseffect')
-    focus_type = models.IntegerField(null=False, default=0, db_column='focustype')
-    focus_level = models.IntegerField(null=False, default=0, db_column='focuslevel')
-    focus_level2 = models.IntegerField(null=False, default=0, db_column='focuslevel2')
-    skill_mod_type = models.IntegerField(null=False, default=0, db_column='skillmodtype')
-    skill_mod_value = models.IntegerField(null=False, default=0, db_column='skillmodvalue')
-    proc_level2 = models.IntegerField(null=False, default=0, db_column='proclevel2')
-    cast_time2 = models.IntegerField(null=False, default=0, db_column='casttime_')
-    click_level = models.IntegerField(null=False, default=0, db_column='clicklevel')
-    click_level2 = models.IntegerField(null=False, default=0, db_column='clicklevel2')
-    scroll_level = models.IntegerField(null=False, default=0, db_column='scrolllevel')
-    scroll_level2 = models.IntegerField(null=False, default=0, db_column='scrolllevel2')
-    material = models.IntegerField(null=False, default=0)
-    color = models.IntegerField(null=False, default=0)
-    light = models.IntegerField(null=False, default=0)
-    filename = models.CharField(max_length=32, null=False)
-    book = models.IntegerField(null=False, default=0)
-    booktype = models.IntegerField(null=False, default=0)
-    tradeskills = models.IntegerField(null=False, default=0)
-    stacksize = models.IntegerField(null=False, default=0)
-    recast_delay = models.IntegerField(null=False, default=0, db_column='recastdelay')
-    recast_type = models.IntegerField(null=False, default=0, db_column='recasttype')
-    proc_rate = models.IntegerField(null=False, default=0, db_column='procrate')
+    svcorruption = models.IntegerField(null=False, default=0)
+    haste = models.IntegerField(null=False, default=0)
+    attack = models.IntegerField(null=False, default=0)
+    accuracy = models.IntegerField(null=False, default=0)
+    avoidance = models.IntegerField(null=False, default=0)
+    shielding = models.IntegerField(null=False, default=0)
+    spellshield = models.IntegerField(null=False, default=0)
+    strikethrough = models.IntegerField(null=False, default=0)
+    stunresist = models.IntegerField(null=False, default=0)
+    dotshielding = models.IntegerField(null=False, default=0)
+    damageshield = models.IntegerField(null=False, default=0)
+    dsmitigation = models.SmallIntegerField(null=False, default=0)
+    purity = models.IntegerField(null=False, default=0)
+
+    # Heroic stats
+    heroic_str = models.SmallIntegerField(null=False, default=0)
+    heroic_int = models.SmallIntegerField(null=False, default=0)
+    heroic_wis = models.SmallIntegerField(null=False, default=0)
+    heroic_agi = models.SmallIntegerField(null=False, default=0)
+    heroic_dex = models.SmallIntegerField(null=False, default=0)
+    heroic_sta = models.SmallIntegerField(null=False, default=0)
+    heroic_cha = models.SmallIntegerField(null=False, default=0)
+    heroic_pr = models.SmallIntegerField(null=False, default=0)
+    heroic_dr = models.SmallIntegerField(null=False, default=0)
+    heroic_fr = models.SmallIntegerField(null=False, default=0)
+    heroic_cr = models.SmallIntegerField(null=False, default=0)
+    heroic_mr = models.SmallIntegerField(null=False, default=0)
+    heroic_svcorrup = models.SmallIntegerField(null=False, default=0)
+    healamt = models.SmallIntegerField(null=False, default=0)
+    spelldmg = models.SmallIntegerField(null=False, default=0)
+    clairvoyance = models.SmallIntegerField(null=False, default=0)
+    backstabdmg = models.SmallIntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Combat
+    # -----------------------------------------------------------------------
+    damage = models.IntegerField(null=False, default=0)
+    delay = models.IntegerField(null=False, default=0)
     range = models.IntegerField(null=False, default=0)
-    req_level = models.IntegerField(null=False, default=0, db_column='reqlevel')
-    rec_skill = models.IntegerField(null=False, default=0, db_column='recskill')
-    item_class = models.IntegerField(null=False, default=0, db_column='itemclass')
-    sell_rate = models.FloatField(null=False, default=0, db_column='sellrate')
-    fv_nodrop = models.IntegerField(null=False, default=0, db_column='fvnodrop')
     bane_dmg_amt = models.IntegerField(null=False, default=0, db_column='banedmgamt')
+    banedmgraceamt = models.IntegerField(null=False, default=0)
     bane_dmg_body = models.IntegerField(null=False, default=0, db_column='banedmgbody')
     bane_dmg_race = models.IntegerField(null=False, default=0, db_column='banedmgrace')
+    extradmgskill = models.IntegerField(null=False, default=0)
+    extradmgamt = models.IntegerField(null=False, default=0)
     elem_dmg_type = models.IntegerField(null=False, default=0, db_column='elemdmgtype')
     elem_dmg_amt = models.IntegerField(null=False, default=0, db_column='elemdmgamt')
+    combateffects = models.CharField(max_length=10, null=False, default='')
+    proc_rate = models.IntegerField(null=False, default=0, db_column='procrate')
+
+    # -----------------------------------------------------------------------
+    # Economy
+    # -----------------------------------------------------------------------
+    price = models.IntegerField(null=False, default=0)
+    sell_rate = models.FloatField(null=False, default=0, db_column='sellrate')
+    tradeskills = models.IntegerField(null=False, default=0)
+    ldonprice = models.IntegerField(null=False, default=0)
+    ldontheme = models.IntegerField(null=False, default=0)
+    ldonsold = models.IntegerField(null=False, default=0)
+    ldonsellbackrate = models.SmallIntegerField(null=False, default=0)
+    guildfavor = models.IntegerField(null=False, default=0)
+    favor = models.IntegerField(null=False, default=0)
+    pointtype = models.IntegerField(null=False, default=0)
+    potionbelt = models.IntegerField(null=False, default=0)
+    potionbeltslots = models.IntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Requirements
+    # -----------------------------------------------------------------------
+    req_level = models.IntegerField(null=False, default=0, db_column='reqlevel')
+    rec_level = models.IntegerField(null=False, default=0, db_column='reclevel')
+    rec_skill = models.IntegerField(null=False, default=0, db_column='recskill')
+    skill_mod_type = models.IntegerField(null=False, default=0, db_column='skillmodtype')
+    skill_mod_value = models.IntegerField(null=False, default=0, db_column='skillmodvalue')
+    skillmodmax = models.IntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Container
+    # -----------------------------------------------------------------------
+    bag_size = models.IntegerField(null=False, default=0, db_column='bagsize')
+    bag_slots = models.IntegerField(null=False, default=0, db_column='bagslots')
+    bag_type = models.IntegerField(null=False, default=0, db_column='bagtype')
+    bag_wr = models.IntegerField(null=False, default=0, db_column='bagwr')
+
+    # -----------------------------------------------------------------------
+    # Charges / stacking
+    # -----------------------------------------------------------------------
+    max_charges = models.IntegerField(null=False, default=0, db_column='maxcharges')
+    stackable = models.IntegerField(null=False, default=0)
+    stacksize = models.IntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Book
+    # -----------------------------------------------------------------------
+    book = models.IntegerField(null=False, default=0)
+    booktype = models.IntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Evolving items
+    # -----------------------------------------------------------------------
+    evoitem = models.IntegerField(null=False, default=0)
+    evoid = models.IntegerField(null=False, default=0)
+    evolvinglevel = models.IntegerField(null=False, default=0)
+    evomax = models.IntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Power source / misc display
+    # -----------------------------------------------------------------------
+    powersourcecapacity = models.IntegerField(null=False, default=0)
+    expendablearrow = models.SmallIntegerField(null=False, default=0)
+    elitematerial = models.SmallIntegerField(null=False, default=0)
+    scriptfileid = models.IntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Faction
+    # -----------------------------------------------------------------------
     faction_mod1 = models.IntegerField(null=False, default=0, db_column='factionmod1')
     faction_mod2 = models.IntegerField(null=False, default=0, db_column='factionmod2')
     faction_mod3 = models.IntegerField(null=False, default=0, db_column='factionmod3')
@@ -92,36 +203,198 @@ class Items(models.Model):
     faction_amt2 = models.IntegerField(null=False, default=0, db_column='factionamt2')
     faction_amt3 = models.IntegerField(null=False, default=0, db_column='factionamt3')
     faction_amt4 = models.IntegerField(null=False, default=0, db_column='factionamt4')
+
+    # -----------------------------------------------------------------------
+    # Click effect
+    # -----------------------------------------------------------------------
+    click_effect = models.IntegerField(null=False, default=0, db_column='clickeffect')
+    click_type = models.IntegerField(null=False, default=0, db_column='clicktype')
+    click_level = models.IntegerField(null=False, default=0, db_column='clicklevel')
+    click_level2 = models.IntegerField(null=False, default=0, db_column='clicklevel2')
+    clickname = models.CharField(max_length=64, null=False, default='')
+    clickunk5 = models.IntegerField(null=False, default=0)
+    clickunk6 = models.CharField(max_length=32, null=False, default='')
+    clickunk7 = models.IntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Proc effect
+    # -----------------------------------------------------------------------
+    proc_effect = models.IntegerField(null=False, default=0, db_column='proceffect')
+    proc_type = models.IntegerField(null=False, default=0, db_column='proctype')
+    proc_level = models.IntegerField(null=False, default=0, db_column='proclevel')
+    proc_level2 = models.IntegerField(null=False, default=0, db_column='proclevel2')
+    procname = models.CharField(max_length=64, null=False, default='')
+    procunk1 = models.IntegerField(null=False, default=0)
+    procunk2 = models.IntegerField(null=False, default=0)
+    procunk3 = models.IntegerField(null=False, default=0)
+    procunk4 = models.IntegerField(null=False, default=0)
+    procunk6 = models.CharField(max_length=32, null=False, default='')
+    procunk7 = models.IntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Worn effect
+    # -----------------------------------------------------------------------
+    worn_effect = models.IntegerField(null=False, default=0, db_column='worneffect')
+    worn_type = models.IntegerField(null=False, default=0, db_column='worntype')
+    worn_level = models.IntegerField(null=False, default=0, db_column='wornlevel')
+    worn_level2 = models.IntegerField(null=False, default=0, db_column='wornlevel2')
+    wornname = models.CharField(max_length=64, null=False, default='')
+    wornunk1 = models.IntegerField(null=False, default=0)
+    wornunk2 = models.IntegerField(null=False, default=0)
+    wornunk3 = models.IntegerField(null=False, default=0)
+    wornunk4 = models.IntegerField(null=False, default=0)
+    wornunk5 = models.IntegerField(null=False, default=0)
+    wornunk6 = models.CharField(max_length=32, null=False, default='')
+    wornunk7 = models.IntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Focus effect
+    # -----------------------------------------------------------------------
+    focus_effect = models.IntegerField(null=False, default=0, db_column='focuseffect')
+    focus_type = models.IntegerField(null=False, default=0, db_column='focustype')
+    focus_level = models.IntegerField(null=False, default=0, db_column='focuslevel')
+    focus_level2 = models.IntegerField(null=False, default=0, db_column='focuslevel2')
+    focusname = models.CharField(max_length=64, null=False, default='')
+    focusunk1 = models.IntegerField(null=False, default=0)
+    focusunk2 = models.IntegerField(null=False, default=0)
+    focusunk3 = models.IntegerField(null=False, default=0)
+    focusunk4 = models.IntegerField(null=False, default=0)
+    focusunk5 = models.IntegerField(null=False, default=0)
+    focusunk6 = models.CharField(max_length=32, null=False, default='')
+    focusunk7 = models.IntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Scroll effect
+    # -----------------------------------------------------------------------
+    scroll_effect = models.IntegerField(null=False, default=0, db_column='scrolleffect')
+    scroll_type = models.IntegerField(null=False, default=0, db_column='scrolltype')
+    scroll_level = models.IntegerField(null=False, default=0, db_column='scrolllevel')
+    scroll_level2 = models.IntegerField(null=False, default=0, db_column='scrolllevel2')
+    scrollname = models.CharField(max_length=64, null=False, default='')
+    scrollunk1 = models.PositiveIntegerField(null=False, default=0)
+    scrollunk2 = models.IntegerField(null=False, default=0)
+    scrollunk3 = models.IntegerField(null=False, default=0)
+    scrollunk4 = models.IntegerField(null=False, default=0)
+    scrollunk5 = models.IntegerField(null=False, default=0)
+    scrollunk6 = models.CharField(max_length=32, null=False, default='')
+    scrollunk7 = models.IntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Cast time (shared)
+    # -----------------------------------------------------------------------
+    cast_time = models.IntegerField(null=False, default=0, db_column='casttime')
+    cast_time2 = models.IntegerField(null=False, default=0, db_column='casttime_')
+    recast_delay = models.IntegerField(null=False, default=0, db_column='recastdelay')
+    recast_type = models.IntegerField(null=False, default=0, db_column='recasttype')
+
+    # -----------------------------------------------------------------------
+    # Bard effect
+    # -----------------------------------------------------------------------
     bard_type = models.IntegerField(null=False, default=0, db_column='bardtype')
     bard_value = models.IntegerField(null=False, default=0, db_column='bardvalue')
-    bard_effect = models.SmallIntegerField(null=False, default=0, db_column='bardeffect')
+    bard_effect = models.IntegerField(null=False, default=0, db_column='bardeffect')
     bard_effect_type = models.SmallIntegerField(null=False, default=0, db_column='bardeffecttype')
     bard_level = models.SmallIntegerField(null=False, default=0, db_column='bardlevel')
     bard_level2 = models.SmallIntegerField(null=False, default=0, db_column='bardlevel2')
-    updated = models.DateTimeField(null=False, default='0000-00-00 00:00:00')
-    created = models.CharField(max_length=64, null=False)
-    comment = models.CharField(max_length=255, null=False)
-    lore_file = models.CharField(max_length=32, null=False, db_column='lorefile')
-    quest_item_flag = models.IntegerField(null=False, default=0, db_column='questitemflag')
-    gm_flag = models.IntegerField(null=False, default=0, db_column='gmflag')
-    soul_bound = models.IntegerField(null=False, default=0, db_column='soulbound')
-    weight = models.IntegerField(null=False, default=0)
-    size = models.IntegerField(null=False, default=0)
-    item_type = models.IntegerField(null=False, default=0, db_column='itemtype')
-    delay = models.IntegerField(null=False, default=0)
-    classes = models.IntegerField(null=False, default=0)
-    races = models.IntegerField(null=False, default=0)
-    deity = models.IntegerField(null=False, default=0)
-    damage = models.IntegerField(null=False, default=0)
-    rec_level = models.IntegerField(null=False, default=0, db_column='reclevel')
-    bag_size = models.IntegerField(null=False, default=0, db_column='bagsize')
-    bag_slots = models.IntegerField(null=False, default=0, db_column='bagslots')
-    bag_type = models.IntegerField(null=False, default=0, db_column='bagtype')
-    bag_wr = models.IntegerField(null=False, default=0, db_column='bagwr')
+    bardname = models.CharField(max_length=64, null=False, default='')
+    bardunk1 = models.SmallIntegerField(null=False, default=0)
+    bardunk2 = models.SmallIntegerField(null=False, default=0)
+    bardunk3 = models.SmallIntegerField(null=False, default=0)
+    bardunk4 = models.SmallIntegerField(null=False, default=0)
+    bardunk5 = models.SmallIntegerField(null=False, default=0)
+    bardunk7 = models.SmallIntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Augmentation
+    # -----------------------------------------------------------------------
+    augrestrict = models.IntegerField(null=False, default=0)
+    augtype = models.IntegerField(null=False, default=0)
+    augdistiller = models.PositiveIntegerField(null=False, default=0)
+    augslot1type = models.SmallIntegerField(null=False, default=0)
+    augslot1visible = models.SmallIntegerField(null=False, default=0)
+    augslot1unk2 = models.IntegerField(null=False, default=0)
+    augslot2type = models.SmallIntegerField(null=False, default=0)
+    augslot2visible = models.SmallIntegerField(null=False, default=0)
+    augslot2unk2 = models.IntegerField(null=False, default=0)
+    augslot3type = models.SmallIntegerField(null=False, default=0)
+    augslot3visible = models.SmallIntegerField(null=False, default=0)
+    augslot3unk2 = models.IntegerField(null=False, default=0)
+    augslot4type = models.SmallIntegerField(null=False, default=0)
+    augslot4visible = models.SmallIntegerField(null=False, default=0)
+    augslot4unk2 = models.IntegerField(null=False, default=0)
+    augslot5type = models.SmallIntegerField(null=False, default=0)
+    augslot5visible = models.SmallIntegerField(null=False, default=0)
+    augslot5unk2 = models.IntegerField(null=False, default=0)
+    augslot6type = models.SmallIntegerField(null=False, default=0)
+    augslot6visible = models.SmallIntegerField(null=False, default=0)
+    augslot6unk2 = models.IntegerField(null=False, default=0)
+
+    # -----------------------------------------------------------------------
+    # Metadata
+    # -----------------------------------------------------------------------
+    source = models.CharField(max_length=20, null=False, default='')
+    charmfile = models.CharField(max_length=32, null=False, default='')
+    charmfileid = models.CharField(max_length=32, null=False, default='')
+    comment = models.CharField(max_length=255, null=False, default='')
+    created = models.CharField(max_length=64, null=False, default='')
+    updated = models.DateTimeField(null=True, blank=True)
+    serialized = models.DateTimeField(null=True, blank=True)
+    verified = models.DateTimeField(null=True, blank=True)
+    serialization = models.TextField(null=True, blank=True)
+
+    # -----------------------------------------------------------------------
+    # Unknown / reserved fields
+    # -----------------------------------------------------------------------
+    benefitflag = models.IntegerField(null=False, default=0)
+    unk012 = models.IntegerField(null=False, default=0, db_column='UNK012')
+    unk013 = models.IntegerField(null=False, default=0, db_column='UNK013')
+    unk014 = models.IntegerField(null=False, default=0, db_column='UNK014')
+    unk033 = models.IntegerField(null=False, default=0, db_column='UNK033')
+    unk054 = models.IntegerField(null=False, default=0, db_column='UNK054')
+    unk059 = models.IntegerField(null=False, default=0, db_column='UNK059')
+    unk060 = models.IntegerField(null=False, default=0, db_column='UNK060')
+    unk120 = models.IntegerField(null=False, default=0, db_column='UNK120')
+    unk121 = models.IntegerField(null=False, default=0, db_column='UNK121')
+    unk123 = models.IntegerField(null=False, default=0, db_column='UNK123')
+    unk124 = models.IntegerField(null=False, default=0, db_column='UNK124')
+    unk127 = models.IntegerField(null=False, default=0, db_column='UNK127')
+    unk132 = models.TextField(null=True, blank=True, db_column='UNK132')
+    unk134 = models.CharField(max_length=255, null=False, default='', db_column='UNK134')
+    unk137 = models.IntegerField(null=False, default=0, db_column='UNK137')
+    unk142 = models.IntegerField(null=False, default=0, db_column='UNK142')
+    unk147 = models.IntegerField(null=False, default=0, db_column='UNK147')
+    unk152 = models.IntegerField(null=False, default=0, db_column='UNK152')
+    unk157 = models.IntegerField(null=False, default=0, db_column='UNK157')
+    unk193 = models.IntegerField(null=False, default=0, db_column='UNK193')
+    unk214 = models.SmallIntegerField(null=False, default=0, db_column='UNK214')
+    unk220 = models.IntegerField(null=False, default=0, db_column='UNK220')
+    unk221 = models.IntegerField(null=False, default=0, db_column='UNK221')
+    unk223 = models.IntegerField(null=False, default=0, db_column='UNK223')
+    unk224 = models.IntegerField(null=False, default=0, db_column='UNK224')
+    unk225 = models.IntegerField(null=False, default=0, db_column='UNK225')
+    unk226 = models.IntegerField(null=False, default=0, db_column='UNK226')
+    unk227 = models.IntegerField(null=False, default=0, db_column='UNK227')
+    unk228 = models.IntegerField(null=False, default=0, db_column='UNK228')
+    unk229 = models.IntegerField(null=False, default=0, db_column='UNK229')
+    unk230 = models.IntegerField(null=False, default=0, db_column='UNK230')
+    unk231 = models.IntegerField(null=False, default=0, db_column='UNK231')
+    unk232 = models.IntegerField(null=False, default=0, db_column='UNK232')
+    unk233 = models.IntegerField(null=False, default=0, db_column='UNK233')
+    unk234 = models.IntegerField(null=False, default=0, db_column='UNK234')
+    unk236 = models.IntegerField(null=False, default=0, db_column='UNK236')
+    unk237 = models.IntegerField(null=False, default=0, db_column='UNK237')
+    unk238 = models.IntegerField(null=False, default=0, db_column='UNK238')
+    unk239 = models.IntegerField(null=False, default=0, db_column='UNK239')
+    unk240 = models.IntegerField(null=False, default=0, db_column='UNK240')
+    unk241 = models.IntegerField(null=False, default=0, db_column='UNK241')
 
     class Meta:
         db_table = 'items'
         managed = False
+
+    # -----------------------------------------------------------------------
+    # Display helpers
+    # -----------------------------------------------------------------------
 
     def get_slot_display(self):
         """Convert slots bitfield to readable format"""
@@ -254,7 +527,7 @@ class Items(models.Model):
 
         # Skill and delay - only for weapons
         skill_delay_parts = []
-        weapon_types = [0, 1, 2, 3, 4, 5, 35]  # Various weapon types
+        weapon_types = [0, 1, 2, 3, 4, 5, 35]
         if self.item_type in weapon_types:
             type_display = self.get_item_type_display()
             if "Unknown" not in type_display:
@@ -265,106 +538,78 @@ class Items(models.Model):
         if skill_delay_parts:
             lines.append(" ".join(skill_delay_parts))
 
-        # Damage
         if self.damage:
             lines.append(f"DMG: {self.damage}")
 
-        # Charges
         if self.max_charges > 0:
             lines.append(f"Charges: {self.max_charges}")
 
-        # AC
         if self.ac:
             lines.append(f"AC: {self.ac}")
 
-        # Stats
         stats = []
         stat_fields = [
             (self.astr, 'STR'), (self.adex, 'DEX'), (self.asta, 'STA'),
             (self.acha, 'CHA'), (self.awis, 'WIS'), (self.aint, 'INT'),
             (self.aagi, 'AGI'), (self.hp, 'HP')
         ]
-
         for value, display in stat_fields:
             if value:
                 stats.append(f"{display}: {self.format_stat_value(value)}")
-
         if self.mana:
             stats.append(f"MANA: +{self.mana}")
-
         if stats:
             lines.append(" ".join(stats))
 
-        # Resistances
         resists = []
         resist_fields = [
             (self.fr, 'SV FIRE'), (self.dr, 'SV DISEASE'), (self.cr, 'SV COLD'),
             (self.mr, 'SV MAGIC'), (self.pr, 'SV POISON')
         ]
-
         for value, display in resist_fields:
             if value:
                 resists.append(f"{display}: +{value}")
-
         if resists:
             lines.append(" ".join(resists))
 
-        # Focus effects and skill modifiers
         focus_mods = []
-
-        # Skill modifiers
         if self.skill_mod_value and self.skill_mod_value != 0:
             skill_name = self.get_skill_mod_display()
             focus_mods.append(f"Skill Mod: {skill_name} +{self.skill_mod_value}%")
-
-        # Focus effects (these need separate effect name lookup)
         if self.focus_effect and self.focus_effect > 0:
             if focus_effect_name:
                 focus_mods.append(f"Focus: {focus_effect_name}")
             else:
                 focus_mods.append(f"Focus Effect: {self.focus_effect}")
-
         if focus_mods:
             lines.extend(focus_mods)
 
-        # Effects (if stackable == 3 means spell effect)
         if self.stackable == 3 and effect_name:
             effects = []
-
-            # Click effects
             if self.click_type in [1, 3, 4, 5]:
                 effect_parts = [f"Effect: {effect_name}"]
                 if self.click_type == 1:
                     effect_parts.append("(Any Slot,")
                 elif self.click_type == 4:
                     effect_parts.append("(Must Equip,")
-
                 cast_time = "Instant" if self.cast_time in [0, -1] else f"{self.cast_time / 1000:.1f} sec"
                 effect_parts.append(f"Casting Time: {cast_time})")
                 effects.append(" ".join(effect_parts))
-
-            # Worn effects
             if self.worn_type == 2:
                 worn_effect = f"Effect: {effect_name} (Worn)"
                 if self.worn_effect == 998 and self.worn_level:
                     worn_effect += f" ({self.worn_level + 1}%)"
                 effects.append(worn_effect)
-
-            # Proc effects
             if self.proc_type == 0 and self.proc_effect > 0:
                 cast_time = "Instant" if self.cast_time == 0 else f"{self.cast_time / 1000:.1f} sec"
                 effects.append(f"Effect: {effect_name} (Combat, Casting Time: {cast_time}) at Level {self.proc_level}")
-
             if effects:
                 lines.extend(effects)
 
-        # Recommended level
         if self.rec_level:
             lines.append(f"Recommended level of {self.rec_level}.")
 
-        # Weight and size
         weight_parts = [f"WT: {self.get_weight_display()}"]
-
         if self.bag_type:
             if self.bag_wr:
                 weight_parts.append(f"Weight Reduction: {self.bag_wr}%")
@@ -372,15 +617,12 @@ class Items(models.Model):
             weight_parts.append(f"Size Capacity: {self.get_size_display()}")
         else:
             weight_parts.append(f"Size: {self.get_size_display()}")
-
         lines.append(" ".join(weight_parts))
 
-        # Classes
         class_display = self.get_class_restrictions_display()
         if class_display:
             lines.append(f"Class: {class_display}")
 
-        # Races
         race_display = self.get_race_restrictions_display()
         if race_display:
             lines.append(f"Race: {race_display}")

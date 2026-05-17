@@ -18,50 +18,50 @@
                         {% csrf_token %}
 
                         <div class="mb-3">
-                            <label for="id_AccountName" class="form-label fw-semibold">Account Name</label>
+                            <label for="id_account_name" class="form-label fw-semibold">Account Name</label>
                             <input type="text"
-                                   name="AccountName"
-                                   id="id_AccountName"
-                                   class="form-control{% if form.AccountName.errors %} is-invalid{% endif %}"
-                                   value="{{ form.AccountName.value|default:'' }}"
+                                   name="account_name"
+                                   id="id_account_name"
+                                   class="form-control{% if form.account_name.errors %} is-invalid{% endif %}"
+                                   value="{{ form.account_name.value|default:'' }}"
                                    maxlength="30"
                                    autocomplete="off"
                                    required>
-                            {% if form.AccountName.errors %}
-                            <div class="invalid-feedback">{{ form.AccountName.errors|join:", " }}</div>
+                            {% if form.account_name.errors %}
+                            <div class="invalid-feedback">{{ form.account_name.errors|join:", " }}</div>
                             {% endif %}
                             <div class="form-text">Used to log in to the game client. Letters and numbers only.</div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="id_AccountPassword" class="form-label fw-semibold">Password</label>
+                            <label for="id_account_password" class="form-label fw-semibold">Password</label>
                             <div class="input-group">
                                 <input type="password"
-                                       name="AccountPassword"
-                                       id="id_AccountPassword"
-                                       class="form-control{% if form.AccountPassword.errors %} is-invalid{% endif %}"
+                                       name="account_password"
+                                       id="id_account_password"
+                                       class="form-control{% if form.account_password.errors %} is-invalid{% endif %}"
                                        autocomplete="new-password"
                                        required>
                                 <button type="button" class="btn btn-outline-secondary" id="toggle-password" tabindex="-1">
                                     <i class="fas fa-eye" id="toggle-icon"></i>
                                 </button>
-                                {% if form.AccountPassword.errors %}
-                                <div class="invalid-feedback">{{ form.AccountPassword.errors|join:", " }}</div>
+                                {% if form.account_password.errors %}
+                                <div class="invalid-feedback">{{ form.account_password.errors|join:", " }}</div>
                                 {% endif %}
                             </div>
                             <div class="form-text">This is separate from your EQ Archives password.</div>
                         </div>
 
                         <div class="mb-4">
-                            <label for="id_AccountEmail" class="form-label fw-semibold">Email <span class="text-muted fw-normal">(optional)</span></label>
+                            <label for="id_account_email" class="form-label fw-semibold">Email <span class="text-muted fw-normal">(optional)</span></label>
                             <input type="email"
-                                   name="AccountEmail"
-                                   id="id_AccountEmail"
-                                   class="form-control{% if form.AccountEmail.errors %} is-invalid{% endif %}"
-                                   value="{{ form.AccountEmail.value|default:'' }}"
+                                   name="account_email"
+                                   id="id_account_email"
+                                   class="form-control{% if form.account_email.errors %} is-invalid{% endif %}"
+                                   value="{{ form.account_email.value|default:'' }}"
                                    autocomplete="email">
-                            {% if form.AccountEmail.errors %}
-                            <div class="invalid-feedback">{{ form.AccountEmail.errors|join:", " }}</div>
+                            {% if form.account_email.errors %}
+                            <div class="invalid-feedback">{{ form.account_email.errors|join:", " }}</div>
                             {% endif %}
                         </div>
 
@@ -80,7 +80,7 @@
 {% block inline_js %}
 <script>
     document.getElementById('toggle-password').addEventListener('click', function () {
-        var input = document.getElementById('id_AccountPassword');
+        var input = document.getElementById('id_account_password');
         var icon = document.getElementById('toggle-icon');
         if (input.type === 'password') {
             input.type = 'text';

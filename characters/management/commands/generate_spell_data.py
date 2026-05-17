@@ -38,91 +38,91 @@ def generate_spell_list(class_id: int):
     max_level = 60
     match class_id:
         case 1:  # Warrior - might remove, but disciplines are also spells
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes1__gte=1,
                                                    classes1__lte=max_level)
                           .annotate(level=F('classes1'))
                           .order_by('classes1', 'name'))
         case 2:  # Cleric
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes2__gte=1,
                                                    classes2__lte=max_level)
                           .annotate(level=F('classes2'))
                           .order_by('classes2', 'name'))
         case 3:  # Paladin
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes3__gte=1,
                                                    classes3__lte=max_level)
                           .annotate(level=F('classes3'))
                           .order_by('classes3', 'name'))
         case 4:  # Ranger
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes4__gte=1,
                                                    classes4__lte=max_level)
                           .annotate(level=F('classes4'))
                           .order_by('classes4', 'name'))
         case 5:  # Shadowknight
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes5__gte=1,
                                                    classes5__lte=max_level)
                           .annotate(level=F('classes5'))
                           .order_by('classes5', 'name'))
         case 6:  # Druid
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes6__gte=1,
                                                    classes6__lte=max_level)
                           .annotate(level=F('classes6'))
                           .order_by('classes6', 'name'))
         case 7:  # Monk
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes7__gte=1,
                                                    classes7__lte=max_level)
                           .annotate(level=F('classes7'))
                           .order_by('classes7', 'name'))
         case 8:  # Bard
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes8__gte=1,
                                                    classes8__lte=max_level)
                           .annotate(level=F('classes8'))
                           .order_by('classes8', 'name'))
         case 9:  # Rogue
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes9__gte=1,
                                                    classes9__lte=max_level)
                           .annotate(level=F('classes9'))
                           .order_by('classes9', 'name'))
         case 10:  # Shaman
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes10__gte=1,
                                                    classes10__lte=max_level)
                           .annotate(level=F('classes10'))
                           .order_by('classes10', 'name'))
         case 11:  # Necromancer
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes11__gte=1,
                                                    classes11__lte=max_level)
                           .annotate(level=F('classes11'))
                           .order_by('classes11', 'name'))
         case 12:  # Wizard
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes12__gte=1,
                                                    classes12__lte=max_level)
                           .annotate(level=F('classes12'))
                           .order_by('classes12', 'name'))
         case 13:  # Magician
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes13__gte=1,
                                                    classes13__lte=max_level)
                           .annotate(level=F('classes13'))
                           .order_by('classes13', 'name'))
         case 14:  # Enchanter
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes14__gte=1,
                                                    classes14__lte=max_level)
                           .annotate(level=F('classes14'))
                           .order_by('classes14', 'name'))
         case 15:  # Beastlord
-            spell_list = (SpellsNew.objects.filter(not_player_spell=0,
+            spell_list = (SpellsNew.objects.filter(
                                                    classes15__gte=1,
                                                    classes15__lte=max_level)
                           .annotate(level=F('classes15'))

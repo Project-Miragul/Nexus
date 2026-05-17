@@ -56,65 +56,65 @@ class LoginAccountOwnership(models.Model):
 
 class ServerAdminRegistration(models.Model):
     """
-    This model should be tied to the database specified in the LoginServerRouter
+    This model maps to the login_server_admins table in the login server database.
     """
 
     def __str__(self):
-        return str(self.ServerAdminID) + " - " + self.AccountName + " - " + self.Email
+        return f"{self.id} - {self.account_name} - {self.email}"
 
-    ServerAdminID = models.AutoField(primary_key=True, null=False)
-    AccountName = models.CharField(max_length=30, null=False)
-    AccountPassword = models.CharField(max_length=30, null=False)
-    FirstName = models.CharField(max_length=40, null=False)
-    LastName = models.CharField(max_length=50, null=False)
-    Email = models.EmailField(max_length=100, null=False)
-    RegistrationDate = models.DateTimeField(null=False)
-    RegistrationIPAddr = models.GenericIPAddressField(max_length=15, null=False)
+    id = models.AutoField(primary_key=True)
+    account_name = models.CharField(max_length=30, null=False)
+    account_password = models.CharField(max_length=255, null=False)
+    first_name = models.CharField(max_length=50, null=False)
+    last_name = models.CharField(max_length=50, null=False)
+    email = models.CharField(max_length=100, null=False)
+    registration_date = models.DateTimeField(null=False)
+    registration_ip_address = models.CharField(max_length=80, null=False)
 
     class Meta:
-        db_table = "tblServerAdminRegistration"
+        db_table = "login_server_admins"
         verbose_name_plural = "Server Admin Registrations"
         managed = False
 
 
 class ServerListType(models.Model):
     """
-    This model should be tied to the database specified in the LoginServerRouter
+    This model maps to the login_server_list_types table in the login server database.
     """
 
     def __str__(self):
-        return str(self.ServerListTypeID) + " - " + self.ServerListTypeDescription
+        return f"{self.id} - {self.description}"
 
-    ServerListTypeID = models.IntegerField(primary_key=True, null=False)
-    ServerListTypeDescription = models.CharField(max_length=20, null=False)
+    id = models.PositiveIntegerField(primary_key=True)
+    description = models.CharField(max_length=60, null=False)
 
     class Meta:
-        db_table = "tblServerListType"
+        db_table = "login_server_list_types"
         verbose_name_plural = "Server List Types"
         managed = False
 
 
 class WorldServerRegistration(models.Model):
     """
-    This model should be tied to the database specified in the LoginServerRouter
+    This model maps to the login_world_servers table in the login server database.
     """
 
     def __str__(self):
-        return str(self.ServerID) + " - " + str(self.ServerLongName) + " - " + str(self.ServerTagDescription)
+        return f"{self.id} - {self.long_name} - {self.tag_description}"
 
-    ServerID = models.AutoField(primary_key=True, null=False)
-    ServerLongName = models.CharField(max_length=100, null=False)
-    ServerTagDescription = models.CharField(max_length=50, null=False)
-    ServerShortName = models.CharField(max_length=25, null=False)
-    ServerListTypeID = models.IntegerField(null=False, default=3)
-    ServerLastLoginDate = models.DateField(null=True)
-    ServerLastIPAddr = models.GenericIPAddressField(null=True)
-    ServerAdminID = models.IntegerField(null=False)
-    ServerTrusted = models.IntegerField(null=False)
-    Note = models.CharField(max_length=300, null=True)
+    id = models.AutoField(primary_key=True)
+    long_name = models.CharField(max_length=100, null=False)
+    short_name = models.CharField(max_length=100, null=False)
+    tag_description = models.CharField(max_length=50, null=False, default='')
+    login_server_list_type_id = models.IntegerField(null=False, default=3)
+    last_login_date = models.DateTimeField(null=True, blank=True)
+    last_ip_address = models.CharField(max_length=80, null=True, blank=True)
+    login_server_admin_id = models.IntegerField(null=False)
+    is_server_trusted = models.IntegerField(null=False)
+    note = models.CharField(max_length=255, null=True, blank=True)
 
     class Meta:
-        db_table = "tblWorldServerRegistration"
+        db_table = "login_world_servers"
         verbose_name_plural = "World Server Registrations"
         managed = False
 

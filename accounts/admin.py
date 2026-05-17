@@ -166,17 +166,17 @@ class LoginAccountsAdmin(admin.ModelAdmin):
 
 
 class ServerAdminRegistrationAdmin(admin.ModelAdmin):
-    list_display = ["ServerAdminID", "AccountName", "Email", "RegistrationDate", "RegistrationIPAddr"]
+    list_display = ["id", "account_name", "email", "registration_date", "registration_ip_address"]
 
 
 class ServerListTypeAdmin(admin.ModelAdmin):
-    ordering = ('ServerListTypeID',)
-    list_display = ["ServerListTypeID", "ServerListTypeDescription"]
+    ordering = ('id',)
+    list_display = ["id", "description"]
 
 
 class WorldServerRegistrationAdmin(admin.ModelAdmin):
-    list_display = ["ServerLongName", "ServerTagDescription", "ServerListTypeID", "ServerTrusted", "ServerAdminID",
-                    "ServerLastLoginDate"]
+    list_display = ["long_name", "tag_description", "login_server_list_type_id", "is_server_trusted",
+                    "login_server_admin_id", "last_login_date"]
 
 
 class AccountAdmin(admin.ModelAdmin):
