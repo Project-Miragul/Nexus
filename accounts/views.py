@@ -632,10 +632,10 @@ def inventory_search(request):
             params_list = []
             where_conditions = []
 
-            base_query = """SELECT ci.itemid,
+            base_query = """SELECT ci.item_id,
                               i.icon,
                               i.Name,
-                              ci.slotid,
+                              ci.slot_id,
                               ci.charges,
                               i.maxcharges,
                               i.stackable,
@@ -643,8 +643,8 @@ def inventory_search(request):
                               cd.name
                        FROM account as acc
                                 JOIN character_data as cd ON acc.id = cd.account_id
-                                JOIN character_inventory as ci ON cd.id = ci.id
-                                JOIN items as i ON i.id = ci.itemid"""
+                                JOIN inventory as ci ON cd.id = ci.character_id
+                                JOIN items as i ON i.id = ci.item_id"""
 
             # Add spell effect joins if needed
             if item_effect:

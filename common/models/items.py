@@ -669,7 +669,7 @@ class DiscoveredItems(models.Model):
     """
     item_id = models.OneToOneField(Items, on_delete=models.DO_NOTHING, primary_key=True, db_column='item_id')
     char_name = models.CharField(max_length=64, null=False)
-    discovered_date = models.IntegerField(null=False, default=0)
+    discovered_date = models.PositiveIntegerField(null=False, default=0)
     account_status = models.IntegerField(null=False, default=0)
 
     class Meta:

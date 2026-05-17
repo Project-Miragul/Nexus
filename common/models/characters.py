@@ -1,7 +1,6 @@
 from django.db import models
 from django.db.models import SmallIntegerField
 from common.models.spells import SpellsNew
-from common.models.items import Items
 
 
 class Characters(models.Model):
@@ -126,20 +125,20 @@ class Characters(models.Model):
 
 class CharacterAlternateAbility(models.Model):
     id = models.PositiveIntegerField(primary_key=True)
-    slot = models.PositiveSmallIntegerField()
     aa_id = models.PositiveSmallIntegerField(default=0)
     aa_value = models.PositiveSmallIntegerField(default=0)
+    charges = models.PositiveSmallIntegerField(default=0)
 
     class Meta:
         db_table = 'character_alternate_abilities'
         verbose_name_plural = 'Character Alternate Abilities'
         managed = False
         constraints = [
-            models.UniqueConstraint(fields=['id', 'slot'], name='unique_id_slot')
+            models.UniqueConstraint(fields=['id', 'aa_id'], name='unique_id_aa_id')
         ]
 
     def __str__(self):
-        return f"Character {self.id} - Slot {self.slot} - AA {self.aa_id}"
+        return f"Character {self.id} - AA {self.aa_id}"
 
 
 class CharacterCurrency(models.Model):
@@ -163,6 +162,10 @@ class CharacterCurrency(models.Model):
     gold_cursor = models.IntegerField(null=False, default=0)
     silver_cursor = models.IntegerField(null=False, default=0)
     copper_cursor = models.IntegerField(null=False, default=0)
+    radiant_crystals = models.PositiveIntegerField(null=False, default=0)
+    career_radiant_crystals = models.PositiveIntegerField(null=False, default=0)
+    ebon_crystals = models.PositiveIntegerField(null=False, default=0)
+    career_ebon_crystals = models.PositiveIntegerField(null=False, default=0)
 
     class Meta:
         db_table = 'character_currency'
@@ -171,55 +174,69 @@ class CharacterCurrency(models.Model):
 
 class CharacterFactionValues(models.Model):
     """
-    This model maps to the character_faction_values table in the database.
+    This model maps to the faction_values table in the database.
     """
 
     def __str__(self):
         return str(self.faction_id)
 
-    id = models.IntegerField(primary_key=True, null=False, default=None)
-    faction_id = models.IntegerField(null=False, unique=True, default=None)
+    char_id = models.IntegerField(primary_key=True, null=False, default=None)
+    faction_id = models.IntegerField(null=False, default=None)
     current_value = SmallIntegerField(null=False, default=0)
     temp = SmallIntegerField(null=False, default=0)
 
     class Meta:
-        db_table = "character_faction_values"
+        db_table = "faction_values"
         managed = False
+        constraints = [
+            models.UniqueConstraint(fields=['char_id', 'faction_id'], name='unique_char_faction')
+        ]
 
 
 class CharacterInventory(models.Model):
     """
-    This model maps to the character_inventory table in the database.
+    This model maps to the inventory table in the database.
     """
 
     def __str__(self):
         return str(self.item_id)
 
-    id = models.IntegerField(primary_key=True, null=False, default=None)
-    slot_id = models.IntegerField(null=False, unique=True, default=None, db_column='slotid')
-    item_id = models.IntegerField(null=True, default=0, db_column='itemid')
-    charges = models.SmallIntegerField(null=False, default=0)
+    character_id = models.IntegerField(primary_key=True, null=False, default=None)
+    slot_id = models.IntegerField(null=False, default=None)
+    item_id = models.IntegerField(null=True, default=0)
+    charges = models.SmallIntegerField(null=True, default=0)
+    color = models.PositiveIntegerField(null=False, default=0)
+    augment_one = models.PositiveIntegerField(null=False, default=0)
+    augment_two = models.PositiveIntegerField(null=False, default=0)
+    augment_three = models.PositiveIntegerField(null=False, default=0)
+    augment_four = models.PositiveIntegerField(null=False, default=0)
+    augment_five = models.PositiveIntegerField(null=False, default=0)
+    augment_six = models.PositiveIntegerField(null=False, default=0)
+    instnodrop = models.SmallIntegerField(null=False, default=0)
     custom_data = models.TextField(null=True, default="")
-    serial_number = models.IntegerField(null=False, default=0, db_column='serialnumber')
-    initial_serial = models.SmallIntegerField(null=False, default=0, db_column='initialserial')
+    ornament_icon = models.PositiveIntegerField(null=False, default=0)
+    ornament_idfile = models.PositiveIntegerField(null=False, default=0)
+    ornament_hero_model = models.IntegerField(null=False, default=0)
+    guid = models.BigIntegerField(null=False, default=0)
 
     class Meta:
-        db_table = "character_inventory"
+        db_table = "inventory"
         managed = False
 
 
 class CharacterKeyring(models.Model):
     """
-    This model maps to the character_keyring table in the database
+    This model maps to the keyring table in the database
     """
     def __str__(self):
-        return self.item_id.id
+        return str(self.item_id)
 
-    id = models.OneToOneField(Characters, primary_key=True, on_delete=models.RESTRICT, db_column='id')
-    item_id = models.OneToOneField(Items, on_delete=models.RESTRICT, db_column='item_id')
+    id = models.AutoField(primary_key=True)
+    char_id = models.IntegerField(null=False, default=0)
+    item_id = models.IntegerField(null=False, default=0)
 
     class Meta:
-        db_table = 'character_keyring'
+        db_table = 'keyring'
         managed = False
 
 
@@ -248,13 +265,16 @@ class CharacterSkills(models.Model):
     def __str__(self):
         return str(self.value)
 
-    id = models.IntegerField(primary_key=True, null=False, default=None)
-    skill_id = models.SmallIntegerField(null=False, default=0)
-    value = SmallIntegerField(null=False, default=0)
+    id = models.AutoField(primary_key=True)
+    skill_id = models.PositiveSmallIntegerField(null=False, default=0)
+    value = models.PositiveSmallIntegerField(null=False, default=0)
 
     class Meta:
         db_table = "character_skills"
         managed = False
+        constraints = [
+            models.UniqueConstraint(fields=['id', 'skill_id'], name='unique_char_skill')
+        ]
 
 
 class CharacterSpells(models.Model):
@@ -263,14 +283,17 @@ class CharacterSpells(models.Model):
     """
 
     def __str__(self):
-        return self.spell_id
+        return str(self.spell_id_id)
 
-    id = models.IntegerField(primary_key=True, null=False, default=0)
-    slot_id = models.SmallIntegerField(null=False, default=0)
+    id = models.AutoField(primary_key=True)
+    slot_id = models.PositiveSmallIntegerField(null=False, default=0)
     spell_id = models.ForeignKey(SpellsNew, on_delete=models.RESTRICT, db_column='spell_id')
 
     class Meta:
         db_table = 'character_spells'
         managed = False
+        constraints = [
+            models.UniqueConstraint(fields=['id', 'slot_id'], name='unique_char_spell_slot')
+        ]
 
 

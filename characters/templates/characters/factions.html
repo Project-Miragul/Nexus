@@ -43,22 +43,14 @@
                                             </tr>
                                             </thead>
                                             <tbody>
-                                            {% for id, name, modifiers, min_cap, max_cap, value in character_faction_values %}
+                                            {% for id, name, modifiers, value in character_faction_values %}
                                                 <tr>
                                                     <td>
                                                         <a href="/factions/view/{{ id }}"
                                                            target="_blank">{{ name }}</a></td>
                                                     <td>{{ value }}</td>
                                                     <td>{{ modifiers }}</td>
-                                                    {% with con_value=value|add:modifiers %}
-                                                        {% if con_value < min_cap %}
-                                                            <td>{{ min_cap }}</td>
-                                                        {% elif con_value > max_cap %}
-                                                            <td>{{ max_cap }}</td>
-                                                        {% else %}
-                                                            <td>{{ value|add:modifiers }}</td>
-                                                        {% endif %}
-                                                    {% endwith %}
+                                                    <td>{{ value|add:modifiers }}</td>
                                                     {% with con_level=value|add:modifiers|faction_level %}
                                                         {% if con_level == "Max Scowls" %}
                                                             <td style="color:#990000">{{ con_level }}</td>

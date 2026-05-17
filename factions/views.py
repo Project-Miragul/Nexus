@@ -40,15 +40,13 @@ def search(request):
         cursor = connections['game_database'].cursor()
         query = """SELECT
                     faction_list.id,
-                    faction_list.NAME,
-                    faction_list.min_cap,
-                    faction_list.max_cap 
+                    faction_list.NAME
                   FROM
-                    faction_list 
+                    faction_list
                   WHERE
-                    faction_list.NAME LIKE %s 
+                    faction_list.NAME LIKE %s
                   ORDER BY
-                    faction_list.NAME 
+                    faction_list.NAME
                     LIMIT %s"""
         cursor.execute(query, ["%" + faction_name + "%", query_limit])
         faction_results = cursor.fetchall()
@@ -70,10 +68,7 @@ def view_faction(request, faction_id):
         faction_name_query = """SELECT
                                     faction_list.id,
                                     faction_list.NAME,
-                                    faction_list.base,
-                                    faction_list.see_illusion,
-                                    faction_list.min_cap,
-                                    faction_list.max_cap 
+                                    faction_list.base
                                 FROM
                                     faction_list
                                 WHERE
@@ -149,7 +144,7 @@ def view_faction(request, faction_id):
             cursor.execute(character_query, [tuple(ls_account_ids)])
             result = cursor.fetchall()
             character_faction_list = []
-            CharacterFaction = namedtuple("FactionTableRow", "id name modified_base min_cap max_cap current_value")
+            CharacterFaction = namedtuple("FactionTableRow", "id name modified_base current_value")
             for cd_id, cd_name, cd_race, cd_class, cd_deity in result:
                 character_faction = get_specific_faction_information(cd_id, cd_race, cd_class, cd_deity,
                                                                      faction_info[1]) # faction name

@@ -61,14 +61,14 @@ def view_zone(request, short_name):
     ground_spawn_results = cursor.fetchall()
 
     SpawnPoint = namedtuple('SpawnPoint', ['x', 'y', 'z', 'respawntime', 'variance', 'min_expansion',
-                                                'max_expansion', 'enabled'])
-    cursor.execute("""SELECT DISTINCT spawngroupID, x, y, z, respawntime, variance, min_expansion, max_expansion, enabled 
-                      FROM spawn2 
+                                                'max_expansion'])
+    cursor.execute("""SELECT DISTINCT spawngroupID, x, y, z, respawntime, variance, min_expansion, max_expansion
+                      FROM spawn2
                       WHERE zone = %s""", [zone_data.short_name])
     spawn_point_results = cursor.fetchall()
     spawn_points = list()
     for sp in spawn_point_results:
-        point = SpawnPoint(sp[1], sp[2], sp[3], sp[4], sp[5], sp[6], sp[7], sp[8])
+        point = SpawnPoint(sp[1], sp[2], sp[3], sp[4], sp[5], sp[6], sp[7])
         spawn_entry_results = SpawnEntry.objects.filter(spawngroupID=sp[0]).exclude(npcID__race='127')
         if spawn_entry_results:
             spawn_points.append((point, spawn_entry_results))

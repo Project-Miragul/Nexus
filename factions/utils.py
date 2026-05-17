@@ -12,13 +12,13 @@ def get_specific_faction_information(character_id: int,
                                      deity_id: int,
                                      faction_name: str) -> namedtuple:
     cursor = connections['game_database'].cursor()
-    faction_query = """SELECT fl.id, fl.name, fl.base, fl.min_cap, fl.max_cap, cfv.current_value
-           FROM character_faction_values as cfv LEFT OUTER JOIN faction_list as fl ON fl.id  = cfv.faction_id
-           WHERE cfv.id = %s AND fl.name = %s"""
+    faction_query = """SELECT fl.id, fl.name, fl.base, cfv.current_value
+           FROM faction_values as cfv LEFT OUTER JOIN faction_list as fl ON fl.id = cfv.faction_id
+           WHERE cfv.char_id = %s AND fl.name = %s"""
     cursor.execute(faction_query, [character_id, faction_name])
     result = cursor.fetchone()
-    FactionTableRow = namedtuple("FactionTableRow", "id name base min_cap max_cap current_value")
-    CharacterFaction = namedtuple("FactionTableRow", "id name modified_base min_cap max_cap current_value")
+    FactionTableRow = namedtuple("FactionTableRow", "id name base current_value")
+    CharacterFaction = namedtuple("CharacterFaction", "id name modified_base current_value")
     faction = ()
     if result is not None:
         race_mod_name = ''.join(['r', str(race_id)])
@@ -36,6 +36,6 @@ def get_specific_faction_information(character_id: int,
             if deity_mod_name == modifier.mod_name:
                 fm.deity_mod = modifier.mod
         modified_base = fm.base_mod + fm.race_mod + fm.class_mod + fm.deity_mod
-        faction = CharacterFaction(result[0], result[1], modified_base, result[3], result[4], result[5])
+        faction = CharacterFaction(result[0], result[1], modified_base, result[3])
     return faction
 

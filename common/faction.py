@@ -72,9 +72,6 @@ class Faction:
     id: int
     base: int
     name: str
-    see_illusion: bool
-    min_cap: int
-    max_cap: int
 
 
 @dataclass

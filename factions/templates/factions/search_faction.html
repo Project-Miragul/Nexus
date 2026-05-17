@@ -38,16 +38,12 @@
                     <thead>
                     <tr>
                         <th>Faction Name</th>
-                        <th>Min Cap</th>
-                        <th>Max Cap</th>
                     </tr>
                     </thead>
                     <tbody>
-                    {% for id, name, min_cap, max_cap in faction_results %}
+                    {% for id, name in faction_results %}
                         <tr>
                             <td><a href="/factions/view/{{ id }}">{{ name }}</a></td>
-                            <td>{{ min_cap }}</td>
-                            <td>{{ max_cap }}</td>
                         </tr>
                     {% endfor %}
                     </tbody>

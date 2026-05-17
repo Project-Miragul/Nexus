@@ -12,9 +12,6 @@ class FactionList(models.Model):
     id = models.IntegerField(primary_key=True, null=False)
     name = models.CharField(max_length=50, null=False)
     base = models.SmallIntegerField(null=False, default=0)
-    see_illusion = models.SmallIntegerField(null=False, default=1)
-    min_cap = models.SmallIntegerField(null=False, default=0)
-    max_cap = models.SmallIntegerField(null=False, default=0)
 
     class Meta:
         db_table = 'faction_list'
@@ -33,7 +30,7 @@ class FactionListMod(models.Model):
         return f"{self.id}, {self.mod_name}, {self.mod}"
 
     id = models.AutoField(primary_key=True, null=False)
-    faction_id = models.IntegerField(unique=True, null=False)
+    faction_id = models.PositiveIntegerField(null=False)
     mod = models.SmallIntegerField(null=False)
     mod_name = models.CharField(max_length=16, null=False)
 

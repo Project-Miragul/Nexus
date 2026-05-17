@@ -137,7 +137,7 @@ def character_profile(request: HttpRequest, character_name: str) -> HttpResponse
 
     # Get guild info using proper model relationships
     try:
-        guild_member = GuildMembers.objects.select_related('guild_id').get(char_id=character)
+        guild_member = GuildMembers.objects.select_related('guild_id').get(char_id=character.id)
         guild_info = {
             'name': guild_member.guild_id.name,
             'rank': guild_member.rank
