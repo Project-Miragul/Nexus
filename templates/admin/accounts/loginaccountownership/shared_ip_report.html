@@ -1,0 +1,100 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+
+  <h2>Shared IP Report</h2>
+  <p style="color:#aaa; margin-bottom:0.5em;">
+    Game accounts belonging to <strong>different web users</strong> that have connected
+    from the same IP address. Based on <code>account_ip</code> game connection records —
+    not just last login.
+  </p>
+  <p style="color:#888; font-size:0.9em; margin-bottom:1.25em;">
+    Common legitimate explanations include household networks, college dorms, and shared
+    NAT. Use the connection count threshold to filter out one-off coincidences and surface
+    patterns consistent with box-limit circumvention or account sharing.
+  </p>
+
+  <!-- Min-count filter -->
+  <form method="get" style="margin-bottom:1.5em; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+    <label for="min_count" style="color:#ccc; font-size:0.9em;">Min connections from shared IP:</label>
+    <input type="number" id="min_count" name="min_count" value="{{ min_count }}" min="1"
+           style="width:70px; background:#1a1a2a; color:#fff; border:1px solid #444; border-radius:3px; padding:3px 7px; font-size:0.9em;">
+    <button type="submit" class="button" style="padding:4px 14px;">Apply</button>
+    {% if min_count != default_min_count %}
+      <a href="?" style="color:#aaa; font-size:0.85em;">Reset to default ({{ default_min_count }})</a>
+    {% endif %}
+  </form>
+
+  {% if ip_groups %}
+    <p style="margin-bottom:1em; color:#ccc;">
+      <strong>{{ flagged_count }}</strong> IP{{ flagged_count|pluralize }} shared across
+      2+ web accounts with ≥ {{ min_count }} connection{{ min_count|pluralize }} each.
+    </p>
+
+    {% for group in ip_groups %}
+      <div style="margin-bottom:1.5em; border:1px solid {% if group.is_exempt %}#3a5a3a{% else %}#554444{% endif %}; border-radius:4px; overflow:hidden;">
+
+        <!-- IP header -->
+        <div style="background:{% if group.is_exempt %}#1e3a1e{% else %}#3a1e1e{% endif %}; padding:8px 14px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+          <span style="font-family:monospace; font-size:1.05em; font-weight:bold; color:{% if group.is_exempt %}#90c890{% else %}#e57373{% endif %};">
+            {{ group.ip }}
+          </span>
+          <span style="color:#aaa; font-size:0.9em;">
+            {{ group.user_count }} web user{{ group.user_count|pluralize }}
+            &nbsp;·&nbsp;
+            {{ group.entries|length }} game account{{ group.entries|length|pluralize }}
+            &nbsp;·&nbsp;
+            {{ group.total_connections }} total connection{{ group.total_connections|pluralize }}
+          </span>
+          {% if group.is_exempt %}
+            <span style="background:#2a5a2a; color:#90e890; border-radius:3px; padding:1px 8px; font-size:0.85em; font-weight:bold;">
+              EXEMPT &mdash; {{ group.exemption_amount }} allowed
+            </span>
+          {% else %}
+            <span style="background:#5a2a2a; color:#e89090; border-radius:3px; padding:1px 8px; font-size:0.85em; font-weight:bold;">
+              NOT EXEMPT
+            </span>
+          {% endif %}
+        </div>
+
+        <!-- Per-account rows -->
+        <table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+          <thead>
+            <tr>
+              <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#888;">Web User</th>
+              <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#888;">Game Account</th>
+              <th style="text-align:right; padding:5px 12px; border-bottom:1px solid #444; color:#888;">Connections</th>
+              <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#888;">Last Used (UTC)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in group.entries %}
+            <tr>
+              <td style="padding:4px 12px; border-bottom:1px solid #2a2a2a;">{{ entry.username }}</td>
+              <td style="padding:4px 12px; border-bottom:1px solid #2a2a2a; font-family:monospace;">{{ entry.account_name }}</td>
+              <td style="padding:4px 12px; border-bottom:1px solid #2a2a2a; text-align:right; color:#c8a060;">{{ entry.count }}</td>
+              <td style="padding:4px 12px; border-bottom:1px solid #2a2a2a; color:#aaa;">{{ entry.lastused }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+
+      </div>
+    {% endfor %}
+
+  {% else %}
+    <p style="color:#70bf2b; font-size:1.1em;">
+      ✓ No shared IPs found at a minimum of {{ min_count }} connection{{ min_count|pluralize }}.
+      {% if min_count > 1 %}
+        Try <a href="?min_count=1" style="color:#70bf2b;">lowering the threshold</a> to see all shared IPs.
+      {% endif %}
+    </p>
+  {% endif %}
+
+  <p style="margin-top:1.5em;">
+    <a href="{{ changelist_url }}" class="button">Back to ownership list</a>
+  </p>
+
+</div>
+{% endblock %}

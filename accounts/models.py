@@ -167,3 +167,35 @@ class Account(models.Model):
         managed = False
         permissions = [('can_suspend_accounts', 'Can suspend and lift player game accounts')]
 
+
+class IpExemption(models.Model):
+    """
+    Maps to the ip_exemptions table in the game database.
+    An entry here means the given IP is allowed exemption_amount concurrent connections
+    instead of the server default box limit.
+    """
+    exemption_id = models.AutoField(primary_key=True)
+    exemption_ip = models.CharField(max_length=255, null=True, blank=True)
+    exemption_amount = models.IntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = "ip_exemptions"
+        managed = False
+
+
+class AccountIp(models.Model):
+    """
+    Maps to the account_ip table in the game database.
+    Tracks every IP address a game account has connected from, with a hit count
+    and the last time that IP was used.  Composite PK (accid + ip).
+    """
+    accid = models.IntegerField(primary_key=True)
+    ip = models.CharField(max_length=32)
+    count = models.IntegerField(default=1)
+    lastused = models.DateTimeField()
+
+    class Meta:
+        db_table = "account_ip"
+        managed = False
+        unique_together = [('accid', 'ip')]
+

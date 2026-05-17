@@ -10,6 +10,8 @@ from django.utils import timezone
 
 from .models import (
     Account,
+    AccountIp,
+    IpExemption,
     LoginAccounts,
     LoginAccountOwnership,
     ServerAdminRegistration,
@@ -250,6 +252,11 @@ class LoginAccountOwnershipAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.ip_conflict_report_view),
                 name='accounts_loginaccountownership_ip_conflicts',
             ),
+            path(
+                'shared-ip-report/',
+                self.admin_site.admin_view(self.shared_ip_report_view),
+                name='accounts_loginaccountownership_shared_ip',
+            ),
         ]
         return custom + urls
 
@@ -266,6 +273,7 @@ class LoginAccountOwnershipAdmin(admin.ModelAdmin):
         extra_context['orphan_count'] = orphan_count
         extra_context['cleanup_url'] = reverse('admin:accounts_loginaccountownership_cleanup')
         extra_context['ip_conflict_url'] = reverse('admin:accounts_loginaccountownership_ip_conflicts')
+        extra_context['shared_ip_url'] = reverse('admin:accounts_loginaccountownership_shared_ip')
         return super().changelist_view(request, extra_context=extra_context)
 
     def ls_account_status(self, obj):
@@ -398,6 +406,152 @@ class LoginAccountOwnershipAdmin(admin.ModelAdmin):
                 'title': 'IP Conflict Report',
                 'flagged_users': flagged_users,
                 'flagged_count': len(flagged_users),
+                'changelist_url': reverse('admin:accounts_loginaccountownership_changelist'),
+            },
+        )
+
+
+    def shared_ip_report_view(self, request):
+        from collections import defaultdict
+
+        DEFAULT_MIN_COUNT = 2
+        try:
+            min_count = max(1, int(request.GET.get('min_count', DEFAULT_MIN_COUNT)))
+        except (ValueError, TypeError):
+            min_count = DEFAULT_MIN_COUNT
+
+        # Step 1: ownership map {login_account_id: {user_id, username}}
+        ownerships = (
+            LoginAccountOwnership.objects
+            .select_related('user')
+            .values('login_account_id', 'user__id', 'user__username')
+        )
+        ownership_map = {
+            row['login_account_id']: {
+                'user_id': row['user__id'],
+                'username': row['user__username'],
+            }
+            for row in ownerships
+        }
+
+        empty_ctx = {
+            **self.admin_site.each_context(request),
+            'title': 'Shared IP Report',
+            'ip_groups': [],
+            'flagged_count': 0,
+            'min_count': min_count,
+            'default_min_count': DEFAULT_MIN_COUNT,
+            'changelist_url': reverse('admin:accounts_loginaccountownership_changelist'),
+        }
+
+        if not ownership_map:
+            return TemplateResponse(
+                request,
+                'admin/accounts/loginaccountownership/shared_ip_report.html',
+                empty_ctx,
+            )
+
+        # Step 2: game accounts keyed by lsaccount_id (game DB)
+        # {lsaccount_id: {accid, account_name}}
+        game_accounts = (
+            Account.objects.using('game_database')
+            .filter(lsaccount_id__in=list(ownership_map.keys()))
+            .values('id', 'name', 'lsaccount_id')
+        )
+        # Two maps for the join in step 4
+        accid_to_lsid = {}       # accid → lsaccount_id
+        accid_to_name = {}       # accid → game account name
+        for ga in game_accounts:
+            accid_to_lsid[ga['id']] = ga['lsaccount_id']
+            accid_to_name[ga['id']] = ga['name']
+
+        if not accid_to_lsid:
+            return TemplateResponse(
+                request,
+                'admin/accounts/loginaccountownership/shared_ip_report.html',
+                empty_ctx,
+            )
+
+        # Step 3: account_ip rows for owned game accounts, filtered by min_count (game DB)
+        account_ips = (
+            AccountIp.objects.using('game_database')
+            .filter(accid__in=list(accid_to_lsid.keys()), count__gte=min_count)
+            .values('accid', 'ip', 'count', 'lastused')
+        )
+
+        # Step 4: group by IP → collect (web user, game account, count, lastused) per IP
+        # {ip: {'users': {user_id: username}, 'entries': [...]}}
+        ip_map = defaultdict(lambda: {'users': {}, 'entries': []})
+
+        for row in account_ips:
+            lsid = accid_to_lsid.get(row['accid'])
+            if lsid is None:
+                continue
+            owner = ownership_map.get(lsid)
+            if not owner:
+                continue
+            ip = (row['ip'] or '').strip()
+            if not ip:
+                continue
+            bucket = ip_map[ip]
+            bucket['users'][owner['user_id']] = owner['username']
+            bucket['entries'].append({
+                'accid': row['accid'],
+                'account_name': accid_to_name.get(row['accid'], str(row['accid'])),
+                'user_id': owner['user_id'],
+                'username': owner['username'],
+                'count': row['count'],
+                'lastused': row['lastused'],
+            })
+
+        # Step 5: keep only IPs shared across 2+ distinct web users
+        flagged_ips = {
+            ip: data
+            for ip, data in ip_map.items()
+            if len(data['users']) >= 2
+        }
+
+        # Step 6: fetch exemptions for flagged IPs (game DB, targeted query)
+        exemption_map = {}
+        if flagged_ips:
+            exemptions = (
+                IpExemption.objects.using('game_database')
+                .filter(exemption_ip__in=list(flagged_ips.keys()))
+                .values('exemption_ip', 'exemption_amount')
+            )
+            exemption_map = {
+                row['exemption_ip']: row['exemption_amount']
+                for row in exemptions
+            }
+
+        # Step 7: build sorted output
+        ip_groups = []
+        for ip, data in flagged_ips.items():
+            # Sort entries: by username then account name, then descending count
+            data['entries'].sort(key=lambda e: (e['username'], e['account_name'], -e['count']))
+            ip_groups.append({
+                'ip': ip,
+                'user_count': len(data['users']),
+                'users': sorted(data['users'].values()),
+                'entries': data['entries'],
+                'total_connections': sum(e['count'] for e in data['entries']),
+                'exemption_amount': exemption_map.get(ip),
+                'is_exempt': ip in exemption_map,
+            })
+
+        # Non-exempt first, then by descending user count, then descending total connections
+        ip_groups.sort(key=lambda g: (g['is_exempt'], -g['user_count'], -g['total_connections']))
+
+        return TemplateResponse(
+            request,
+            'admin/accounts/loginaccountownership/shared_ip_report.html',
+            {
+                **self.admin_site.each_context(request),
+                'title': 'Shared IP Report',
+                'ip_groups': ip_groups,
+                'flagged_count': len(ip_groups),
+                'min_count': min_count,
+                'default_min_count': DEFAULT_MIN_COUNT,
                 'changelist_url': reverse('admin:accounts_loginaccountownership_changelist'),
             },
         )
