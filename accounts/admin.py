@@ -8,6 +8,7 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone
 
+from .forms import LoginAccountOwnershipAdminForm
 from .models import (
     Account,
     AccountIp,
@@ -236,8 +237,18 @@ class LoginAccountOwnershipAdmin(admin.ModelAdmin):
     list_display = ['id', 'user', 'login_account_id', 'ls_account_status', 'created_at']
     list_filter = [OrphanedFilter]
     search_fields = ['user__username', 'login_account_id']
-    readonly_fields = ['user', 'login_account_id', 'created_at']
     ordering = ['user__username', 'login_account_id']
+
+    def get_form(self, request, obj=None, **kwargs):
+        if obj is None:
+            kwargs['form'] = LoginAccountOwnershipAdminForm
+        return super().get_form(request, obj, **kwargs)
+
+    def get_readonly_fields(self, request, obj=None):
+        if obj:
+            # Existing record — lock the core fields to prevent accidental edits
+            return ['user', 'login_account_id', 'created_at']
+        return ['created_at']
 
     def get_urls(self):
         urls = super().get_urls()
