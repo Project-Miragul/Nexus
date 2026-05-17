@@ -32,6 +32,9 @@ from django.http import HttpResponse
 
 admin.site.site_header = "Nexus Accounts Administration"
 
+handler404 = 'accounts.views.handler404'
+handler500 = 'accounts.views.handler500'
+
 def robots_txt(request):
     lines = [
         "User-agent: *",

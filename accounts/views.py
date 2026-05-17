@@ -843,3 +843,16 @@ def inventory_search(request):
                   template_name="accounts/inventory_search.html",
                   context=context
                   )
+
+
+# ---------------------------------------------------------------------------
+# Custom error handlers — use render() so context processors run and
+# template variables like site_name are available in the navbar.
+# ---------------------------------------------------------------------------
+
+def handler404(request, exception=None):
+    return render(request, '404.html', status=404)
+
+
+def handler500(request):
+    return render(request, '500.html', status=500)

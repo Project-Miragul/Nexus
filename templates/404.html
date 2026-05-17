@@ -1,18 +1,14 @@
-{% extends "accounts/header.html" %}
+{% extends "base.html" %}
+{% block title %}404 — Page Not Found | {{ site_name }}{% endblock %}
 {% block content %}
-    <div class="container py-5">
-        <h1>Whoops!</h1>
-        <h5>Quoth the server, 404 (page not found).</h5>
-        {% if exception %}
-            <div style="margin-top: 10px;">
-            {{ exception }}
-            </div>
-            <div style="margin-top: 10px;">
-            <p>Try our <a href="https://wiki.eqarchives.com">Wiki</a> instead.</p>
-            </div>
-        {% else %}
-            <p>Either the page you are looking for does not exist, or your lock-picking skill is too low!
-                Seriously though, try our <a href="https://wiki.eqarchives.com/">Wiki</a> instead.</p>
-        {% endif %}
-    </div>
+<div class="container py-5">
+    <h1>Page not found.</h1>
+    <h4>404 — Not Found</h4>
+    {% if exception %}
+        <p>{{ exception }}</p>
+    {% else %}
+        <p>Either the page you're looking for doesn't exist, or your lock-picking skill is too low.</p>
+    {% endif %}
+    <p><a href="/">Return to the home page.</a></p>
+</div>
 {% endblock %}
