@@ -1,0 +1,16 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools-items %}
+  {% if orphan_count %}
+    <li>
+      <a href="{{ cleanup_url }}" class="button" style="background:#ba2121; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">
+        Clean Up {{ orphan_count }} Orphaned Record{{ orphan_count|pluralize }}
+      </a>
+    </li>
+  {% else %}
+    <li>
+      <span style="padding:5px 12px; color:#70bf2b; font-weight:bold;">✓ No orphaned records</span>
+    </li>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}

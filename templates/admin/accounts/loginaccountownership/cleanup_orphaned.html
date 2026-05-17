@@ -1,0 +1,53 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+
+  <h2>Clean Up Orphaned Ownership Records</h2>
+
+  {% if orphaned_count %}
+    <p>
+      The following <strong>{{ orphaned_count }}</strong> record{{ orphaned_count|pluralize }}
+      reference login account ID{{ orphaned_count|pluralize }} that no longer exist in the
+      login server database. Deleting them is safe and will not affect active players.
+    </p>
+
+    <table class="table" style="width:100%; border-collapse:collapse; margin-bottom:1.5em;">
+      <thead>
+        <tr>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555;">ID</th>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555;">Web User</th>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555;">Orphaned LS Account ID</th>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555;">Created At</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in orphaned_list %}
+        <tr>
+          <td style="padding:5px 12px; border-bottom:1px solid #333;">{{ row.id }}</td>
+          <td style="padding:5px 12px; border-bottom:1px solid #333;">{{ row.user__username }}</td>
+          <td style="padding:5px 12px; border-bottom:1px solid #333; color:#e57373;">{{ row.login_account_id }}</td>
+          <td style="padding:5px 12px; border-bottom:1px solid #333;">{{ row.created_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="confirmed" value="yes">
+      <button type="submit" class="button default" style="background:#ba2121; color:#fff; margin-right:10px;">
+        Delete {{ orphaned_count }} orphaned record{{ orphaned_count|pluralize }}
+      </button>
+      <a href="{{ changelist_url }}" class="button">Cancel</a>
+    </form>
+
+  {% else %}
+    <p style="color:#70bf2b; font-size:1.1em;">
+      ✓ No orphaned records found. All ownership entries have a corresponding login server account.
+    </p>
+    <a href="{{ changelist_url }}" class="button">Back to list</a>
+  {% endif %}
+
+</div>
+{% endblock %}

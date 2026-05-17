@@ -3,7 +3,9 @@ from datetime import timedelta
 from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
+from django.http import HttpResponseRedirect
 from django.template.response import TemplateResponse
+from django.urls import path, reverse
 from django.utils import timezone
 
 from .models import (
@@ -200,3 +202,113 @@ admin.site.register(ServerAdminRegistration, ServerAdminRegistrationAdmin)
 admin.site.register(ServerListType, ServerListTypeAdmin)
 admin.site.register(WorldServerRegistration, WorldServerRegistrationAdmin)
 admin.site.register(Account, AccountAdmin)
+
+
+# ---------------------------------------------------------------------------
+# LoginAccountOwnership admin — includes orphan cleanup tool
+# ---------------------------------------------------------------------------
+
+class OrphanedFilter(admin.SimpleListFilter):
+    title = 'login account status'
+    parameter_name = 'orphaned'
+
+    def lookups(self, request, model_admin):
+        return [
+            ('yes', 'Orphaned (login account missing)'),
+            ('no', 'Valid (login account exists)'),
+        ]
+
+    def queryset(self, request, queryset):
+        existing_ids = list(
+            LoginAccounts.objects.using('login_server_database').values_list('id', flat=True)
+        )
+        if self.value() == 'yes':
+            return queryset.exclude(login_account_id__in=existing_ids)
+        if self.value() == 'no':
+            return queryset.filter(login_account_id__in=existing_ids)
+        return queryset
+
+
+class LoginAccountOwnershipAdmin(admin.ModelAdmin):
+    change_list_template = 'admin/accounts/loginaccountownership/change_list.html'
+    list_display = ['id', 'user', 'login_account_id', 'ls_account_status', 'created_at']
+    list_filter = [OrphanedFilter]
+    search_fields = ['user__username', 'login_account_id']
+    readonly_fields = ['user', 'login_account_id', 'created_at']
+    ordering = ['user__username', 'login_account_id']
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path(
+                'cleanup-orphaned/',
+                self.admin_site.admin_view(self.cleanup_orphaned_view),
+                name='accounts_loginaccountownership_cleanup',
+            ),
+        ]
+        return custom + urls
+
+    # Batch-load existing LS IDs so the changelist column isn't N+1
+    def changelist_view(self, request, extra_context=None):
+        existing_ids = set(
+            LoginAccounts.objects.using('login_server_database').values_list('id', flat=True)
+        )
+        request._ls_existing_ids = existing_ids
+        orphan_count = LoginAccountOwnership.objects.exclude(
+            login_account_id__in=existing_ids
+        ).count()
+        extra_context = extra_context or {}
+        extra_context['orphan_count'] = orphan_count
+        extra_context['cleanup_url'] = reverse('admin:accounts_loginaccountownership_cleanup')
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def ls_account_status(self, obj):
+        existing = getattr(obj, '_ls_existing_ids', None)
+        if existing is None:
+            exists = LoginAccounts.objects.using('login_server_database').filter(
+                id=obj.login_account_id
+            ).exists()
+        else:
+            exists = obj.login_account_id in existing
+        if exists:
+            return '✓ Exists'
+        return '✗ Missing'
+    ls_account_status.short_description = 'LS Account'
+
+    def cleanup_orphaned_view(self, request):
+        existing_ids = list(
+            LoginAccounts.objects.using('login_server_database').values_list('id', flat=True)
+        )
+        orphaned_qs = LoginAccountOwnership.objects.exclude(login_account_id__in=existing_ids)
+
+        if request.method == 'POST' and request.POST.get('confirmed') == 'yes':
+            count = orphaned_qs.count()
+            orphaned_qs.delete()
+            self.message_user(
+                request,
+                f'Deleted {count} orphaned LoginAccountOwnership record(s).',
+                messages.SUCCESS,
+            )
+            return HttpResponseRedirect(
+                reverse('admin:accounts_loginaccountownership_changelist')
+            )
+
+        orphaned_list = list(
+            orphaned_qs.select_related('user').values(
+                'id', 'user__username', 'login_account_id', 'created_at'
+            )
+        )
+        return TemplateResponse(
+            request,
+            'admin/accounts/loginaccountownership/cleanup_orphaned.html',
+            {
+                **self.admin_site.each_context(request),
+                'title': 'Clean Up Orphaned Ownership Records',
+                'orphaned_list': orphaned_list,
+                'orphaned_count': len(orphaned_list),
+                'changelist_url': reverse('admin:accounts_loginaccountownership_changelist'),
+            },
+        )
+
+
+admin.site.register(LoginAccountOwnership, LoginAccountOwnershipAdmin)
