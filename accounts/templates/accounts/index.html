@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block title %}{{ site_name }} — Player Portal{% endblock %}
+{% block body_class %}page-home{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -17,11 +18,32 @@ body {
     ) !important;
 }
 
+/* Full-width layout — remove main-content padding so sections bleed edge to edge */
+.page-home .main-content {
+    padding: 0 !important;
+}
+
+/* Strip the global container card styling for this full-width page */
+.hero-section .container,
+.page-section .container {
+    background: transparent !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding-left: 3rem;
+    padding-right: 3rem;
+}
+@media (max-width: 768px) {
+    .hero-section .container,
+    .page-section .container {
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
 /* ── Hero ── */
 .hero-section {
-    padding: 70px 0 60px;
+    padding: 90px 0 80px;
     background: linear-gradient(135deg, #1a1a20 0%, #2a2a35 100%);
-    border-bottom: 2px solid #444;
     overflow: hidden;
 }
 
@@ -34,20 +56,21 @@ body {
     -webkit-text-fill-color: transparent;
     background-clip: text;
     filter: drop-shadow(0 0 8px rgba(252, 199, 33, 0.4));
-    margin-bottom: 0.5rem;
-    line-height: 1.1;
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
 }
 
 .hero-subtitle {
     color: #cccccc;
     font-size: 1.15rem;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.85rem;
 }
 
 .hero-tagline {
     color: #999;
     font-size: 0.95rem;
-    margin-bottom: 2rem;
+    line-height: 1.7;
+    margin-bottom: 2.25rem;
     max-width: 480px;
 }
 
@@ -83,7 +106,7 @@ body {
 
 /* ── Shared section styles ── */
 .page-section {
-    padding: 60px 0;
+    padding: 80px 0;
     background-color: #0b0b10;
     border-bottom: 1px solid #2a2a35;
 }
@@ -91,11 +114,12 @@ body {
     color: #8aa3ff;
     font-size: 1.75rem;
     font-weight: 700;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
 }
 .section-subtitle {
     color: #999;
     margin-bottom: 0;
+    line-height: 1.6;
 }
 
 /* ── Feature cards ── */
@@ -103,7 +127,7 @@ body {
     background: #1a1a20;
     border: 1px solid #333;
     border-radius: 10px;
-    padding: 1.75rem;
+    padding: 2.25rem;
     height: 100%;
     transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
 }
@@ -115,29 +139,37 @@ body {
 .feature-icon {
     font-size: 2.4rem;
     color: #8aa3ff;
-    margin-bottom: 0.9rem;
+    margin-bottom: 1.1rem;
 }
 .feature-title {
     color: #c8d6ff;
     font-size: 1.1rem;
     font-weight: 700;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.75rem;
 }
 .feature-text {
     color: #aaa;
     font-size: 0.9rem;
-    line-height: 1.6;
+    line-height: 1.7;
     margin: 0;
 }
 
 /* ── Expansion pills ── */
 .expansion-tag {
     display: inline-block;
-    margin: 0.5rem;
+    margin: 0.4rem;
     transition: all 0.3s ease;
     cursor: pointer;
 }
 .expansion-tag:hover { transform: scale(1.05); }
+.expansion-tag span {
+    display: inline-block;
+    /*padding: 0.45rem 1.1rem;*/
+    border-radius: 5px;
+    /*font-size: 0.875rem;*/
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
 .kunark span  { background: #2D4A1E; color: #A8D878; }
 .velious span { background: #4a4a5a; color: #c8ccd8; }
 .luclin span  { background: #1a1a5a; color: #a0a0f0; }
@@ -154,7 +186,7 @@ body {
     background: #1a1a20;
     border: 1px solid #333;
     border-radius: 10px;
-    padding: 2.5rem;
+    padding: 3rem 2.5rem;
     text-align: center;
 }
 
@@ -163,10 +195,10 @@ body {
     background: #1a1a20;
     border: 1px solid #333;
     border-radius: 10px;
-    padding: 1.75rem;
+    padding: 2.25rem;
     height: 100%;
 }
-.step-title { color: #8aa3ff; font-weight: 700; }
+.step-title { color: #8aa3ff; font-weight: 700; margin-bottom: 0.85rem; }
 
 /* ── Code block ── */
 pre {
@@ -183,6 +215,8 @@ pre {
     border-color: var(--accent-color, #fcc721) !important;
     color: #111 !important;
     font-weight: 700;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
 }
 .btn-primary:hover {
     background-color: #ffe066 !important;
@@ -191,6 +225,8 @@ pre {
 .btn-outline-secondary {
     border-color: #555 !important;
     color: #ccc !important;
+    padding-top: 0.6rem;
+    padding-bottom: 0.6rem;
 }
 .btn-outline-secondary:hover {
     background-color: #2a2a35 !important;
@@ -201,7 +237,7 @@ pre {
     color: #fff;
     font-weight: 700;
     border: none;
-    padding: 0.55rem 1.5rem;
+    padding: 0.7rem 2rem;
     border-radius: 6px;
     text-decoration: none;
     display: inline-block;
@@ -212,10 +248,11 @@ pre {
 /* ── Checklist ── */
 .check-list li {
     color: #bbb;
-    margin-bottom: 0.75rem;
+    margin-bottom: 1rem;
     display: flex;
     align-items: flex-start;
-    gap: 0.6rem;
+    gap: 0.75rem;
+    line-height: 1.6;
 }
 .check-list .fa-check-circle { color: #8aa3ff; margin-top: 3px; flex-shrink: 0; }
 </style>
@@ -275,7 +312,7 @@ pre {
 </section>
 
 <!-- ══════════ FEATURES ══════════ -->
-<section class="page-section">
+<section class="page-section" style="background: #1a1a20;">
     <div class="container">
         <div class="row text-center mb-5">
             <div class="col-12">
@@ -427,7 +464,7 @@ pre {
                     <p style="color:#999; font-size:0.9rem;" class="mb-3">
                         Get the Rain of Fear 2 (RoF2) client for Windows (limited support for Linux under WINE)</p>
                     <div class="d-flex flex-wrap gap-2">
-                        <a href="https://www.dropbox.com/s/bppy4ebt7vl7hwk/TAKP%20PC%20V2.1c.zip?dl=0"
+                        <a href="https://archive.org/details/everquest_rof2"
                            class="btn btn-primary btn-sm" target="_blank" rel="noopener noreferrer">
                             <i class="fas fa-download me-1"></i>Windows Client
                         </a>
@@ -440,7 +477,7 @@ pre {
             </div>
             <div class="col-lg-4">
                 <div class="step-card">
-                    <h3 class="step-title h5 mb-3">2. Point at Our Server</h3>
+                    <h3 class="step-title h5 mb-3">2. Point at Our Login Server</h3>
                     <p style="color:#999; font-size:0.9rem;" class="mb-3">
                         Update your <code>eqhost.txt</code> with our login server address.</p>
                     <pre class="small mb-0"><code>[LoginServer]
