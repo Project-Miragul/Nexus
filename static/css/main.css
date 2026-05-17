@@ -112,6 +112,9 @@ body {
         rgba(255,255,255,0.02) 4px
     );
     color: var(--text-primary);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 .container {
@@ -907,7 +910,7 @@ p.text-muted {
 /* Layout Container */
 .layout-container {
     display: flex;
-    min-height: calc(100vh - 60px); /* Adjust based on your actual navbar height */
+    flex: 1; /* grows to fill remaining body height; footer always visible */
 }
 
 /* Side Navigation */
