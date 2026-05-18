@@ -1,27 +1,25 @@
 {% extends "admin/change_list.html" %}
 
 {% block object-tools-items %}
-  <li>
+  <li style="display:flex; align-items:center; gap:6px;">
+    <span style="font-size:0.7em; color:#445; text-transform:uppercase; letter-spacing:0.08em; padding-right:4px;">Investigate</span>
     <a href="{{ character_map_url }}" class="button"
-       style="background:#417690; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">
+       style="background:#2a3a4a; color:#8aa3ff; padding:5px 12px; border-radius:4px; font-weight:bold;">
       Character Map
     </a>
   </li>
-  <li>
+  <li style="display:flex; align-items:center; gap:6px; border-left:1px solid #2a2a2a; margin-left:4px; padding-left:10px;">
+    <span style="font-size:0.7em; color:#445; text-transform:uppercase; letter-spacing:0.08em; padding-right:4px;">Reports</span>
     <a href="{{ shared_email_url }}" class="button"
-       style="background:#417690; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">
+       style="background:#1e2a1e; color:#8ab88a; padding:5px 12px; border-radius:4px; font-weight:bold;">
       Shared Emails
     </a>
-  </li>
-  <li>
     <a href="{{ high_velocity_url }}" class="button"
-       style="background:#417690; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">
+       style="background:#1e2a1e; color:#8ab88a; padding:5px 12px; border-radius:4px; font-weight:bold;">
       High Velocity
     </a>
-  </li>
-  <li>
     <a href="{{ mfa_status_url }}" class="button"
-       style="background:#417690; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">
+       style="background:#1e2a1e; color:#8ab88a; padding:5px 12px; border-radius:4px; font-weight:bold;">
       MFA Status
     </a>
   </li>

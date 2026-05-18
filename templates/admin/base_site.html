@@ -9,4 +9,31 @@
 {% endif %}
 {% endblock %}
 
-{% block nav-global %}{% endblock %}
+{% block nav-global %}
+<nav id="nexus-staff-nav" style="background:#111; border-top:1px solid #222; padding:5px 20px; display:flex; gap:0; align-items:center;">
+  <a href="{% url 'admin:index' %}"
+     style="color:#556; font-size:0.8em; text-decoration:none; padding:3px 10px 3px 0;">
+    Dashboard
+  </a>
+  <span style="color:#2a2a2a; margin:0 2px;">|</span>
+  <a href="{% url 'admin:accounts_user_character_map' %}"
+     style="color:#7a9fd4; font-size:0.8em; text-decoration:none; font-weight:bold; padding:3px 10px;">
+    Character Map
+  </a>
+  <span style="color:#2a2a2a; margin:0 2px;">|</span>
+  <a href="{% url 'admin:accounts_loginaccountownership_ip_conflicts' %}"
+     style="color:#556; font-size:0.8em; text-decoration:none; padding:3px 10px;">
+    IP Conflicts
+  </a>
+  <span style="color:#2a2a2a; margin:0 2px;">|</span>
+  <a href="{% url 'admin:accounts_loginaccountownership_shared_ip' %}"
+     style="color:#556; font-size:0.8em; text-decoration:none; padding:3px 10px;">
+    Shared IPs
+  </a>
+  <span style="color:#2a2a2a; margin:0 2px;">|</span>
+  <a href="{% url 'admin:accounts_account_suspended_dashboard' %}"
+     style="color:#556; font-size:0.8em; text-decoration:none; padding:3px 10px;">
+    Suspended
+  </a>
+</nav>
+{% endblock %}

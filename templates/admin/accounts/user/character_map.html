@@ -37,7 +37,19 @@
               {% endfor %}
             </span>
           </div>
-          <p style="color:#555; font-size:0.85em; margin:0 0 1em 0;">{{ row.user.email|default:"no email" }}</p>
+          <p style="color:#555; font-size:0.85em; margin:0 0 0.6em 0;">{{ row.user.email|default:"no email" }}</p>
+          <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:0.8em;">
+            <a href="{% url 'admin:auth_user_change' row.user.id %}"
+               style="font-size:0.78em; padding:2px 10px; background:#1a2a3a; color:#8aa3ff; border-radius:3px; text-decoration:none;">Edit User</a>
+            <a href="{% url 'admin:accounts_user_quick_action' row.user.id 'suspend' %}"
+               style="font-size:0.78em; padding:2px 10px; background:#2a1800; color:#e8a060; border-radius:3px; text-decoration:none;">Suspend</a>
+            <a href="{% url 'admin:accounts_user_quick_action' row.user.id 'lift-suspension' %}"
+               style="font-size:0.78em; padding:2px 10px; background:#1a2a1a; color:#8ab88a; border-radius:3px; text-decoration:none;">Lift Suspension</a>
+            <a href="{% url 'admin:accounts_user_quick_action' row.user.id 'ban' %}"
+               style="font-size:0.78em; padding:2px 10px; background:#2a0a0a; color:#e07070; border-radius:3px; text-decoration:none;">Ban</a>
+            <a href="{% url 'admin:accounts_user_quick_action' row.user.id 'lift-ban' %}"
+               style="font-size:0.78em; padding:2px 10px; background:#1a2a1a; color:#8ab88a; border-radius:3px; text-decoration:none;">Lift Ban</a>
+          </div>
 
           {% if row.login_accounts %}
             {% for la in row.login_accounts %}

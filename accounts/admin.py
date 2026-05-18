@@ -266,6 +266,11 @@ class CustomUserAdmin(BaseUserAdmin):
                 self.admin_site.admin_view(self.mfa_status_view),
                 name='accounts_user_mfa_status',
             ),
+            path(
+                'quick-action/<int:user_id>/<str:action_type>/',
+                self.admin_site.admin_view(self.quick_action_view),
+                name='accounts_user_quick_action',
+            ),
         ]
         return custom + urls
 
@@ -476,6 +481,85 @@ class CustomUserAdmin(BaseUserAdmin):
                 'unlinked_results': unlinked_results,
                 'searched': searched,
                 'changelist_url': reverse('admin:auth_user_changelist'),
+            },
+        )
+
+    def quick_action_view(self, request, user_id, action_type):
+        from django.contrib.auth.models import User as AuthUser
+        from django.shortcuts import get_object_or_404
+
+        VALID_ACTIONS = ('suspend', 'lift-suspension', 'ban', 'lift-ban')
+        if action_type not in VALID_ACTIONS:
+            from django.http import Http404
+            raise Http404
+
+        if not request.user.has_perm('accounts.can_suspend_accounts'):
+            self.message_user(request, "You don't have permission to perform this action.", messages.ERROR)
+            return HttpResponseRedirect(reverse('admin:accounts_user_character_map'))
+
+        user = get_object_or_404(AuthUser, pk=user_id)
+        return_url = reverse('admin:accounts_user_character_map') + f'?q={user.username}'
+        now = timezone.now()
+
+        ls_ids = _ls_ids_for_users([user.username])
+        game_accounts = list(
+            _game_accounts_qs(ls_ids)
+            .values('id', 'name', 'revoked', 'ban_reason', 'suspendeduntil', 'suspend_reason')
+        )
+
+        if request.method == 'POST':
+            reason = request.POST.get('reason', '').strip() or f'Action by admin'
+            toggle_web = request.POST.get('toggle_web') == '1'
+
+            if action_type == 'suspend':
+                try:
+                    duration_days = max(1, int(request.POST.get('duration_days', 7)))
+                except (ValueError, TypeError):
+                    duration_days = 7
+                _game_accounts_qs(ls_ids).update(
+                    suspendeduntil=now + timedelta(days=duration_days),
+                    suspend_reason=reason,
+                )
+                if toggle_web:
+                    user.is_active = False
+                    user.save()
+            elif action_type == 'lift-suspension':
+                _game_accounts_qs(ls_ids).update(
+                    suspendeduntil=now - timedelta(seconds=1),
+                    suspend_reason='',
+                )
+                if toggle_web:
+                    user.is_active = True
+                    user.save()
+            elif action_type == 'ban':
+                _game_accounts_qs(ls_ids).update(revoked=1, ban_reason=reason)
+                if toggle_web:
+                    user.is_active = False
+                    user.save()
+            elif action_type == 'lift-ban':
+                _game_accounts_qs(ls_ids).update(revoked=0, ban_reason='')
+                if toggle_web:
+                    user.is_active = True
+                    user.save()
+
+            self.message_user(
+                request,
+                f"Applied '{action_type}' for {user.username}.",
+                messages.SUCCESS,
+            )
+            return HttpResponseRedirect(return_url)
+
+        return TemplateResponse(
+            request,
+            'admin/accounts/user/quick_action.html',
+            {
+                **self.admin_site.each_context(request),
+                'title': f'{action_type.replace("-", " ").title()} — {user.username}',
+                'action_user': user,
+                'action_type': action_type,
+                'game_accounts': game_accounts,
+                'return_url': return_url,
+                'now': now,
             },
         )
 

@@ -21,6 +21,7 @@
           <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Suspended Until (UTC)</th>
           <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Reason</th>
           <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Status</th>
+          <th style="padding:6px 12px; border-bottom:1px solid #555;"></th>
         </tr>
       </thead>
       <tbody>
@@ -39,6 +40,12 @@
           <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; color:#e8a060;">{{ acct.suspendeduntil }}</td>
           <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; color:#aaa;">{{ acct.suspend_reason|default:"—" }}</td>
           <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a;">{{ acct.status }}</td>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; white-space:nowrap;">
+            {% if acct.web_username != '—' %}
+              <a href="{% url 'admin:accounts_user_character_map' %}?q={{ acct.web_username }}"
+                 style="font-size:0.8em; color:#8aa3ff; text-decoration:none;">Investigate &rarr;</a>
+            {% endif %}
+          </td>
         </tr>
         {% endfor %}
       </tbody>
