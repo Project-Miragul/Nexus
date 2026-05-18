@@ -103,17 +103,35 @@
             <div class="card shadow-sm mb-4 border-warning">
                 <div class="card-body py-3 px-3">
 
-                    <!-- Row 1: Petitioner info + Reassign -->
+                    <!-- Row 1: Petitioner info + Investigate + Reassign -->
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 mb-2">
                         <div class="small">
                             <span class="text-muted">Petitioner:</span>
                             <strong>{{ petition.user.username }}</strong>
-                            <span class="text-muted ms-3">Account created:</span>
+                            <a href="/admin/accounts/user/character-map/?q={{ petition.user.username }}"
+                               class="ms-2 btn btn-outline-primary btn-sm py-0 px-2"
+                               style="font-size:0.75rem;" title="Open in Character Map">
+                                <i class="fas fa-search me-1"></i>Investigate
+                            </a>
+                            <span class="text-muted ms-3">Joined:</span>
                             {{ petition.user.date_joined|date:"M j, Y" }}
                             {% if petition.claimed_by %}
                             <span class="text-muted ms-3">Claimed by:</span>
                             <strong>{{ petition.claimed_by.username }}</strong>
                             {% endif %}
+
+                            {# World account status badges #}
+                            {% for acct in player_accounts %}
+                              {% if acct.is_banned %}
+                              <span class="badge bg-danger ms-2">
+                                <i class="fas fa-ban me-1"></i>{{ acct.name }} BANNED
+                              </span>
+                              {% elif acct.is_suspended %}
+                              <span class="badge bg-warning text-dark ms-2">
+                                <i class="fas fa-clock me-1"></i>{{ acct.name }} SUSPENDED until {{ acct.suspendeduntil|date:"M j, Y" }}
+                              </span>
+                              {% endif %}
+                            {% endfor %}
                         </div>
 
                         <!-- Reassign -->
@@ -163,6 +181,27 @@
                         </a>
                     </div>
                     {% endif %}
+
+                    <!-- Row 3: Account actions -->
+                    <div class="d-flex flex-wrap gap-2 mt-2 pt-2 border-top border-secondary border-opacity-25">
+                        <span class="text-muted small align-self-center">Account actions:</span>
+                        <a href="/admin/accounts/user/quick-action/{{ petition.user.pk }}/suspend/"
+                           class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size:0.8rem;">
+                            <i class="fas fa-clock me-1"></i>Suspend
+                        </a>
+                        <a href="/admin/accounts/user/quick-action/{{ petition.user.pk }}/lift-suspension/"
+                           class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:0.8rem;">
+                            Lift Suspension
+                        </a>
+                        <a href="/admin/accounts/user/quick-action/{{ petition.user.pk }}/ban/"
+                           class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:0.8rem;">
+                            <i class="fas fa-ban me-1"></i>Ban
+                        </a>
+                        <a href="/admin/accounts/user/quick-action/{{ petition.user.pk }}/lift-ban/"
+                           class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size:0.8rem;">
+                            Lift Ban
+                        </a>
+                    </div>
 
                 </div>
             </div>

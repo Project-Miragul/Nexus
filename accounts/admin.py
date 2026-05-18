@@ -448,6 +448,22 @@ class CustomUserAdmin(BaseUserAdmin):
                         )
                         characters_by_account.setdefault(ch['account_id'], []).append(ch)
 
+                # Petition counts per user (default DB, no cross-DB join needed)
+                from petitions.models import Petition as PetitionModel
+                petition_rows = (
+                    PetitionModel.objects
+                    .filter(user_id__in=all_user_ids)
+                    .values('user_id', 'status')
+                )
+                petition_counts = {}
+                for pr in petition_rows:
+                    uid = pr['user_id']
+                    if uid not in petition_counts:
+                        petition_counts[uid] = {'total': 0, 'active': 0}
+                    petition_counts[uid]['total'] += 1
+                    if pr['status'] in PetitionModel.ACTIVE_STATUSES:
+                        petition_counts[uid]['active'] += 1
+
                 for user in users:
                     ls_ids_for_user = ownership_by_user.get(user['id'], [])
                     login_accounts = []
@@ -468,6 +484,7 @@ class CustomUserAdmin(BaseUserAdmin):
                         'user': user,
                         'login_accounts': login_accounts,
                         'match_reasons': match_reasons.get(user['id'], []),
+                        'petition_counts': petition_counts.get(user['id'], {'total': 0, 'active': 0}),
                     })
 
                 results.sort(key=lambda r: r['user']['username'])

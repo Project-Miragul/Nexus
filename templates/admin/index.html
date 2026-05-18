@@ -32,6 +32,9 @@
 
   .nexus-tile--new .tile-num { color: var(--nx-new-num); }
 
+  .nexus-tile--petitions { background: var(--nx-sus-bg); border-color: var(--nx-sus-border); }
+  .nexus-tile--petitions .tile-num { color: var(--nx-sus-num); }
+
   /* ---- Quick-link panels ---- */
   .nexus-panel {
     background: var(--nx-panel-bg);
@@ -135,6 +138,14 @@
       </div>
     </a>
 
+    <a href="/petitions/staff/" class="nexus-tile-link" style="text-decoration:none;">
+      <div class="nexus-tile {% if counts.open_petitions %}nexus-tile--petitions{% endif %}">
+        <div class="tile-num">{{ counts.open_petitions }}</div>
+        <div class="tile-label">Open Petitions</div>
+        {% if not counts.open_petitions %}<div class="tile-ok">&#10003; none</div>{% endif %}
+      </div>
+    </a>
+
   </div>
 
   {# ------------------------------------------------------------------ #}
@@ -195,6 +206,30 @@
       <a href="{% url 'admin:accounts_webloginhistory_changelist' %}" class="nexus-ql-link">
         Web Login History
         <span class="desc">Recent portal login activity</span>
+      </a>
+    </div>
+
+    <div class="nexus-panel">
+      <h3>Petitions</h3>
+      <a href="/petitions/staff/" class="nexus-ql-link">
+        Staff Queue
+        <span class="desc">All open, claimed, and pending petitions</span>
+      </a>
+      <a href="/petitions/staff/?status=open" class="nexus-ql-link">
+        Unclaimed
+        <span class="desc">Open petitions not yet claimed by anyone</span>
+      </a>
+      <a href="/petitions/staff/?status=pending_player" class="nexus-ql-link">
+        Awaiting Player
+        <span class="desc">Petitions waiting on player response</span>
+      </a>
+      <a href="/petitions/staff/tags/" class="nexus-ql-link">
+        Manage Tags
+        <span class="desc">Create and delete staff workflow tags</span>
+      </a>
+      <a href="/petitions/staff/canned-responses/" class="nexus-ql-link">
+        Canned Responses
+        <span class="desc">Reusable reply templates</span>
       </a>
     </div>
 

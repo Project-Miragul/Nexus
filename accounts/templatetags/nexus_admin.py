@@ -15,6 +15,7 @@ def nexus_dashboard_counts():
         'unlinked': 0,
         'new_today': 0,
         'web_users': 0,
+        'open_petitions': 0,
     }
     try:
         now = timezone.now()
@@ -38,6 +39,10 @@ def nexus_dashboard_counts():
         counts['unlinked'] = len(all_ls_ids - linked_ids)
         counts['new_today'] = User.objects.filter(date_joined__date=now.date()).count()
         counts['web_users'] = User.objects.count()
+        from petitions.models import Petition
+        counts['open_petitions'] = Petition.objects.filter(
+            status__in=Petition.ACTIVE_STATUSES
+        ).count()
     except Exception:
         pass
 

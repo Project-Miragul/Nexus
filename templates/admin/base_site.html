@@ -150,5 +150,16 @@ html[data-theme="light"] {
      style="color:var(--nx-nav-dim); font-size:0.8em; text-decoration:none; padding:3px 10px;">
     Suspended
   </a>
+  <span style="color:var(--nx-nav-sep); margin:0 2px;">|</span>
+  <a href="/petitions/staff/"
+     style="color:var(--nx-nav-active); font-size:0.8em; text-decoration:none; font-weight:bold; padding:3px 10px; display:inline-flex; align-items:center; gap:5px;">
+    Petitions
+    {% if open_petition_count %}
+    <span style="background:#c0392b; color:#fff; border-radius:10px; padding:1px 7px;
+                 font-size:0.85em; font-weight:bold; line-height:1.4;">
+      {{ open_petition_count }}
+    </span>
+    {% endif %}
+  </a>
 </nav>
 {% endblock %}

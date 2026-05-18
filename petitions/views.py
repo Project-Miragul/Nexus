@@ -252,6 +252,7 @@ def petition_detail(request, pk):
     other_petitions = []
     canned_responses = []
     staff_members = []
+    player_accounts = []
     if user_is_staff:
         other_petitions = (
             Petition.objects.filter(user=petition.user)
@@ -266,6 +267,30 @@ def petition_detail(request, pk):
             .order_by('username')
         )
 
+        # Fetch world account status for the petitioner so staff can see
+        # ban/suspension state without leaving the page.
+        try:
+            from accounts.models import Account, LoginAccountOwnership
+            from django.utils import timezone as tz
+            ls_ids = list(
+                LoginAccountOwnership.objects
+                .filter(user=petition.user)
+                .values_list('login_account_id', flat=True)
+            )
+            if ls_ids:
+                now = tz.now()
+                for acct in Account.objects.using('game_database').filter(
+                    lsaccount_id__in=ls_ids
+                ).values('id', 'name', 'status', 'revoked', 'suspendeduntil',
+                         'ban_reason', 'suspend_reason'):
+                    acct['is_banned'] = bool(acct['revoked'])
+                    acct['is_suspended'] = bool(
+                        acct['suspendeduntil'] and acct['suspendeduntil'] > now
+                    )
+                    player_accounts.append(acct)
+        except Exception:
+            pass
+
     return render(request, 'petitions/petition_detail.html', {
         'petition': petition,
         'replies': replies,
@@ -277,6 +302,7 @@ def petition_detail(request, pk):
         'other_petitions': other_petitions,
         'canned_responses': canned_responses,
         'staff_members': staff_members,
+        'player_accounts': player_accounts,
     })
 
 
