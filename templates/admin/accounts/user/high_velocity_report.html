@@ -1,0 +1,76 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+
+  <h2>High Velocity New Accounts</h2>
+  <p style="color:#aaa; margin-bottom:0.5em;">
+    Days where {{ threshold }} or more web accounts were registered. May indicate bot signups or
+    coordinated account creation.
+  </p>
+
+  <form method="get" style="margin-bottom:1.5em; display:flex; align-items:center; gap:10px;">
+    <label style="color:#aaa;">Minimum accounts per day:</label>
+    <input type="number" name="threshold" value="{{ threshold }}" min="1"
+           style="width:70px; padding:4px 8px; background:#1a1a1a; border:1px solid #444; color:#eee; border-radius:4px;">
+    <button type="submit"
+            style="padding:5px 12px; background:#417690; color:#fff; border:none; border-radius:4px; cursor:pointer;">
+      Apply
+    </button>
+    {% if threshold != default_threshold %}
+      <a href="?" style="color:#666; font-size:0.85em;">Reset to default ({{ default_threshold }})</a>
+    {% endif %}
+  </form>
+
+  {% if day_groups %}
+    <p style="margin-bottom:1.5em;">
+      <strong>{{ flagged_count }}</strong> day{{ flagged_count|pluralize }} with {{ threshold }}+ registrations.
+    </p>
+
+    {% for group in day_groups %}
+      <div style="margin-bottom:2em; border:1px solid #333; border-radius:5px; padding:0.8em 1.2em;">
+        <h3 style="margin-top:0; margin-bottom:0.5em; font-size:1em; color:#ccc;">
+          {{ group.day|date:"Y-m-d" }}
+          <span style="color:#666; font-weight:normal; font-size:0.85em; margin-left:8px;">{{ group.count }} account{{ group.count|pluralize }}</span>
+        </h3>
+        <table style="width:100%; border-collapse:collapse; font-size:0.88em;">
+          <thead>
+            <tr>
+              <th style="text-align:left; padding:4px 10px; color:#666; border-bottom:1px solid #2a2a2a;">Username</th>
+              <th style="text-align:left; padding:4px 10px; color:#666; border-bottom:1px solid #2a2a2a;">Email</th>
+              <th style="text-align:left; padding:4px 10px; color:#666; border-bottom:1px solid #2a2a2a;">Registered (UTC)</th>
+              <th style="text-align:left; padding:4px 10px; color:#666; border-bottom:1px solid #2a2a2a;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for u in group.users %}
+            <tr>
+              <td style="padding:4px 10px; border-bottom:1px solid #222; font-family:monospace;">
+                <a href="{% url 'admin:auth_user_change' u.id %}" style="color:#8aa3ff;">{{ u.username }}</a>
+              </td>
+              <td style="padding:4px 10px; border-bottom:1px solid #222; color:#aaa;">{{ u.email|default:"—" }}</td>
+              <td style="padding:4px 10px; border-bottom:1px solid #222; color:#aaa;">{{ u.date_joined }}</td>
+              <td style="padding:4px 10px; border-bottom:1px solid #222;">
+                {% if u.is_active %}
+                  <span style="color:#70bf2b;">active</span>
+                {% else %}
+                  <span style="color:#ba2121;">disabled</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endfor %}
+
+  {% else %}
+    <p style="color:#70bf2b; font-size:1.1em;">✓ No days with {{ threshold }}+ registrations found.</p>
+  {% endif %}
+
+  <p style="margin-top:1.5em;">
+    <a href="{{ changelist_url }}" class="button">Back to user list</a>
+  </p>
+
+</div>
+{% endblock %}

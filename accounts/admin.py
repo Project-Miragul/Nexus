@@ -8,6 +8,8 @@ from django.template.response import TemplateResponse
 from django.urls import path, reverse
 from django.utils import timezone
 
+from common.models.characters import Characters
+from common.models.guilds import Guilds, GuildMembers
 from .forms import LoginAccountOwnershipAdminForm
 from .models import (
     Account,
@@ -148,10 +150,272 @@ def lift_suspension_action(modeladmin, request, queryset):
 # ---------------------------------------------------------------------------
 
 class CustomUserAdmin(BaseUserAdmin):
+    change_list_template = 'admin/accounts/user/change_list.html'
     actions = list(BaseUserAdmin.actions or []) + [
         suspend_accounts_action,
         lift_suspension_action,
     ]
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path(
+                'character-map/',
+                self.admin_site.admin_view(self.character_map_view),
+                name='accounts_user_character_map',
+            ),
+            path(
+                'shared-email/',
+                self.admin_site.admin_view(self.shared_email_report_view),
+                name='accounts_user_shared_email',
+            ),
+            path(
+                'high-velocity/',
+                self.admin_site.admin_view(self.high_velocity_view),
+                name='accounts_user_high_velocity',
+            ),
+            path(
+                'mfa-status/',
+                self.admin_site.admin_view(self.mfa_status_view),
+                name='accounts_user_mfa_status',
+            ),
+        ]
+        return custom + urls
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+        extra_context['character_map_url'] = reverse('admin:accounts_user_character_map')
+        extra_context['shared_email_url'] = reverse('admin:accounts_user_shared_email')
+        extra_context['high_velocity_url'] = reverse('admin:accounts_user_high_velocity')
+        extra_context['mfa_status_url'] = reverse('admin:accounts_user_mfa_status')
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def character_map_view(self, request):
+        query = request.GET.get('q', '').strip()
+        results = []
+        searched = False
+
+        if query:
+            searched = True
+            # Step 1: find matching web users
+            from django.contrib.auth.models import User as AuthUser
+            users = list(
+                AuthUser.objects.filter(username__icontains=query)
+                .values('id', 'username', 'email', 'is_active')
+            )
+
+            # Step 2: for each user, get their login account IDs
+            user_ids = [u['id'] for u in users]
+            ownerships = list(
+                LoginAccountOwnership.objects
+                .filter(user_id__in=user_ids)
+                .values('user_id', 'login_account_id')
+            )
+            ownership_by_user = {}
+            for o in ownerships:
+                ownership_by_user.setdefault(o['user_id'], []).append(o['login_account_id'])
+
+            # Step 3: get login account names from LS DB
+            all_ls_ids = [o['login_account_id'] for o in ownerships]
+            ls_accounts = {}
+            if all_ls_ids:
+                for la in LoginAccounts.objects.using('login_server_database').filter(
+                    id__in=all_ls_ids
+                ).values('id', 'account_name'):
+                    ls_accounts[la['id']] = la['account_name']
+
+            # Step 4: get world server accounts from game DB
+            world_accounts = {}
+            if all_ls_ids:
+                for wa in Account.objects.using('game_database').filter(
+                    lsaccount_id__in=all_ls_ids
+                ).values('id', 'name', 'lsaccount_id', 'status', 'revoked'):
+                    world_accounts.setdefault(wa['lsaccount_id'], []).append(wa)
+
+            # Step 5: get characters from game DB
+            world_account_ids = [wa['id'] for was in world_accounts.values() for wa in was]
+            characters_by_account = {}
+            if world_account_ids:
+                for ch in Characters.objects.using('game_database').filter(
+                    account_id__in=world_account_ids
+                ).values('id', 'name', 'account_id', 'level', 'race', 'class_name', 'last_login'):
+                    characters_by_account.setdefault(ch['account_id'], []).append(ch)
+
+            # Step 6: assemble results
+            for user in users:
+                ls_ids = ownership_by_user.get(user['id'], [])
+                login_accounts = []
+                for ls_id in ls_ids:
+                    world_accts = world_accounts.get(ls_id, [])
+                    enriched_world = []
+                    for wa in world_accts:
+                        chars = sorted(
+                            characters_by_account.get(wa['id'], []),
+                            key=lambda c: -c['level'],
+                        )
+                        enriched_world.append({**wa, 'characters': chars})
+                    login_accounts.append({
+                        'ls_id': ls_id,
+                        'ls_account_name': ls_accounts.get(ls_id, f'(id={ls_id})'),
+                        'world_accounts': enriched_world,
+                    })
+                results.append({
+                    'user': user,
+                    'login_accounts': login_accounts,
+                })
+
+        return TemplateResponse(
+            request,
+            'admin/accounts/user/character_map.html',
+            {
+                **self.admin_site.each_context(request),
+                'title': 'Character Map',
+                'query': query,
+                'results': results,
+                'searched': searched,
+                'changelist_url': reverse('admin:auth_user_changelist'),
+            },
+        )
+
+    def shared_email_report_view(self, request):
+        from django.contrib.auth.models import User as AuthUser
+        from django.db.models import Count
+
+        # Find emails used by more than one account (exclude blank)
+        dupes = (
+            AuthUser.objects
+            .exclude(email='')
+            .values('email')
+            .annotate(count=Count('id'))
+            .filter(count__gt=1)
+            .order_by('-count', 'email')
+        )
+
+        email_groups = []
+        for row in dupes:
+            users = list(
+                AuthUser.objects
+                .filter(email=row['email'])
+                .values('id', 'username', 'email', 'is_active', 'date_joined')
+                .order_by('date_joined')
+            )
+            email_groups.append({'email': row['email'], 'count': row['count'], 'users': users})
+
+        return TemplateResponse(
+            request,
+            'admin/accounts/user/shared_email_report.html',
+            {
+                **self.admin_site.each_context(request),
+                'title': 'Shared Email Report',
+                'email_groups': email_groups,
+                'flagged_count': len(email_groups),
+                'changelist_url': reverse('admin:auth_user_changelist'),
+            },
+        )
+
+    def high_velocity_view(self, request):
+        from django.contrib.auth.models import User as AuthUser
+        from django.db.models import Count
+        from django.db.models.functions import TruncDate
+
+        DEFAULT_THRESHOLD = 3
+        try:
+            threshold = max(1, int(request.GET.get('threshold', DEFAULT_THRESHOLD)))
+        except (ValueError, TypeError):
+            threshold = DEFAULT_THRESHOLD
+
+        # Days where threshold+ accounts were created
+        busy_days = (
+            AuthUser.objects
+            .annotate(day=TruncDate('date_joined'))
+            .values('day')
+            .annotate(count=Count('id'))
+            .filter(count__gte=threshold)
+            .order_by('-day')
+        )
+
+        day_groups = []
+        for row in busy_days:
+            users = list(
+                AuthUser.objects
+                .filter(date_joined__date=row['day'])
+                .values('id', 'username', 'email', 'is_active', 'date_joined')
+                .order_by('date_joined')
+            )
+            day_groups.append({'day': row['day'], 'count': row['count'], 'users': users})
+
+        return TemplateResponse(
+            request,
+            'admin/accounts/user/high_velocity_report.html',
+            {
+                **self.admin_site.each_context(request),
+                'title': 'High Velocity New Accounts',
+                'day_groups': day_groups,
+                'flagged_count': len(day_groups),
+                'threshold': threshold,
+                'default_threshold': DEFAULT_THRESHOLD,
+                'changelist_url': reverse('admin:auth_user_changelist'),
+            },
+        )
+
+    def mfa_status_view(self, request):
+        from django.contrib.auth.models import User as AuthUser
+        from django_otp.plugins.otp_totp.models import TOTPDevice
+        from django_otp.plugins.otp_static.models import StaticDevice
+
+        # Users with at least one confirmed TOTP or WebAuthn device
+        totp_user_ids = set(
+            TOTPDevice.objects.filter(confirmed=True).values_list('user_id', flat=True)
+        )
+        static_user_ids = set(
+            StaticDevice.objects.filter(confirmed=True).values_list('user_id', flat=True)
+        )
+        webauthn_user_ids = set()
+        try:
+            from django_otp_webauthn.models import WebAuthnCredential
+            webauthn_user_ids = set(
+                WebAuthnCredential.objects.values_list('user_id', flat=True)
+            )
+        except Exception:
+            pass
+
+        mfa_user_ids = totp_user_ids | static_user_ids | webauthn_user_ids
+
+        all_users = list(
+            AuthUser.objects
+            .values('id', 'username', 'email', 'is_active', 'date_joined', 'last_login')
+            .order_by('username')
+        )
+
+        for u in all_users:
+            uid = u['id']
+            methods = []
+            if uid in totp_user_ids:
+                methods.append('TOTP')
+            if uid in webauthn_user_ids:
+                methods.append('Passkey')
+            if uid in static_user_ids and uid not in totp_user_ids and uid not in webauthn_user_ids:
+                methods.append('Backup codes only')
+            u['mfa_methods'] = methods
+            u['has_mfa'] = uid in mfa_user_ids
+
+        enrolled = [u for u in all_users if u['has_mfa']]
+        not_enrolled = [u for u in all_users if not u['has_mfa']]
+
+        return TemplateResponse(
+            request,
+            'admin/accounts/user/mfa_status_report.html',
+            {
+                **self.admin_site.each_context(request),
+                'title': 'MFA Status Report',
+                'enrolled': enrolled,
+                'not_enrolled': not_enrolled,
+                'enrolled_count': len(enrolled),
+                'not_enrolled_count': len(not_enrolled),
+                'total': len(all_users),
+                'changelist_url': reverse('admin:auth_user_changelist'),
+            },
+        )
 
 
 admin.site.unregister(User)
@@ -183,22 +447,6 @@ class ServerListTypeAdmin(admin.ModelAdmin):
 class WorldServerRegistrationAdmin(admin.ModelAdmin):
     list_display = ["long_name", "tag_description", "login_server_list_type_id", "is_server_trusted",
                     "login_server_admin_id", "last_login_date"]
-
-
-class AccountAdmin(admin.ModelAdmin):
-    list_display = ["name", "id", "lsaccount_id", "charname", "status"]
-    list_filter = ["name"]
-    search_fields = ["id", "name", "lsaccount_id"]
-    readonly_fields = ["id", "karma", "time_creation"]
-    fieldsets = [
-        ("General Information", {
-            "fields": ["name", "charname", "ls_id", "lsaccount_id", "karma", "time_creation"]
-        }),
-        ("Flag Account as Mule/Trader", {"fields": ["mule"]}),
-        ("Administrative Actions",
-         {"fields": ["revoked", "ban_reason", "suspendeduntil", "suspend_reason", "rulesflag"]}),
-        ("GM Settings", {"fields": ["status", "gmspeed", "hideme", "invulnerable", "flymode", "ignore_tells"]}),
-    ]
 
 
 admin.site.register(LoginAccounts, LoginAccountsAdmin)
@@ -255,6 +503,11 @@ class AccountAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.suspended_dashboard_view),
                 name='accounts_account_suspended_dashboard',
             ),
+            path(
+                'record-counts/',
+                self.admin_site.admin_view(self.record_count_dashboard_view),
+                name='accounts_account_record_counts',
+            ),
         ]
         return custom + urls
 
@@ -267,6 +520,7 @@ class AccountAdmin(admin.ModelAdmin):
         extra_context = extra_context or {}
         extra_context['suspended_count'] = suspended_count
         extra_context['suspended_dashboard_url'] = reverse('admin:accounts_account_suspended_dashboard')
+        extra_context['record_counts_url'] = reverse('admin:accounts_account_record_counts')
         return super().changelist_view(request, extra_context=extra_context)
 
     def suspended_dashboard_view(self, request):
@@ -299,6 +553,31 @@ class AccountAdmin(admin.ModelAdmin):
                 'title': 'Suspended Accounts',
                 'suspended': suspended,
                 'suspended_count': len(suspended),
+                'changelist_url': reverse('admin:accounts_account_changelist'),
+            },
+        )
+
+
+    def record_count_dashboard_view(self, request):
+        from django.contrib.auth.models import User as AuthUser
+
+        counts = {
+            'web_users': AuthUser.objects.count(),
+            'ownerships': LoginAccountOwnership.objects.count(),
+            'login_accounts': LoginAccounts.objects.using('login_server_database').count(),
+            'world_accounts': Account.objects.using('game_database').count(),
+            'characters': Characters.objects.using('game_database').count(),
+            'guilds': Guilds.objects.using('game_database').count(),
+            'guild_members': GuildMembers.objects.using('game_database').count(),
+        }
+
+        return TemplateResponse(
+            request,
+            'admin/accounts/account/record_count_dashboard.html',
+            {
+                **self.admin_site.each_context(request),
+                'title': 'Record Counts',
+                'counts': counts,
                 'changelist_url': reverse('admin:accounts_account_changelist'),
             },
         )

@@ -1,0 +1,29 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools-items %}
+  <li>
+    <a href="{{ character_map_url }}" class="button"
+       style="background:#417690; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">
+      Character Map
+    </a>
+  </li>
+  <li>
+    <a href="{{ shared_email_url }}" class="button"
+       style="background:#417690; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">
+      Shared Emails
+    </a>
+  </li>
+  <li>
+    <a href="{{ high_velocity_url }}" class="button"
+       style="background:#417690; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">
+      High Velocity
+    </a>
+  </li>
+  <li>
+    <a href="{{ mfa_status_url }}" class="button"
+       style="background:#417690; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">
+      MFA Status
+    </a>
+  </li>
+  {{ block.super }}
+{% endblock %}

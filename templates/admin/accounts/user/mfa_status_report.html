@@ -1,0 +1,88 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+
+  <h2>MFA Status Report</h2>
+  <p style="color:#aaa; margin-bottom:1.5em;">
+    MFA enrollment status for all web accounts.
+    Enrolled methods: TOTP (authenticator app), Passkey (WebAuthn), or Backup codes only.
+  </p>
+
+  <div style="display:flex; gap:2em; margin-bottom:2em;">
+    <div style="background:#1a2a1a; border:1px solid #2a3a2a; border-radius:5px; padding:1em 1.5em; text-align:center;">
+      <div style="font-size:1.8em; font-weight:bold; color:#70bf2b;">{{ enrolled_count }}</div>
+      <div style="color:#aaa; font-size:0.85em; margin-top:2px;">Enrolled</div>
+    </div>
+    <div style="background:#2a1a1a; border:1px solid #3a2a2a; border-radius:5px; padding:1em 1.5em; text-align:center;">
+      <div style="font-size:1.8em; font-weight:bold; color:#e07070;">{{ not_enrolled_count }}</div>
+      <div style="color:#aaa; font-size:0.85em; margin-top:2px;">Not Enrolled</div>
+    </div>
+    <div style="background:#1a1a2a; border:1px solid #2a2a3a; border-radius:5px; padding:1em 1.5em; text-align:center;">
+      <div style="font-size:1.8em; font-weight:bold; color:#8aa3ff;">{{ total }}</div>
+      <div style="color:#aaa; font-size:0.85em; margin-top:2px;">Total</div>
+    </div>
+  </div>
+
+  {% if not_enrolled %}
+    <h3 style="color:#e07070; margin-bottom:0.5em;">Not Enrolled ({{ not_enrolled_count }})</h3>
+    <table style="width:100%; border-collapse:collapse; font-size:0.88em; margin-bottom:2.5em;">
+      <thead>
+        <tr>
+          <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Username</th>
+          <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Email</th>
+          <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Last Login</th>
+          <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in not_enrolled %}
+        <tr>
+          <td style="padding:4px 12px; border-bottom:1px solid #222; font-family:monospace;">
+            <a href="{% url 'admin:auth_user_change' u.id %}" style="color:#8aa3ff;">{{ u.username }}</a>
+          </td>
+          <td style="padding:4px 12px; border-bottom:1px solid #222; color:#aaa;">{{ u.email|default:"—" }}</td>
+          <td style="padding:4px 12px; border-bottom:1px solid #222; color:#666;">{{ u.last_login|default:"never" }}</td>
+          <td style="padding:4px 12px; border-bottom:1px solid #222;">
+            {% if u.is_active %}<span style="color:#70bf2b;">active</span>{% else %}<span style="color:#ba2121;">disabled</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  {% if enrolled %}
+    <h3 style="color:#70bf2b; margin-bottom:0.5em;">Enrolled ({{ enrolled_count }})</h3>
+    <table style="width:100%; border-collapse:collapse; font-size:0.88em;">
+      <thead>
+        <tr>
+          <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Username</th>
+          <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Email</th>
+          <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Methods</th>
+          <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in enrolled %}
+        <tr>
+          <td style="padding:4px 12px; border-bottom:1px solid #222; font-family:monospace;">
+            <a href="{% url 'admin:auth_user_change' u.id %}" style="color:#8aa3ff;">{{ u.username }}</a>
+          </td>
+          <td style="padding:4px 12px; border-bottom:1px solid #222; color:#aaa;">{{ u.email|default:"—" }}</td>
+          <td style="padding:4px 12px; border-bottom:1px solid #222; color:#70bf2b;">{{ u.mfa_methods|join:", " }}</td>
+          <td style="padding:4px 12px; border-bottom:1px solid #222;">
+            {% if u.is_active %}<span style="color:#70bf2b;">active</span>{% else %}<span style="color:#ba2121;">disabled</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <p style="margin-top:2em;">
+    <a href="{{ changelist_url }}" class="button">Back to user list</a>
+  </p>
+
+</div>
+{% endblock %}

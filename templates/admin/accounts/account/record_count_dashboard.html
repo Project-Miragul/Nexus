@@ -1,0 +1,63 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+
+  <h2>Record Counts</h2>
+  <p style="color:#aaa; margin-bottom:2em;">
+    Live record counts across all three databases.
+  </p>
+
+  <table style="width:100%; max-width:600px; border-collapse:collapse; font-size:0.95em;">
+    <thead>
+      <tr>
+        <th style="text-align:left; padding:8px 14px; border-bottom:2px solid #444; color:#888;">Table / Model</th>
+        <th style="text-align:left; padding:8px 14px; border-bottom:2px solid #444; color:#888;">Database</th>
+        <th style="text-align:right; padding:8px 14px; border-bottom:2px solid #444; color:#888;">Count</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; font-family:monospace;">auth_user</td>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; color:#666;">default</td>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; text-align:right; color:#ccc;">{{ counts.web_users }}</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; font-family:monospace;">login_account_ownership</td>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; color:#666;">default</td>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; text-align:right; color:#ccc;">{{ counts.ownerships }}</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; font-family:monospace;">login_accounts</td>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; color:#666;">login_server_database</td>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; text-align:right; color:#ccc;">{{ counts.login_accounts }}</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; font-family:monospace;">account</td>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; color:#666;">game_database</td>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; text-align:right; color:#ccc;">{{ counts.world_accounts }}</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; font-family:monospace;">character_data</td>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; color:#666;">game_database</td>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; text-align:right; color:#ccc;">{{ counts.characters }}</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; font-family:monospace;">guilds</td>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; color:#666;">game_database</td>
+        <td style="padding:7px 14px; border-bottom:1px solid #2a2a2a; text-align:right; color:#ccc;">{{ counts.guilds }}</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 14px; font-family:monospace;">guild_members</td>
+        <td style="padding:7px 14px; color:#666;">game_database</td>
+        <td style="padding:7px 14px; text-align:right; color:#ccc;">{{ counts.guild_members }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="margin-top:2em;">
+    <a href="{{ changelist_url }}" class="button">Back to account list</a>
+  </p>
+
+</div>
+{% endblock %}
