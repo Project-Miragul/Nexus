@@ -233,12 +233,17 @@ class CustomUserAdmin(BaseUserAdmin):
                     world_accounts.setdefault(wa['lsaccount_id'], []).append(wa)
 
             # Step 5: get characters from game DB
+            from datetime import datetime, timezone as dt_timezone
             world_account_ids = [wa['id'] for was in world_accounts.values() for wa in was]
             characters_by_account = {}
             if world_account_ids:
                 for ch in Characters.objects.using('game_database').filter(
                     account_id__in=world_account_ids
                 ).values('id', 'name', 'account_id', 'level', 'race', 'class_name', 'last_login'):
+                    ts = ch['last_login']
+                    ch['last_login_dt'] = (
+                        datetime.fromtimestamp(ts, tz=dt_timezone.utc) if ts else None
+                    )
                     characters_by_account.setdefault(ch['account_id'], []).append(ch)
 
             # Step 6: assemble results
