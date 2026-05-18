@@ -8,7 +8,7 @@ def valid_game_account_owner(user_or_username, game_account_id: str) -> bool:
     Returns True if the given user owns the game account.
     Accepts a User instance or a username string.
     """
-    game_account = Account.objects.filter(id=game_account_id).first()
+    game_account = Account.objects.using('game_database').filter(id=game_account_id).first()
     if game_account is None:
         return False
 

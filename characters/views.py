@@ -13,7 +13,7 @@ from common.models.items import DiscoveredItems
 from common.utils import valid_game_account_owner
 from common.constants import PLAYER_RACIAL_EXP_MODIFIERS
 
-from accounts.models import Account
+from accounts.models import Account, AccountMetadata
 
 from characters.utils import get_character_keyring
 from characters.utils import get_character_inventory
@@ -78,7 +78,7 @@ def list_characters(request, game_account_name):
     if request.method == "GET":
 
         forum_name = request.user.username
-        game_account = Account.objects.filter(name__iexact=game_account_name).first()
+        game_account = Account.objects.using('game_database').filter(name__iexact=game_account_name).first()
         if game_account is None:
             messages.error(request, "The world server has not seen this account. If this account is new, "
                                     "please log in to character select first.")
@@ -89,8 +89,10 @@ def list_characters(request, game_account_name):
                           "attempting to view this page.")
 
         if game_account.id is not None:
-            is_mule = bool(game_account.mule)
-            characters = Characters.objects.filter(account_id=game_account.id)
+            is_mule = AccountMetadata.objects.filter(
+                login_account_id=game_account.lsaccount_id, is_trader=True
+            ).exists()
+            characters = Characters.objects.using('game_database').filter(account_id=game_account.id)
             return render(request=request, template_name="characters/list.html",
                           context={"characters": characters,
                                    "is_mule": is_mule,

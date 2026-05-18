@@ -61,6 +61,25 @@ class LoginAccountOwnership(models.Model):
         return f"User {self.user_id} owns login account {self.login_account_id}"
 
 
+class AccountMetadata(models.Model):
+    """
+    Web-side metadata for a login account. Keyed on login_account_id.
+    Stores attributes that have no home in the game DB schema (e.g. trader designation).
+    Lives in the default (Django) database.
+    """
+    login_account_id = models.IntegerField(unique=True)
+    is_trader = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "accounts_accountmetadata"
+        app_label = 'accounts'
+
+    def __str__(self):
+        return f"Metadata for login account {self.login_account_id}"
+
+
 class ServerAdminRegistration(models.Model):
     """
     This model maps to the login_server_admins table in the login server database.
@@ -160,7 +179,7 @@ class Account(models.Model):
     crc_eqgame = models.TextField(null=True, blank=True)
     crc_skillcaps = models.TextField(null=True, blank=True)
     crc_basedata = models.TextField(null=True, blank=True)
-#    mule = models.SmallIntegerField(default=0, null=False)
+    mule = models.SmallIntegerField(default=0, null=False)
 
     class Meta:
         db_table = "account"

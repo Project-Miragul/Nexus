@@ -23,7 +23,7 @@
             <h3 class="eq-header">Current Status</h3>
             <div class="d-flex align-items-center gap-3">
                 <div class="trader-status">
-                    <span class="h4">{{ mule_count }} of {{ max_mules }}</span>
+                    <span class="h4">{{ trader_count }} of {{ max_traders }}</span>
                     <small class="text-muted d-block">Trader accounts used</small>
                 </div>
                 {% if at_limit %}
@@ -38,7 +38,7 @@
         {% if at_limit %}
             <div class="eq-window-simple">
                 <h4 class="eq-header">Maximum Trader Accounts Reached</h4>
-                <p>You already have the maximum number of trader accounts ({{ max_mules }}). Your current trader
+                <p>You already have the maximum number of trader accounts ({{ max_traders }}). Your current trader
                     accounts are:</p>
 
                 <div class="trader-accounts-list mb-3">
@@ -129,7 +129,7 @@
                         <ul class="mb-0">
                             <li>This conversion is <strong>permanent</strong> and cannot be undone</li>
                             <li>Trader accounts are intended for commerce and trading activities</li>
-                            <li>You can only have {{ max_mules }} trader accounts total</li>
+                            <li>You can only have {{ max_traders }} trader accounts total</li>
                         </ul>
                     </div>
 

@@ -48,7 +48,7 @@ from items.utils import build_stat_query, get_class_bitmask, get_item_effect, ge
 from django_ratelimit.decorators import ratelimit
 
 from .forms import NewLSAccountForm, NewUserForm, UpdateLSAccountForm
-from .models import Account, LoginAccounts, LoginAccountOwnership, WebLoginHistory, WorldServerRegistration
+from .models import Account, AccountMetadata, LoginAccounts, LoginAccountOwnership, WebLoginHistory, WorldServerRegistration
 from common.models.characters import Characters
 from .utils import get_client_ip, get_owned_login_account_ids, sha1_password
 
@@ -494,11 +494,14 @@ def convert_to_trader(request):
     # Find login server accounts that don't exist on world server yet
     orphaned_ls_accounts = set(user_ls_accounts) - set(world_server_account_ids)
 
-    # Get current mule count and eligible accounts
-    mule_count = Account.objects.using('game_database').filter(
-        lsaccount_id__in=user_ls_accounts,
-        mule=1
-    ).count()
+    # Trader status lives in AccountMetadata (web-side), not the game DB
+    trader_ls_ids = set(
+        AccountMetadata.objects.filter(
+            login_account_id__in=user_ls_accounts,
+            is_trader=True
+        ).values_list('login_account_id', flat=True)
+    )
+    trader_count = len(trader_ls_ids)
 
     user_account_ids = list(
         Account.objects.using('game_database').filter(
@@ -507,22 +510,20 @@ def convert_to_trader(request):
     )
 
     accounts_with_chars = list(
-        Characters.objects.filter(
+        Characters.objects.using('game_database').filter(
             account_id__in=user_account_ids,
             deleted_at__isnull=True
         ).values_list('account_id', flat=True).distinct()
     )
 
     eligible_accounts = Account.objects.using('game_database').filter(
-        lsaccount_id__in=user_ls_accounts,
-        mule=0
-    ).exclude(id__in=accounts_with_chars)
+        lsaccount_id__in=user_ls_accounts
+    ).exclude(lsaccount_id__in=trader_ls_ids).exclude(id__in=accounts_with_chars)
 
     trader_accounts = None
-    if mule_count >= 2:
+    if trader_count >= 2:
         trader_accounts = Account.objects.using('game_database').filter(
-            lsaccount_id__in=user_ls_accounts,
-            mule=1
+            lsaccount_id__in=trader_ls_ids
         ).values('name', 'id')
 
     # Handle POST request (conversion)
@@ -539,40 +540,40 @@ def convert_to_trader(request):
             messages.error(request, "Please type CONVERT to confirm the conversion.")
             return redirect('accounts:convert_to_trader')
 
-        if mule_count >= 2:
+        if trader_count >= 2:
             messages.error(request, "You already have the maximum number of trader accounts (2).")
             return redirect('accounts:convert_to_trader')
 
-        # Verify account is still eligible
+        # Verify account is still eligible (owned, not already a trader, no characters)
         try:
             account = Account.objects.using('game_database').get(
                 id=account_id,
-                lsaccount_id__in=user_ls_accounts,
-                mule=0
+                lsaccount_id__in=user_ls_accounts
             )
+            if account.lsaccount_id in trader_ls_ids:
+                messages.error(request, "This account is already a trader account.")
+                return redirect('accounts:convert_to_trader')
             if account.id in accounts_with_chars:
                 messages.error(request, "This account is no longer eligible - it contains characters.")
                 return redirect('accounts:convert_to_trader')
-
         except Account.DoesNotExist:
             messages.error(request, "Invalid account selection.")
             return redirect('accounts:convert_to_trader')
 
-        account.mule = 1
-        # Ensure suspendeduntil has a valid datetime (not None)
-        if not account.suspendeduntil or account.suspendeduntil == datetime(1900, 1, 1):  # Handle potential null/invalid dates
-            account.suspendeduntil = timezone.now()
-        account.save(using='game_database')
+        AccountMetadata.objects.update_or_create(
+            login_account_id=account.lsaccount_id,
+            defaults={'is_trader': True},
+        )
 
         messages.success(request, f"Account '{account.name}' has been successfully converted to a trader account.")
         return redirect('accounts:list_accounts')
 
     # GET request - show interface
     context = {
-        'mule_count': mule_count,
-        'max_mules': 2,
+        'trader_count': trader_count,
+        'max_traders': 2,
         'eligible_accounts': eligible_accounts,
-        'at_limit': mule_count >= 2,
+        'at_limit': trader_count >= 2,
         'no_eligible': not eligible_accounts.exists(),
         'trader_accounts': trader_accounts,
         'orphaned_count': len(orphaned_ls_accounts),
