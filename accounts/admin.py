@@ -1404,7 +1404,9 @@ class IpExemptionAdmin(admin.ModelAdmin):
         extra_context['effective_limit'] = box_rules[0]['rule_value'] if box_rules else '1'
         extra_context['limit_is_default'] = not bool(box_rules)
 
-        # Inline IP lookup
+        # Inline IP lookup — read ip_q before super() sees it, then strip it
+        # from request.GET so Django admin's changelist doesn't treat it as an
+        # unknown filter param and redirect with ?e=1.
         ip_q = request.GET.get('ip_q', '').strip()
         extra_context['ip_q'] = ip_q
         if ip_q:
@@ -1414,7 +1416,6 @@ class IpExemptionAdmin(admin.ModelAdmin):
                 .values('account_name', 'last_ip_address', 'last_login_date')
                 .order_by('account_name')[:20]
             )
-            # Flag which IPs already have an exemption
             ips_with_exemption = set(
                 IpExemption.objects.using('game_database')
                 .filter(exemption_ip__in=[m['last_ip_address'] for m in matches if m['last_ip_address']])
@@ -1425,6 +1426,11 @@ class IpExemptionAdmin(admin.ModelAdmin):
             extra_context['ip_lookup_results'] = matches
         else:
             extra_context['ip_lookup_results'] = None
+
+        if 'ip_q' in request.GET:
+            mutable = request.GET.copy()
+            mutable.pop('ip_q')
+            request.GET = mutable
 
         return super().changelist_view(request, extra_context=extra_context)
 
