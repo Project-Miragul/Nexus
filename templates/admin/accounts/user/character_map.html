@@ -28,27 +28,27 @@
                 {{ row.user.username }}
               </a>
               {% if not row.user.is_active %}
-                <span style="font-size:0.75em; background:#6b1111; color:#f8a0a0; border-radius:3px; padding:1px 6px; margin-left:6px;">disabled</span>
+                <span style="font-size:0.8rem; background:#6b1111; color:#f8a0a0; border-radius:3px; padding:1px 6px; margin-left:6px;">disabled</span>
               {% endif %}
             </h3>
-            <span style="color:#555; font-size:0.8em;">
+            <span style="color:#555; font-size:0.875rem;">
               {% for reason in row.match_reasons %}
                 <span style="background:#1a2a3a; color:#7ab3d4; border-radius:3px; padding:1px 7px; margin-right:4px;">{{ reason }}</span>
               {% endfor %}
             </span>
           </div>
-          <p style="color:#555; font-size:0.85em; margin:0 0 0.6em 0;">{{ row.user.email|default:"no email" }}</p>
+          <p style="color:#555; font-size:0.9rem; margin:0 0 0.6em 0;">{{ row.user.email|default:"no email" }}</p>
           <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:0.8em;">
             <a href="{% url 'admin:auth_user_change' row.user.id %}"
-               style="font-size:0.78em; padding:2px 10px; background:#1a2a3a; color:#8aa3ff; border-radius:3px; text-decoration:none;">Edit User</a>
+               style="font-size:0.875rem; padding:2px 10px; background:#1a2a3a; color:#8aa3ff; border-radius:3px; text-decoration:none;">Edit User</a>
             <a href="{% url 'admin:accounts_user_quick_action' row.user.id 'suspend' %}"
-               style="font-size:0.78em; padding:2px 10px; background:#2a1800; color:#e8a060; border-radius:3px; text-decoration:none;">Suspend</a>
+               style="font-size:0.875rem; padding:2px 10px; background:#2a1800; color:#e8a060; border-radius:3px; text-decoration:none;">Suspend</a>
             <a href="{% url 'admin:accounts_user_quick_action' row.user.id 'lift-suspension' %}"
-               style="font-size:0.78em; padding:2px 10px; background:#1a2a1a; color:#8ab88a; border-radius:3px; text-decoration:none;">Lift Suspension</a>
+               style="font-size:0.875rem; padding:2px 10px; background:#1a2a1a; color:#8ab88a; border-radius:3px; text-decoration:none;">Lift Suspension</a>
             <a href="{% url 'admin:accounts_user_quick_action' row.user.id 'ban' %}"
-               style="font-size:0.78em; padding:2px 10px; background:#2a0a0a; color:#e07070; border-radius:3px; text-decoration:none;">Ban</a>
+               style="font-size:0.875rem; padding:2px 10px; background:#2a0a0a; color:#e07070; border-radius:3px; text-decoration:none;">Ban</a>
             <a href="{% url 'admin:accounts_user_quick_action' row.user.id 'lift-ban' %}"
-               style="font-size:0.78em; padding:2px 10px; background:#1a2a1a; color:#8ab88a; border-radius:3px; text-decoration:none;">Lift Ban</a>
+               style="font-size:0.875rem; padding:2px 10px; background:#1a2a1a; color:#8ab88a; border-radius:3px; text-decoration:none;">Lift Ban</a>
           </div>
 
           {% if row.login_accounts %}
@@ -56,7 +56,7 @@
               <div style="margin-left:1em; margin-bottom:1.2em;">
                 <div style="font-weight:bold; color:#ccc; margin-bottom:0.3em;">
                   LS: <span style="font-family:monospace; color:#8aa3ff;">{{ la.ls_account_name }}</span>
-                  <span style="color:#555; font-size:0.8em; margin-left:6px;">(id={{ la.ls_id }})</span>
+                  <span style="color:#555; font-size:0.875rem; margin-left:6px;">(id={{ la.ls_id }})</span>
                 </div>
 
                 {% if la.world_accounts %}
@@ -65,12 +65,12 @@
                       <div style="color:#ddd; margin-bottom:0.2em;">
                         World:
                         <a href="{% url 'admin:accounts_account_change' wa.id %}" style="color:#8aa3ff; font-family:monospace;">{{ wa.name }}</a>
-                        {% if wa.status %}<span style="color:#888; font-size:0.8em;">(status={{ wa.status }})</span>{% endif %}
-                        {% if wa.revoked %}<span style="font-size:0.75em; background:#6b1111; color:#f8a0a0; border-radius:3px; padding:1px 6px; margin-left:4px;">revoked</span>{% endif %}
+                        {% if wa.status %}<span style="color:#888; font-size:0.875rem;">(status={{ wa.status }})</span>{% endif %}
+                        {% if wa.revoked %}<span style="font-size:0.8rem; background:#6b1111; color:#f8a0a0; border-radius:3px; padding:1px 6px; margin-left:4px;">revoked</span>{% endif %}
                       </div>
 
                       {% if wa.characters %}
-                        <table style="margin-left:1.5em; font-size:0.85em; border-collapse:collapse;">
+                        <table style="margin-left:1.5em; font-size:0.9rem; border-collapse:collapse;">
                           <thead>
                             <tr>
                               <th style="text-align:left; padding:2px 10px; color:#666; border-bottom:1px solid #2a2a2a;">Name</th>
@@ -83,23 +83,23 @@
                             <tr>
                               <td style="padding:2px 10px; color:#ccc; font-family:monospace;">{{ ch.name }}</td>
                               <td style="padding:2px 10px; color:#aaa;">{{ ch.level }}</td>
-                              <td style="padding:2px 10px; color:#666; font-size:0.9em;">{{ ch.last_login_dt|date:"Y-m-d H:i"|default:"—" }}</td>
+                              <td style="padding:2px 10px; color:#666; font-size:0.95rem;">{{ ch.last_login_dt|date:"Y-m-d H:i"|default:"—" }}</td>
                             </tr>
                             {% endfor %}
                           </tbody>
                         </table>
                       {% else %}
-                        <span style="margin-left:1.5em; color:#555; font-size:0.85em;">No characters</span>
+                        <span style="margin-left:1.5em; color:#555; font-size:0.9rem;">No characters</span>
                       {% endif %}
                     </div>
                   {% endfor %}
                 {% else %}
-                  <span style="margin-left:1.5em; color:#555; font-size:0.85em;">No world server account found</span>
+                  <span style="margin-left:1.5em; color:#555; font-size:0.9rem;">No world server account found</span>
                 {% endif %}
               </div>
             {% endfor %}
           {% else %}
-            <p style="margin-left:1em; color:#555; font-size:0.9em;">No linked login accounts.</p>
+            <p style="margin-left:1em; color:#555; font-size:0.95rem;">No linked login accounts.</p>
           {% endif %}
 
         </div>
@@ -108,10 +108,10 @@
 
     {% if unlinked_results %}
       <h3 style="color:#888; margin-top:2em; margin-bottom:0.5em;">Unlinked matches</h3>
-      <p style="color:#666; font-size:0.85em; margin-bottom:1em;">
+      <p style="color:#666; font-size:0.9rem; margin-bottom:1em;">
         These matched your search but have no web user linked via LoginAccountOwnership.
       </p>
-      <table style="width:100%; border-collapse:collapse; font-size:0.88em;">
+      <table style="width:100%; border-collapse:collapse;">
         <thead>
           <tr>
             <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #333; color:#555;">Type</th>

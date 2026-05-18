@@ -1,0 +1,165 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+
+  {# ------------------------------------------------------------------ #}
+  {# Box-limit hero section                                              #}
+  {# ------------------------------------------------------------------ #}
+  <div style="display:grid; grid-template-columns:auto 1fr; gap:16px; align-items:start;
+              background:#0d1520; border:1px solid #2a3a4a; border-radius:8px;
+              padding:1.4em 1.6em; margin-bottom:1.4em;">
+
+    {# Big stat tile #}
+    <div style="text-align:center; background:#111d2b; border:1px solid #2a4a6a;
+                border-radius:8px; padding:1em 1.6em; min-width:130px;">
+      <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:0.12em;
+                  color:#445; margin-bottom:0.3em;">Box Limit</div>
+      <div style="font-size:3.2em; font-weight:bold; line-height:1;
+                  color:{% if effective_limit == '1' %}#e8c84a{% else %}#8ab88a{% endif %};">
+        {{ effective_limit }}
+      </div>
+      <div style="font-size:0.8rem; color:#445; margin-top:0.4em;">accounts per IP</div>
+      {% if limit_is_default %}
+        <div style="font-size:0.7rem; color:#3a5a3a; margin-top:0.5em; font-style:italic;">
+          compiled default — no rule row
+        </div>
+      {% else %}
+        {% with rule=box_rules.0 %}
+        <div style="font-size:0.75rem; color:var(--nx-subtitle); margin-top:0.5em; font-family:monospace;
+                    word-break:break-all;">
+          {{ rule.rule_name }}
+        </div>
+        {% endwith %}
+      {% endif %}
+    </div>
+
+    {# Explanation #}
+    <div>
+      <h3 style="margin:0 0 0.5em 0; color:#8aa3ff; font-size:1rem;">How IP Exemptions Work</h3>
+      <p style="margin:0 0 0.6em 0; color:#889; font-size:0.9rem; line-height:1.6;">
+        The server enforces the box limit above for every incoming game client connection.
+        If the connecting IP has a row in this table, <strong style="color:#ccc;">exemption_amount</strong>
+        overrides the global rule for that IP only — everyone else still hits the standard limit.
+      </p>
+      <p style="margin:0 0 0.6em 0; color:#889; font-size:0.9rem; line-height:1.6;">
+        <strong style="color:#ccc;">Common case:</strong>
+        Multiple people in the same household share one external IP (router NAT). They're all
+        separate real players but the server can't tell them apart. Add their external IP here
+        with <em>exemption_amount</em> set to the number of people in the house.
+      </p>
+      <p style="margin:0; color:#556; font-size:0.875rem;">
+        Find a player's current IP using the lookup below, or from
+        <em>Login Accounts → last_ip_address</em>.
+      </p>
+    </div>
+
+  </div>
+
+  {# Extra rule rows (if the DB has more than one matching rule) #}
+  {% if box_rules|length > 1 %}
+  <div style="background:#111; border:1px solid #222; border-radius:6px; padding:0.8em 1em;
+              margin-bottom:1.4em; font-size:0.9rem;">
+    <strong style="color:#555;">All matching rule_values rows:</strong>
+    <table style="width:100%; border-collapse:collapse; margin-top:0.5em;">
+      {% for rule in box_rules %}
+      <tr>
+        <td style="padding:3px 8px; font-family:monospace; color:#8aa3ff;">{{ rule.rule_name }}</td>
+        <td style="padding:3px 8px; font-weight:bold; color:#e8c84a;">{{ rule.rule_value }}</td>
+        <td style="padding:3px 8px; color:#445;">{{ rule.notes|default:"—" }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+
+  {# ------------------------------------------------------------------ #}
+  {# Quick IP lookup                                                     #}
+  {# ------------------------------------------------------------------ #}
+  <div style="background:#111; border:1px solid #252525; border-radius:6px;
+              padding:1.2em 1.4em; margin-bottom:1.6em;">
+
+    <h3 style="margin:0 0 0.7em 0; font-size:0.9rem; text-transform:uppercase;
+               letter-spacing:0.1em; color:#555;">Quick IP Lookup</h3>
+
+    <form method="get" style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:0.8em;">
+      {# preserve any active changelist filters #}
+      {% for key, value in request.GET.items %}
+        {% if key != 'ip_q' %}
+          <input type="hidden" name="{{ key }}" value="{{ value }}">
+        {% endif %}
+      {% endfor %}
+      <input type="text" name="ip_q" value="{{ ip_q }}" placeholder="Login account name…"
+             autofocus
+             style="flex:1; min-width:220px; max-width:380px; padding:7px 11px;
+                    background:#1a1a1a; border:1px solid #3a5a7a; color:#eee;
+                    border-radius:4px; font-size:1rem;">
+      <button type="submit"
+              style="padding:7px 18px; background:#417690; color:#fff; border:none;
+                     border-radius:4px; cursor:pointer; font-weight:bold; font-size:0.95rem;">
+        Look Up
+      </button>
+      {% if ip_q %}
+        <a href="?" style="color:#445; font-size:0.9rem;">Clear</a>
+      {% endif %}
+    </form>
+
+    {% if ip_lookup_results is not None %}
+      {% if ip_lookup_results %}
+        <table style="width:100%; border-collapse:collapse;">
+          <thead>
+            <tr>
+              <th style="text-align:left; padding:4px 10px; border-bottom:1px solid #222; color:#445;">Login Account</th>
+              <th style="text-align:left; padding:4px 10px; border-bottom:1px solid #222; color:#445;">Last IP</th>
+              <th style="text-align:left; padding:4px 10px; border-bottom:1px solid #222; color:#445;">Last Login</th>
+              <th style="text-align:left; padding:4px 10px; border-bottom:1px solid #222; color:#445;">Exemption</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in ip_lookup_results %}
+            <tr>
+              <td style="padding:4px 10px; border-bottom:1px solid #1a1a1a; color:#ccc; font-family:monospace;">
+                {{ row.account_name }}
+              </td>
+              <td style="padding:4px 10px; border-bottom:1px solid #1a1a1a; font-family:monospace;
+                         color:{% if row.last_ip_address %}#8aa3ff{% else %}#333{% endif %};">
+                {{ row.last_ip_address|default:"—" }}
+              </td>
+              <td style="padding:4px 10px; border-bottom:1px solid #1a1a1a; color:#556;">
+                {{ row.last_login_date|date:"Y-m-d H:i"|default:"—" }}
+              </td>
+              <td style="padding:4px 10px; border-bottom:1px solid #1a1a1a;">
+                {% if row.last_ip_address %}
+                  {% if row.has_exemption %}
+                    <span style="color:#8ab88a; font-size:0.9rem;">already exempt</span>
+                  {% else %}
+                    <a href="{% url 'admin:accounts_ipexemption_add' %}?exemption_ip={{ row.last_ip_address }}&exemption_amount={{ effective_limit }}"
+                       style="color:#e8a060; font-size:0.9rem; text-decoration:none;">
+                      + Add Exemption
+                    </a>
+                  {% endif %}
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% if ip_lookup_results|length == 20 %}
+          <p style="color:#445; font-size:0.875rem; margin:0.5em 0 0 0;">Showing first 20 matches — narrow your search.</p>
+        {% endif %}
+      {% else %}
+        <p style="color:#445; font-size:0.9rem; margin:0;">
+          No login accounts matching <strong style="color:#ccc;">{{ ip_q }}</strong>.
+        </p>
+      {% endif %}
+    {% else %}
+      <p style="color:#334; font-size:0.875rem; margin:0;">
+        Search by login account name to find their last known IP address.
+      </p>
+    {% endif %}
+
+  </div>
+
+  {# Standard changelist table #}
+  {{ block.super }}
+
+{% endblock %}

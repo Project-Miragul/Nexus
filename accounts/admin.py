@@ -17,6 +17,8 @@ from .models import (
     IpExemption,
     LoginAccounts,
     LoginAccountOwnership,
+    PlayerEventLog,
+    RuleValues,
     ServerAdminRegistration,
     ServerListType,
     WebLoginHistory,
@@ -814,6 +816,11 @@ class AccountAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.record_count_dashboard_view),
                 name='accounts_account_record_counts',
             ),
+            path(
+                'item-history/',
+                self.admin_site.admin_view(self.item_history_view),
+                name='accounts_account_item_history',
+            ),
         ]
         return custom + urls
 
@@ -827,6 +834,7 @@ class AccountAdmin(admin.ModelAdmin):
         extra_context['suspended_count'] = suspended_count
         extra_context['suspended_dashboard_url'] = reverse('admin:accounts_account_suspended_dashboard')
         extra_context['record_counts_url'] = reverse('admin:accounts_account_record_counts')
+        extra_context['item_history_url'] = reverse('admin:accounts_account_item_history')
         return super().changelist_view(request, extra_context=extra_context)
 
     def suspended_dashboard_view(self, request):
@@ -863,6 +871,69 @@ class AccountAdmin(admin.ModelAdmin):
             },
         )
 
+
+    def item_history_view(self, request):
+        import json
+
+        char_query = request.GET.get('q', '').strip()
+        item_query = request.GET.get('item', '').strip()
+        searched = bool(char_query or item_query)
+        results = []
+        error = None
+
+        if searched:
+            # Resolve character names → IDs from game DB
+            char_qs = Characters.objects.using('game_database')
+            if char_query:
+                char_qs = char_qs.filter(name__icontains=char_query)
+            char_map = {c['id']: c['name'] for c in char_qs.values('id', 'name')}
+
+            if not char_map and char_query:
+                error = f'No characters found matching "{char_query}".'
+            else:
+                log_qs = (
+                    PlayerEventLog.objects.using('game_database')
+                    .filter(event_type_id=47)
+                    .order_by('-created_at')
+                )
+                if char_map:
+                    log_qs = log_qs.filter(character_id__in=char_map.keys())
+                if item_query:
+                    log_qs = log_qs.filter(event_data__icontains=item_query)
+
+                for row in log_qs.values(
+                    'id', 'character_id', 'zone_id', 'event_data', 'created_at'
+                )[:500]:
+                    try:
+                        data = json.loads(row['event_data'] or '{}')
+                    except (ValueError, TypeError):
+                        data = {}
+                    results.append({
+                        'character_id': row['character_id'],
+                        'character_name': char_map.get(row['character_id'], f'(id={row["character_id"]})'),
+                        'item_id': data.get('item_id'),
+                        'item_name': data.get('item_name', '—'),
+                        'to_slot': data.get('to_slot'),
+                        'charges': data.get('charges', 0),
+                        'zone_id': row['zone_id'],
+                        'created_at': row['created_at'],
+                    })
+
+        return TemplateResponse(
+            request,
+            'admin/accounts/account/item_history.html',
+            {
+                **self.admin_site.each_context(request),
+                'title': 'Item History',
+                'char_query': char_query,
+                'item_query': item_query,
+                'results': results,
+                'result_count': len(results),
+                'searched': searched,
+                'error': error,
+                'changelist_url': reverse('admin:accounts_account_changelist'),
+            },
+        )
 
     def record_count_dashboard_view(self, request):
         from django.contrib.auth.models import User as AuthUser
@@ -1296,5 +1367,68 @@ class LoginAccountOwnershipAdmin(admin.ModelAdmin):
 
 
 admin.site.register(LoginAccountOwnership, LoginAccountOwnershipAdmin)
+
+
+# ---------------------------------------------------------------------------
+# IP Exemptions — game database, manual DB routing required
+# ---------------------------------------------------------------------------
+
+class IpExemptionAdmin(admin.ModelAdmin):
+    list_display = ['exemption_ip', 'exemption_amount']
+    search_fields = ['exemption_ip']
+    ordering = ['exemption_ip']
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).using('game_database')
+
+    def save_model(self, request, obj, form, change):
+        obj.save(using='game_database')
+
+    def delete_model(self, request, obj):
+        obj.delete(using='game_database')
+
+    def delete_queryset(self, request, queryset):
+        queryset.using('game_database').delete()
+
+    def changelist_view(self, request, extra_context=None):
+        extra_context = extra_context or {}
+
+        # Fetch the box-limit rules from the game DB
+        box_rules = list(
+            RuleValues.objects.using('game_database')
+            .filter(rule_name__icontains='AccountSessionLimit')
+            .values('rule_name', 'rule_value', 'notes')
+        )
+        extra_context['box_rules'] = box_rules
+        # Derive the effective limit: first matching rule value, else compiled default of 1
+        extra_context['effective_limit'] = box_rules[0]['rule_value'] if box_rules else '1'
+        extra_context['limit_is_default'] = not bool(box_rules)
+
+        # Inline IP lookup
+        ip_q = request.GET.get('ip_q', '').strip()
+        extra_context['ip_q'] = ip_q
+        if ip_q:
+            matches = list(
+                LoginAccounts.objects.using('login_server_database')
+                .filter(account_name__icontains=ip_q)
+                .values('account_name', 'last_ip_address', 'last_login_date')
+                .order_by('account_name')[:20]
+            )
+            # Flag which IPs already have an exemption
+            ips_with_exemption = set(
+                IpExemption.objects.using('game_database')
+                .filter(exemption_ip__in=[m['last_ip_address'] for m in matches if m['last_ip_address']])
+                .values_list('exemption_ip', flat=True)
+            )
+            for m in matches:
+                m['has_exemption'] = m['last_ip_address'] in ips_with_exemption
+            extra_context['ip_lookup_results'] = matches
+        else:
+            extra_context['ip_lookup_results'] = None
+
+        return super().changelist_view(request, extra_context=extra_context)
+
+
+admin.site.register(IpExemption, IpExemptionAdmin)
 
 

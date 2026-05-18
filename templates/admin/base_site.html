@@ -9,30 +9,145 @@
 {% endif %}
 {% endblock %}
 
+{% block extrahead %}
+{{ block.super }}
+<style>
+/* ---------------------------------------------------------------
+   Nexus custom properties — light mode defaults
+--------------------------------------------------------------- */
+:root {
+  --nx-card-bg: #eef4fb;
+  --nx-card-border: #b8d0e8;
+  --nx-heading: #2c5282;
+  --nx-subtitle: #4a6a85;
+  --nx-search-bg: #fff;
+  --nx-search-border: #7a9fc0;
+
+  --nx-tile-bg: #f5f5f5;
+  --nx-tile-border: #e0e0e0;
+  --nx-tile-label: #555;
+  --nx-tile-num: #999;
+  --nx-tile-ok: #2e7d32;
+
+  --nx-sus-bg: #fff3e0; --nx-sus-border: #ffb74d; --nx-sus-num: #e65100;
+  --nx-ban-bg: #ffebee; --nx-ban-border: #ef9a9a; --nx-ban-num: #c62828;
+  --nx-unl-bg: #fffde7; --nx-unl-border: #f9a825; --nx-unl-num: #f57f17;
+  --nx-new-num: #1565c0;
+
+  --nx-panel-bg: #f5f7fa;
+  --nx-panel-border: #e0e4e8;
+  --nx-panel-heading: #5a6a7a;
+  --nx-panel-divider: #d4d8dc;
+  --nx-ql-color: #2563a8;
+  --nx-ql-hover: #1a4080;
+  --nx-ql-desc: #555;
+
+  --nx-nav-bg: #f0f4f8;
+  --nx-nav-border: #d0dce8;
+  --nx-nav-sep: #c8d4e0;
+  --nx-nav-active: #1565c0;
+  --nx-nav-dim: #5a6a7a;
+}
+
+/* Dark mode — system preference */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --nx-card-bg: #1a2433; --nx-card-border: #2a3a4a;
+    --nx-heading: #8aa3ff; --nx-subtitle: #8a9fb5;
+    --nx-search-bg: #0f1a24; --nx-search-border: #3a5a7a;
+
+    --nx-tile-bg: #1a1a1a; --nx-tile-border: #2a2a2a;
+    --nx-tile-label: #888; --nx-tile-num: #666; --nx-tile-ok: #2a6a2a;
+
+    --nx-sus-bg: #2a1800; --nx-sus-border: #6b3a00; --nx-sus-num: #e8a060;
+    --nx-ban-bg: #2a0a0a; --nx-ban-border: #6b1111; --nx-ban-num: #e07070;
+    --nx-unl-bg: #1a1a00; --nx-unl-border: #5a5a00; --nx-unl-num: #d4d470;
+    --nx-new-num: #8aa3ff;
+
+    --nx-panel-bg: #111; --nx-panel-border: #252525;
+    --nx-panel-heading: #778; --nx-panel-divider: #222;
+    --nx-ql-color: #8aa3ff; --nx-ql-hover: #b8ccff; --nx-ql-desc: #888;
+
+    --nx-nav-bg: #111; --nx-nav-border: #222; --nx-nav-sep: #2a2a2a;
+    --nx-nav-active: #7a9fd4; --nx-nav-dim: #556;
+  }
+}
+
+/* Dark mode — manual toggle */
+html[data-theme="dark"] {
+  --nx-card-bg: #1a2433; --nx-card-border: #2a3a4a;
+  --nx-heading: #8aa3ff; --nx-subtitle: #8a9fb5;
+  --nx-search-bg: #0f1a24; --nx-search-border: #3a5a7a;
+
+  --nx-tile-bg: #1a1a1a; --nx-tile-border: #2a2a2a;
+  --nx-tile-label: #888; --nx-tile-num: #666; --nx-tile-ok: #2a6a2a;
+
+  --nx-sus-bg: #2a1800; --nx-sus-border: #6b3a00; --nx-sus-num: #e8a060;
+  --nx-ban-bg: #2a0a0a; --nx-ban-border: #6b1111; --nx-ban-num: #e07070;
+  --nx-unl-bg: #1a1a00; --nx-unl-border: #5a5a00; --nx-unl-num: #d4d470;
+  --nx-new-num: #8aa3ff;
+
+  --nx-panel-bg: #111; --nx-panel-border: #252525;
+  --nx-panel-heading: #778; --nx-panel-divider: #222;
+  --nx-ql-color: #8aa3ff; --nx-ql-hover: #b8ccff; --nx-ql-desc: #888;
+
+  --nx-nav-bg: #111; --nx-nav-border: #222; --nx-nav-sep: #2a2a2a;
+  --nx-nav-active: #7a9fd4; --nx-nav-dim: #556;
+}
+
+/* Light mode — manual toggle (overrides system dark preference) */
+html[data-theme="light"] {
+  --nx-card-bg: #eef4fb; --nx-card-border: #b8d0e8;
+  --nx-heading: #2c5282; --nx-subtitle: #4a6a85;
+  --nx-search-bg: #fff; --nx-search-border: #7a9fc0;
+
+  --nx-tile-bg: #f5f5f5; --nx-tile-border: #e0e0e0;
+  --nx-tile-label: #555; --nx-tile-num: #999; --nx-tile-ok: #2e7d32;
+
+  --nx-sus-bg: #fff3e0; --nx-sus-border: #ffb74d; --nx-sus-num: #e65100;
+  --nx-ban-bg: #ffebee; --nx-ban-border: #ef9a9a; --nx-ban-num: #c62828;
+  --nx-unl-bg: #fffde7; --nx-unl-border: #f9a825; --nx-unl-num: #f57f17;
+  --nx-new-num: #1565c0;
+
+  --nx-panel-bg: #f5f7fa; --nx-panel-border: #e0e4e8;
+  --nx-panel-heading: #5a6a7a; --nx-panel-divider: #d4d8dc;
+  --nx-ql-color: #2563a8; --nx-ql-hover: #1a4080; --nx-ql-desc: #555;
+
+  --nx-nav-bg: #f0f4f8; --nx-nav-border: #d0dce8; --nx-nav-sep: #c8d4e0;
+  --nx-nav-active: #1565c0; --nx-nav-dim: #5a6a7a;
+}
+
+/* Nav bar */
+#nexus-staff-nav a { transition: color 0.15s; }
+#nexus-staff-nav a:hover { text-decoration: underline; }
+</style>
+{% endblock %}
+
 {% block nav-global %}
-<nav id="nexus-staff-nav" style="background:#111; border-top:1px solid #222; padding:5px 20px; display:flex; gap:0; align-items:center;">
+<nav id="nexus-staff-nav" style="background:var(--nx-nav-bg); border-top:1px solid var(--nx-nav-border);
+     padding:5px 20px; display:flex; gap:0; align-items:center;">
   <a href="{% url 'admin:index' %}"
-     style="color:#556; font-size:0.8em; text-decoration:none; padding:3px 10px 3px 0;">
+     style="color:var(--nx-nav-dim); font-size:0.8em; text-decoration:none; padding:3px 10px 3px 0;">
     Dashboard
   </a>
-  <span style="color:#2a2a2a; margin:0 2px;">|</span>
+  <span style="color:var(--nx-nav-sep); margin:0 2px;">|</span>
   <a href="{% url 'admin:accounts_user_character_map' %}"
-     style="color:#7a9fd4; font-size:0.8em; text-decoration:none; font-weight:bold; padding:3px 10px;">
+     style="color:var(--nx-nav-active); font-size:0.8em; text-decoration:none; font-weight:bold; padding:3px 10px;">
     Character Map
   </a>
-  <span style="color:#2a2a2a; margin:0 2px;">|</span>
+  <span style="color:var(--nx-nav-sep); margin:0 2px;">|</span>
   <a href="{% url 'admin:accounts_loginaccountownership_ip_conflicts' %}"
-     style="color:#556; font-size:0.8em; text-decoration:none; padding:3px 10px;">
+     style="color:var(--nx-nav-dim); font-size:0.8em; text-decoration:none; padding:3px 10px;">
     IP Conflicts
   </a>
-  <span style="color:#2a2a2a; margin:0 2px;">|</span>
+  <span style="color:var(--nx-nav-sep); margin:0 2px;">|</span>
   <a href="{% url 'admin:accounts_loginaccountownership_shared_ip' %}"
-     style="color:#556; font-size:0.8em; text-decoration:none; padding:3px 10px;">
+     style="color:var(--nx-nav-dim); font-size:0.8em; text-decoration:none; padding:3px 10px;">
     Shared IPs
   </a>
-  <span style="color:#2a2a2a; margin:0 2px;">|</span>
+  <span style="color:var(--nx-nav-sep); margin:0 2px;">|</span>
   <a href="{% url 'admin:accounts_account_suspended_dashboard' %}"
-     style="color:#556; font-size:0.8em; text-decoration:none; padding:3px 10px;">
+     style="color:var(--nx-nav-dim); font-size:0.8em; text-decoration:none; padding:3px 10px;">
     Suspended
   </a>
 </nav>

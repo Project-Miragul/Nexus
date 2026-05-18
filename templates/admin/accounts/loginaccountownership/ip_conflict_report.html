@@ -8,7 +8,7 @@
     Users whose owned login accounts were last seen from <strong>different IP addresses on the same calendar day</strong>.
     This is an anomaly-detection tool for staff review — not a definitive violation report.
   </p>
-  <p style="color:#888; font-size:0.9em; margin-bottom:1.5em;">
+  <p style="color:#888; font-size:0.95rem; margin-bottom:1.5em;">
     Common legitimate explanations include VPN use, ISP IP rotation, and NAT re-assignment.
     Use this data to identify accounts worth closer investigation, particularly where the pattern
     is consistent with circumventing box limits or cross-player account sharing.
@@ -26,14 +26,14 @@
         <div style="background:#2a3a4a; padding:8px 14px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
           <span style="font-size:1.05em; font-weight:bold;">{{ group.grouper }}</span>
           <a href="{% url 'admin:accounts_user_character_map' %}?q={{ group.grouper }}"
-             style="font-size:0.8em; background:#1a2a3a; color:#8aa3ff; border-radius:3px; padding:2px 10px; text-decoration:none; white-space:nowrap;">
+             style="font-size:0.875rem; background:#1a2a3a; color:#8aa3ff; border-radius:3px; padding:2px 10px; text-decoration:none; white-space:nowrap;">
             Investigate &rarr;
           </a>
         </div>
 
         {% for row in group.list %}
           <div style="padding:10px 14px; border-top:1px solid #333;">
-            <div style="margin-bottom:6px; color:#aaa; font-size:0.9em;">
+            <div style="margin-bottom:6px; color:#aaa; font-size:0.95rem;">
               {{ row.date }}
               &nbsp;·&nbsp;
               {% for ip in row.ips %}
@@ -41,7 +41,7 @@
               {% endfor %}
             </div>
 
-            <table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+            <table style="width:100%; border-collapse:collapse;">
               <thead>
                 <tr>
                   <th style="text-align:left; padding:4px 10px; border-bottom:1px solid #444; color:#888;">Login Account</th>

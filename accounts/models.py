@@ -183,6 +183,21 @@ class IpExemption(models.Model):
         managed = False
 
 
+class RuleValues(models.Model):
+    """
+    Maps to the rule_values table in the game database.
+    Stores server configuration rules as name/value pairs.
+    """
+    ruleset_id = models.IntegerField(default=0)
+    rule_name = models.CharField(max_length=255, primary_key=True)
+    rule_value = models.CharField(max_length=30, null=False)
+    notes = models.TextField(null=True, blank=True)
+
+    class Meta:
+        db_table = "rule_values"
+        managed = False
+
+
 class AccountIp(models.Model):
     """
     Maps to the account_ip table in the game database.
@@ -198,4 +213,30 @@ class AccountIp(models.Model):
         db_table = "account_ip"
         managed = False
         unique_together = [('accid', 'ip')]
+
+
+class PlayerEventLog(models.Model):
+    """
+    Maps to the player_event_logs table in the game database.
+    Stores structured player events; event_data is a JSON string whose
+    schema varies by event_type_id.
+    """
+    id = models.BigAutoField(primary_key=True)
+    account_id = models.BigIntegerField(null=True, blank=True)
+    character_id = models.BigIntegerField(null=True, blank=True, db_index=True)
+    zone_id = models.IntegerField(null=True, blank=True)
+    instance_id = models.IntegerField(null=True, blank=True)
+    x = models.FloatField(null=True, blank=True)
+    y = models.FloatField(null=True, blank=True)
+    z = models.FloatField(null=True, blank=True)
+    heading = models.FloatField(null=True, blank=True)
+    event_type_id = models.IntegerField(null=True, blank=True, db_index=True)
+    event_type_name = models.CharField(max_length=255, null=True, blank=True)
+    event_data = models.TextField(null=True, blank=True)
+    etl_table_id = models.BigIntegerField(default=0)
+    created_at = models.DateTimeField(null=True, blank=True, db_index=True)
+
+    class Meta:
+        db_table = "player_event_logs"
+        managed = False
 

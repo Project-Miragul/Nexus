@@ -9,7 +9,7 @@
     claimed them. Players with these accounts can log into the game but cannot manage their account
     through the web portal.
   </p>
-  <p style="color:#888; font-size:0.9em; margin-bottom:1.5em;">
+  <p style="color:#888; font-size:0.95rem; margin-bottom:1.5em;">
     Use <strong>assign_ownership</strong> or the admin add form to link any of these to a web account.
   </p>
 
@@ -18,7 +18,7 @@
       <strong>{{ unlinked_count }}</strong> unlinked login account{{ unlinked_count|pluralize }}.
     </p>
 
-    <table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+    <table style="width:100%; border-collapse:collapse;">
       <thead>
         <tr>
           <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">ID</th>
@@ -41,7 +41,7 @@
           <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; color:#aaa;">{{ acct.source_loginserver|default:"—" }}</td>
           <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; white-space:nowrap;">
             <a href="{% url 'admin:accounts_user_character_map' %}?q={{ acct.account_name }}"
-               style="font-size:0.8em; color:#8aa3ff; text-decoration:none;">Investigate &rarr;</a>
+               style="font-size:0.875rem; color:#8aa3ff; text-decoration:none;">Investigate &rarr;</a>
           </td>
         </tr>
         {% endfor %}

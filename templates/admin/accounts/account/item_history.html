@@ -1,0 +1,87 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+
+  <h2>Item History</h2>
+  <p style="color:#aaa; margin-bottom:0.4em;">
+    Search <code>player_event_logs</code> for Item Creation events (type 47).
+    Covers items received via GM commands, quest rewards, and server-side item creation.
+  </p>
+  <p style="color:#666; font-size:0.9rem; margin-bottom:1.5em;">
+    Note: player drops, trades, and deletions are not currently logged. This shows when an item
+    was <strong>created and given</strong> to a character, not its entire history.
+  </p>
+
+  <form method="get" style="margin-bottom:2em; display:flex; gap:10px; align-items:flex-end; flex-wrap:wrap;">
+    <div>
+      <label style="color:#aaa; display:block; font-size:0.9rem; margin-bottom:4px;">Character name</label>
+      <input type="text" name="q" value="{{ char_query }}" placeholder="e.g. Firiona"
+             style="padding:6px 10px; width:220px; background:#1a1a1a; border:1px solid #444; color:#eee; border-radius:4px;">
+    </div>
+    <div>
+      <label style="color:#aaa; display:block; font-size:0.9rem; margin-bottom:4px;">Item name</label>
+      <input type="text" name="item" value="{{ item_query }}" placeholder="e.g. Satchel"
+             style="padding:6px 10px; width:220px; background:#1a1a1a; border:1px solid #444; color:#eee; border-radius:4px;">
+    </div>
+    <button type="submit"
+            style="padding:7px 18px; background:#417690; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
+      Search
+    </button>
+    {% if char_query or item_query %}
+      <a href="?" style="color:#666; font-size:0.9rem; align-self:center;">Clear</a>
+    {% endif %}
+  </form>
+
+  {% if error %}
+    <p style="color:#e07070;">{{ error }}</p>
+  {% elif searched %}
+    {% if results %}
+      <p style="color:#aaa; margin-bottom:1em;">
+        <strong>{{ result_count }}</strong> event{{ result_count|pluralize }}
+        {% if result_count == 500 %}<span style="color:#888; font-size:0.9rem;">(capped at 500 — narrow your search)</span>{% endif %}
+      </p>
+
+      <table style="width:100%; border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Character</th>
+            <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Item</th>
+            <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Item ID</th>
+            <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Slot</th>
+            <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Charges</th>
+            <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Received (UTC)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in results %}
+          <tr>
+            <td style="padding:4px 12px; border-bottom:1px solid #222; font-family:monospace; color:#8aa3ff;">
+              <a href="{% url 'admin:accounts_user_character_map' %}?q={{ row.character_name }}"
+                 style="color:#8aa3ff; text-decoration:none;">{{ row.character_name }}</a>
+            </td>
+            <td style="padding:4px 12px; border-bottom:1px solid #222; color:#ccc;">{{ row.item_name }}</td>
+            <td style="padding:4px 12px; border-bottom:1px solid #222; color:#666; font-family:monospace;">{{ row.item_id|default:"—" }}</td>
+            <td style="padding:4px 12px; border-bottom:1px solid #222; color:#666;">{{ row.to_slot|default:"—" }}</td>
+            <td style="padding:4px 12px; border-bottom:1px solid #222; color:#666;">{{ row.charges }}</td>
+            <td style="padding:4px 12px; border-bottom:1px solid #222; color:#aaa;">{{ row.created_at }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+    {% else %}
+      <p style="color:#aaa;">
+        No item creation events found
+        {% if char_query %}for character matching <strong>{{ char_query }}</strong>{% endif %}
+        {% if item_query %}with item matching <strong>{{ item_query }}</strong>{% endif %}.
+      </p>
+    {% endif %}
+  {% endif %}
+
+  <p style="margin-top:2em;">
+    <a href="{{ changelist_url }}" class="button">Back to account list</a>
+  </p>
+
+</div>
+{% endblock %}

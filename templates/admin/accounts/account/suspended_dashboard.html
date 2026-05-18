@@ -13,7 +13,7 @@
       <strong>{{ suspended_count }}</strong> account{{ suspended_count|pluralize }} currently suspended.
     </p>
 
-    <table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+    <table style="width:100%; border-collapse:collapse;">
       <thead>
         <tr>
           <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Game Account</th>
@@ -43,7 +43,7 @@
           <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; white-space:nowrap;">
             {% if acct.web_username != '—' %}
               <a href="{% url 'admin:accounts_user_character_map' %}?q={{ acct.web_username }}"
-                 style="font-size:0.8em; color:#8aa3ff; text-decoration:none;">Investigate &rarr;</a>
+                 style="font-size:0.875rem; color:#8aa3ff; text-decoration:none;">Investigate &rarr;</a>
             {% endif %}
           </td>
         </tr>
