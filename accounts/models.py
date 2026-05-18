@@ -179,8 +179,6 @@ class Account(models.Model):
     crc_eqgame = models.TextField(null=True, blank=True)
     crc_skillcaps = models.TextField(null=True, blank=True)
     crc_basedata = models.TextField(null=True, blank=True)
-    mule = models.SmallIntegerField(default=0, null=False)
-
     class Meta:
         db_table = "account"
         managed = False
