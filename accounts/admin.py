@@ -1212,3 +1212,88 @@ class LoginAccountOwnershipAdmin(admin.ModelAdmin):
 
 
 admin.site.register(LoginAccountOwnership, LoginAccountOwnershipAdmin)
+
+
+# ---------------------------------------------------------------------------
+# Custom AdminSite — injects live counts into the dashboard index
+# ---------------------------------------------------------------------------
+
+class NexusAdminSite(admin.AdminSite):
+    def index(self, request, extra_context=None):
+        from django.contrib.auth.models import User as AuthUser
+        from django.utils import timezone as tz
+        import datetime
+
+        counts = {}
+        try:
+            now = tz.now()
+            today = now.date()
+
+            counts['suspended'] = (
+                Account.objects.using('game_database')
+                .filter(suspendeduntil__gt=now)
+                .count()
+            )
+            counts['banned'] = (
+                Account.objects.using('game_database')
+                .filter(revoked=1)
+                .count()
+            )
+            all_ls_ids = set(
+                LoginAccounts.objects.using('login_server_database')
+                .values_list('id', flat=True)
+            )
+            linked_ids = set(
+                LoginAccountOwnership.objects.values_list('login_account_id', flat=True)
+            )
+            counts['unlinked'] = len(all_ls_ids - linked_ids)
+            counts['new_today'] = AuthUser.objects.filter(date_joined__date=today).count()
+            counts['web_users'] = AuthUser.objects.count()
+        except Exception:
+            pass
+
+        extra_context = extra_context or {}
+        extra_context['dashboard_counts'] = counts
+        extra_context['character_map_url'] = reverse('admin:accounts_user_character_map')
+        extra_context['reports'] = [
+            {
+                'label': 'Investigate',
+                'links': [
+                    {'name': 'Character Map', 'url': reverse('admin:accounts_user_character_map'), 'desc': 'Search any name across all accounts'},
+                    {'name': 'IP Conflict Report', 'url': reverse('admin:accounts_loginaccountownership_ip_conflicts'), 'desc': 'Single users logging in from multiple IPs same day'},
+                    {'name': 'Shared IP Report', 'url': reverse('admin:accounts_loginaccountownership_shared_ip'), 'desc': 'Different web users sharing the same IP'},
+                ],
+            },
+            {
+                'label': 'Account Health',
+                'links': [
+                    {'name': 'Unlinked Accounts', 'url': reverse('admin:accounts_loginaccountownership_unlinked'), 'desc': 'Login accounts with no web user'},
+                    {'name': 'Orphaned Records', 'url': reverse('admin:accounts_loginaccountownership_cleanup'), 'desc': 'Ownership records pointing to deleted login accounts'},
+                    {'name': 'Shared Emails', 'url': reverse('admin:accounts_user_shared_email'), 'desc': 'Web users sharing the same email address'},
+                    {'name': 'High Velocity Signups', 'url': reverse('admin:accounts_user_high_velocity'), 'desc': 'Days with burst account registrations'},
+                    {'name': 'MFA Status', 'url': reverse('admin:accounts_user_mfa_status'), 'desc': 'Which web users have 2FA enrolled'},
+                ],
+            },
+            {
+                'label': 'Player Status',
+                'links': [
+                    {'name': 'Suspended Accounts', 'url': reverse('admin:accounts_account_suspended_dashboard'), 'desc': 'Currently suspended world server accounts'},
+                    {'name': 'Web Login History', 'url': reverse('admin:accounts_webloginhistory_changelist'), 'desc': 'Recent portal login activity'},
+                ],
+            },
+            {
+                'label': 'System',
+                'links': [
+                    {'name': 'Record Counts', 'url': reverse('admin:accounts_account_record_counts'), 'desc': 'Live row counts across all three databases'},
+                    {'name': 'Web Users', 'url': reverse('admin:auth_user_changelist'), 'desc': 'All portal accounts'},
+                    {'name': 'World Accounts', 'url': reverse('admin:accounts_account_changelist'), 'desc': 'Game server accounts'},
+                    {'name': 'Login Accounts', 'url': reverse('admin:accounts_loginaccounts_changelist'), 'desc': 'Login server accounts'},
+                    {'name': 'Ownership Links', 'url': reverse('admin:accounts_loginaccountownership_changelist'), 'desc': 'Web user ↔ login account mappings'},
+                ],
+            },
+        ]
+        return super().index(request, extra_context=extra_context)
+
+
+# Swap the default admin site class in-place — no re-registration needed
+admin.site.__class__ = NexusAdminSite
