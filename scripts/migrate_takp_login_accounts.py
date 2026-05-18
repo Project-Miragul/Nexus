@@ -98,14 +98,17 @@ def load_tsv(path):
 
 def build_insert_block(rows):
     """Return a complete INSERT statement for a batch of value tuples."""
+    # id is explicitly included to preserve the TAKP LoginServerID so that
+    # world server account.lsaccount_id references remain valid after import.
     columns = (
-        'account_name, account_password, account_email, source_loginserver, '
+        'id, account_name, account_password, account_email, source_loginserver, '
         'last_ip_address, last_login_date, created_at'
     )
     values_sql = []
     for row in rows:
         values_sql.append(
-            '  ({}, {}, {}, {}, {}, {}, {})'.format(
+            '  ({}, {}, {}, {}, {}, {}, {}, {})'.format(
+                row['id'],
                 sql_str(row['account_name']),
                 sql_str(row['account_password']),
                 sql_str(row['account_email']),
@@ -196,6 +199,7 @@ def main():
                     continue
 
         import_rows.append({
+            'id':               ls_id,
             'account_name':     acct_name,
             'account_password': password,
             'account_email':    email,
