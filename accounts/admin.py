@@ -146,6 +146,91 @@ def lift_suspension_action(modeladmin, request, queryset):
 
 
 # ---------------------------------------------------------------------------
+# Ban / unban actions
+# ---------------------------------------------------------------------------
+
+@admin.action(description='Permanently ban game accounts…')
+def ban_accounts_action(modeladmin, request, queryset):
+    if not request.user.has_perm('accounts.can_suspend_accounts'):
+        modeladmin.message_user(request, "You don't have permission to ban accounts.", messages.ERROR)
+        return
+
+    if request.POST.get('confirmed') == 'yes':
+        reason = request.POST.get('reason', '').strip() or 'Banned by admin'
+        also_disable_web = request.POST.get('disable_web_login') == '1'
+
+        usernames = list(queryset.values_list('username', flat=True))
+        ls_ids = _ls_ids_for_users(usernames)
+        _game_accounts_qs(ls_ids).update(revoked=1, ban_reason=reason)
+
+        if also_disable_web:
+            queryset.update(is_active=False)
+
+        modeladmin.message_user(
+            request,
+            f"Permanently banned game accounts for {queryset.count()} user(s).",
+            messages.SUCCESS,
+        )
+        return
+
+    usernames = list(queryset.values_list('username', flat=True))
+    ls_ids = _ls_ids_for_users(usernames)
+    game_accounts = list(
+        _game_accounts_qs(ls_ids).values('name', 'revoked', 'ban_reason')
+    )
+
+    return TemplateResponse(request, 'admin/accounts/ban_confirmation.html', {
+        **modeladmin.admin_site.each_context(request),
+        'title': 'Permanently Ban Game Accounts',
+        'queryset': queryset,
+        'game_accounts': game_accounts,
+        'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME,
+        'action_name': 'ban_accounts_action',
+    })
+
+
+@admin.action(description='Lift permanent ban…')
+def lift_ban_action(modeladmin, request, queryset):
+    if not request.user.has_perm('accounts.can_suspend_accounts'):
+        modeladmin.message_user(request, "You don't have permission to lift bans.", messages.ERROR)
+        return
+
+    if request.POST.get('confirmed') == 'yes':
+        also_restore_web = request.POST.get('restore_web_login') == '1'
+
+        usernames = list(queryset.values_list('username', flat=True))
+        ls_ids = _ls_ids_for_users(usernames)
+        _game_accounts_qs(ls_ids).update(revoked=0, ban_reason='')
+
+        if also_restore_web:
+            queryset.update(is_active=True)
+
+        modeladmin.message_user(
+            request,
+            f"Lifted permanent ban for {queryset.count()} user(s).",
+            messages.SUCCESS,
+        )
+        return
+
+    usernames = list(queryset.values_list('username', flat=True))
+    ls_ids = _ls_ids_for_users(usernames)
+    game_accounts = list(
+        _game_accounts_qs(ls_ids)
+        .filter(revoked=1)
+        .values('name', 'ban_reason')
+    )
+
+    return TemplateResponse(request, 'admin/accounts/lift_ban_confirmation.html', {
+        **modeladmin.admin_site.each_context(request),
+        'title': 'Lift Permanent Ban',
+        'queryset': queryset,
+        'game_accounts': game_accounts,
+        'action_checkbox_name': admin.helpers.ACTION_CHECKBOX_NAME,
+        'action_name': 'lift_ban_action',
+    })
+
+
+# ---------------------------------------------------------------------------
 # Custom User admin with suspension actions
 # ---------------------------------------------------------------------------
 
@@ -154,6 +239,8 @@ class CustomUserAdmin(BaseUserAdmin):
     actions = list(BaseUserAdmin.actions or []) + [
         suspend_accounts_action,
         lift_suspension_action,
+        ban_accounts_action,
+        lift_ban_action,
     ]
 
     def get_urls(self):

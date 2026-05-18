@@ -1,0 +1,76 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+  <h2>Suspend Game Accounts</h2>
+  <p style="color:#aaa; margin-bottom:1em;">
+    This will set a future <code>suspendeduntil</code> date on all game accounts linked to the
+    selected web user(s). Players will be unable to log into the game server until the suspension expires.
+  </p>
+
+  <h3 style="color:#ccc;">Selected web user(s)</h3>
+  <ul style="color:#aaa; margin-bottom:1em;">
+    {% for user in queryset %}
+      <li>{{ user.username }}</li>
+    {% endfor %}
+  </ul>
+
+  {% if game_accounts %}
+    <h3 style="color:#ccc;">Game accounts that will be suspended</h3>
+    <table style="width:100%; max-width:600px; border-collapse:collapse; font-size:0.9em; margin-bottom:1.5em;">
+      <thead>
+        <tr>
+          <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Account</th>
+          <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Currently Suspended Until</th>
+          <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #444; color:#666;">Reason</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for acct in game_accounts %}
+        <tr>
+          <td style="padding:4px 12px; border-bottom:1px solid #222; font-family:monospace; color:#ccc;">{{ acct.name }}</td>
+          <td style="padding:4px 12px; border-bottom:1px solid #222; color:#aaa;">{{ acct.suspendeduntil|default:"—" }}</td>
+          <td style="padding:4px 12px; border-bottom:1px solid #222; color:#aaa;">{{ acct.suspend_reason|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <p style="color:#aaa; margin-bottom:1.5em;">No linked game accounts found.</p>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="{{ action_name }}">
+    <input type="hidden" name="confirmed" value="yes">
+    {% for user in queryset %}
+      <input type="hidden" name="{{ action_checkbox_name }}" value="{{ user.pk }}">
+    {% endfor %}
+
+    <div style="margin-bottom:1em;">
+      <label style="color:#ccc; display:block; margin-bottom:4px;">Reason</label>
+      <input type="text" name="reason" placeholder="Reason for suspension…"
+             style="width:400px; padding:6px 10px; background:#1a1a1a; border:1px solid #444; color:#eee; border-radius:4px;">
+    </div>
+
+    <div style="margin-bottom:1em;">
+      <label style="color:#ccc; display:block; margin-bottom:4px;">Duration (days)</label>
+      <input type="number" name="duration_days" value="7" min="1"
+             style="width:100px; padding:6px 10px; background:#1a1a1a; border:1px solid #444; color:#eee; border-radius:4px;">
+    </div>
+
+    <div style="margin-bottom:1.5em;">
+      <label style="color:#aaa; display:flex; align-items:center; gap:8px;">
+        <input type="checkbox" name="disable_web_login" value="1">
+        Also disable web account login
+      </label>
+    </div>
+
+    <button type="submit"
+            style="padding:7px 18px; background:#8B4500; color:#fff; border:none; border-radius:4px; cursor:pointer; font-weight:bold; margin-right:10px;">
+      Confirm Suspension
+    </button>
+    <a href="../" style="color:#aaa;">Cancel</a>
+  </form>
+</div>
+{% endblock %}
