@@ -278,83 +278,192 @@ class CustomUserAdmin(BaseUserAdmin):
         return super().changelist_view(request, extra_context=extra_context)
 
     def character_map_view(self, request):
+        from django.contrib.auth.models import User as AuthUser
+        from datetime import datetime, timezone as dt_timezone
+
         query = request.GET.get('q', '').strip()
         results = []
+        unlinked_results = []
         searched = False
 
         if query:
             searched = True
-            # Step 1: find matching web users
-            from django.contrib.auth.models import User as AuthUser
-            users = list(
-                AuthUser.objects.filter(username__icontains=query)
-                .values('id', 'username', 'email', 'is_active')
+
+            # Accumulate {user_id: [reason, ...]} across all search paths.
+            # Using a list+dedup so insertion order is preserved for display.
+            match_reasons = {}
+
+            def add_reason(uid, reason):
+                reasons = match_reasons.setdefault(uid, [])
+                if reason not in reasons:
+                    reasons.append(reason)
+
+            # ------------------------------------------------------------------
+            # Path 1: web username
+            # ------------------------------------------------------------------
+            for u in AuthUser.objects.filter(username__icontains=query).values('id', 'username'):
+                add_reason(u['id'], f"web user: {u['username']}")
+
+            # ------------------------------------------------------------------
+            # Path 2: login account name  (LS DB → ownership → user)
+            # ------------------------------------------------------------------
+            ls_name_matches = list(
+                LoginAccounts.objects.using('login_server_database')
+                .filter(account_name__icontains=query)
+                .values('id', 'account_name')
             )
+            ls_name_map = {m['id']: m['account_name'] for m in ls_name_matches}
+            if ls_name_map:
+                for o in LoginAccountOwnership.objects.filter(
+                    login_account_id__in=ls_name_map.keys()
+                ).values('user_id', 'login_account_id'):
+                    add_reason(o['user_id'], f"login account: {ls_name_map[o['login_account_id']]}")
 
-            # Step 2: for each user, get their login account IDs
-            user_ids = [u['id'] for u in users]
-            ownerships = list(
-                LoginAccountOwnership.objects
-                .filter(user_id__in=user_ids)
-                .values('user_id', 'login_account_id')
+            # ------------------------------------------------------------------
+            # Path 3: world account name  (game DB → ownership → user)
+            # ------------------------------------------------------------------
+            wa_name_matches = list(
+                Account.objects.using('game_database')
+                .filter(name__icontains=query)
+                .values('id', 'name', 'lsaccount_id')
             )
-            ownership_by_user = {}
-            for o in ownerships:
-                ownership_by_user.setdefault(o['user_id'], []).append(o['login_account_id'])
+            if wa_name_matches:
+                wa_lsid_to_name = {
+                    m['lsaccount_id']: m['name']
+                    for m in wa_name_matches if m['lsaccount_id']
+                }
+                linked_lsids = set()
+                for o in LoginAccountOwnership.objects.filter(
+                    login_account_id__in=wa_lsid_to_name.keys()
+                ).values('user_id', 'login_account_id'):
+                    add_reason(o['user_id'], f"world account: {wa_lsid_to_name[o['login_account_id']]}")
+                    linked_lsids.add(o['login_account_id'])
+                # World accounts with no web user
+                seen_wa_ids = set()
+                for m in wa_name_matches:
+                    if m['lsaccount_id'] not in linked_lsids and m['id'] not in seen_wa_ids:
+                        seen_wa_ids.add(m['id'])
+                        unlinked_results.append({
+                            'type': 'world_account',
+                            'name': m['name'],
+                            'id': m['id'],
+                            'lsaccount_id': m['lsaccount_id'],
+                        })
 
-            # Step 3: get login account names from LS DB
-            all_ls_ids = [o['login_account_id'] for o in ownerships]
-            ls_accounts = {}
-            if all_ls_ids:
-                for la in LoginAccounts.objects.using('login_server_database').filter(
-                    id__in=all_ls_ids
-                ).values('id', 'account_name'):
-                    ls_accounts[la['id']] = la['account_name']
+            # ------------------------------------------------------------------
+            # Path 4: character name  (game DB → world account → ownership → user)
+            # ------------------------------------------------------------------
+            char_matches = list(
+                Characters.objects.using('game_database')
+                .filter(name__icontains=query)
+                .values('id', 'name', 'account_id', 'level')
+            )
+            if char_matches:
+                chars_per_account = {}
+                for c in char_matches:
+                    chars_per_account.setdefault(c['account_id'], []).append(c['name'])
 
-            # Step 4: get world server accounts from game DB
-            world_accounts = {}
-            if all_ls_ids:
-                for wa in Account.objects.using('game_database').filter(
-                    lsaccount_id__in=all_ls_ids
-                ).values('id', 'name', 'lsaccount_id', 'status', 'revoked'):
-                    world_accounts.setdefault(wa['lsaccount_id'], []).append(wa)
+                wa_for_chars = list(
+                    Account.objects.using('game_database')
+                    .filter(id__in=chars_per_account.keys())
+                    .values('id', 'lsaccount_id')
+                )
+                lsid_to_acc_ids = {}
+                for wa in wa_for_chars:
+                    if wa['lsaccount_id']:
+                        lsid_to_acc_ids.setdefault(wa['lsaccount_id'], []).append(wa['id'])
 
-            # Step 5: get characters from game DB
-            from datetime import datetime, timezone as dt_timezone
-            world_account_ids = [wa['id'] for was in world_accounts.values() for wa in was]
-            characters_by_account = {}
-            if world_account_ids:
-                for ch in Characters.objects.using('game_database').filter(
-                    account_id__in=world_account_ids
-                ).values('id', 'name', 'account_id', 'level', 'race', 'class_name', 'last_login'):
-                    ts = ch['last_login']
-                    ch['last_login_dt'] = (
-                        datetime.fromtimestamp(ts, tz=dt_timezone.utc) if ts else None
-                    )
-                    characters_by_account.setdefault(ch['account_id'], []).append(ch)
+                linked_lsids = set()
+                for o in LoginAccountOwnership.objects.filter(
+                    login_account_id__in=lsid_to_acc_ids.keys()
+                ).values('user_id', 'login_account_id'):
+                    for acc_id in lsid_to_acc_ids.get(o['login_account_id'], []):
+                        for cname in chars_per_account.get(acc_id, []):
+                            add_reason(o['user_id'], f"character: {cname}")
+                    linked_lsids.add(o['login_account_id'])
 
-            # Step 6: assemble results
-            for user in users:
-                ls_ids = ownership_by_user.get(user['id'], [])
-                login_accounts = []
-                for ls_id in ls_ids:
-                    world_accts = world_accounts.get(ls_id, [])
-                    enriched_world = []
-                    for wa in world_accts:
-                        chars = sorted(
-                            characters_by_account.get(wa['id'], []),
-                            key=lambda c: -c['level'],
+                # Characters whose world account has no web user
+                seen_char_acc_ids = set()
+                for wa in wa_for_chars:
+                    if wa['lsaccount_id'] not in linked_lsids and wa['id'] not in seen_char_acc_ids:
+                        seen_char_acc_ids.add(wa['id'])
+                        for cname in chars_per_account.get(wa['id'], []):
+                            unlinked_results.append({
+                                'type': 'character',
+                                'name': cname,
+                                'account_id': wa['id'],
+                                'lsaccount_id': wa['lsaccount_id'],
+                            })
+
+            # ------------------------------------------------------------------
+            # Assemble full tree for every matched user
+            # ------------------------------------------------------------------
+            if match_reasons:
+                all_user_ids = list(match_reasons.keys())
+                users = list(
+                    AuthUser.objects.filter(id__in=all_user_ids)
+                    .values('id', 'username', 'email', 'is_active')
+                )
+
+                ownerships = list(
+                    LoginAccountOwnership.objects
+                    .filter(user_id__in=all_user_ids)
+                    .values('user_id', 'login_account_id')
+                )
+                ownership_by_user = {}
+                for o in ownerships:
+                    ownership_by_user.setdefault(o['user_id'], []).append(o['login_account_id'])
+
+                all_ls_ids = [o['login_account_id'] for o in ownerships]
+                ls_accounts = {}
+                if all_ls_ids:
+                    for la in LoginAccounts.objects.using('login_server_database').filter(
+                        id__in=all_ls_ids
+                    ).values('id', 'account_name'):
+                        ls_accounts[la['id']] = la['account_name']
+
+                world_accounts = {}
+                if all_ls_ids:
+                    for wa in Account.objects.using('game_database').filter(
+                        lsaccount_id__in=all_ls_ids
+                    ).values('id', 'name', 'lsaccount_id', 'status', 'revoked'):
+                        world_accounts.setdefault(wa['lsaccount_id'], []).append(wa)
+
+                world_account_ids = [wa['id'] for was in world_accounts.values() for wa in was]
+                characters_by_account = {}
+                if world_account_ids:
+                    for ch in Characters.objects.using('game_database').filter(
+                        account_id__in=world_account_ids
+                    ).values('id', 'name', 'account_id', 'level', 'race', 'class_name', 'last_login'):
+                        ts = ch['last_login']
+                        ch['last_login_dt'] = (
+                            datetime.fromtimestamp(ts, tz=dt_timezone.utc) if ts else None
                         )
-                        enriched_world.append({**wa, 'characters': chars})
-                    login_accounts.append({
-                        'ls_id': ls_id,
-                        'ls_account_name': ls_accounts.get(ls_id, f'(id={ls_id})'),
-                        'world_accounts': enriched_world,
+                        characters_by_account.setdefault(ch['account_id'], []).append(ch)
+
+                for user in users:
+                    ls_ids_for_user = ownership_by_user.get(user['id'], [])
+                    login_accounts = []
+                    for ls_id in ls_ids_for_user:
+                        enriched_world = []
+                        for wa in world_accounts.get(ls_id, []):
+                            chars = sorted(
+                                characters_by_account.get(wa['id'], []),
+                                key=lambda c: -c['level'],
+                            )
+                            enriched_world.append({**wa, 'characters': chars})
+                        login_accounts.append({
+                            'ls_id': ls_id,
+                            'ls_account_name': ls_accounts.get(ls_id, f'(id={ls_id})'),
+                            'world_accounts': enriched_world,
+                        })
+                    results.append({
+                        'user': user,
+                        'login_accounts': login_accounts,
+                        'match_reasons': match_reasons.get(user['id'], []),
                     })
-                results.append({
-                    'user': user,
-                    'login_accounts': login_accounts,
-                })
+
+                results.sort(key=lambda r: r['user']['username'])
 
         return TemplateResponse(
             request,
@@ -364,6 +473,7 @@ class CustomUserAdmin(BaseUserAdmin):
                 'title': 'Character Map',
                 'query': query,
                 'results': results,
+                'unlinked_results': unlinked_results,
                 'searched': searched,
                 'changelist_url': reverse('admin:auth_user_changelist'),
             },

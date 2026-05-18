@@ -4,13 +4,13 @@
 <div id="content-main">
 
   <h2>Character Map</h2>
-  <p style="color:#aaa; margin-bottom:1.5em;">
-    Search for a web user to see their linked login accounts, world server accounts, and characters.
+  <p style="color:#aaa; margin-bottom:0.4em;">
+    Search by web username, login account name, world account name, or character name.
   </p>
 
   <form method="get" style="margin-bottom:2em;">
-    <input type="text" name="q" value="{{ query }}" placeholder="Web username…"
-           style="padding:6px 10px; width:300px; background:#1a1a1a; border:1px solid #444; color:#eee; border-radius:4px;">
+    <input type="text" name="q" value="{{ query }}" placeholder="Search any name…"
+           style="padding:6px 10px; width:320px; background:#1a1a1a; border:1px solid #444; color:#eee; border-radius:4px;">
     <button type="submit"
             style="padding:6px 14px; background:#417690; color:#fff; border:none; border-radius:4px; cursor:pointer; margin-left:6px;">
       Search
@@ -22,15 +22,22 @@
       {% for row in results %}
         <div style="margin-bottom:2.5em; border:1px solid #333; border-radius:6px; padding:1em 1.2em;">
 
-          <h3 style="margin-top:0; margin-bottom:0.3em;">
-            <a href="{% url 'admin:auth_user_change' row.user.id %}" style="color:#8aa3ff;">
-              {{ row.user.username }}
-            </a>
-            {% if not row.user.is_active %}
-              <span style="font-size:0.75em; background:#6b1111; color:#f8a0a0; border-radius:3px; padding:1px 6px; margin-left:6px;">disabled</span>
-            {% endif %}
-          </h3>
-          <p style="color:#666; font-size:0.85em; margin-top:0; margin-bottom:1em;">{{ row.user.email|default:"no email" }}</p>
+          <div style="display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:0.3em;">
+            <h3 style="margin:0;">
+              <a href="{% url 'admin:auth_user_change' row.user.id %}" style="color:#8aa3ff;">
+                {{ row.user.username }}
+              </a>
+              {% if not row.user.is_active %}
+                <span style="font-size:0.75em; background:#6b1111; color:#f8a0a0; border-radius:3px; padding:1px 6px; margin-left:6px;">disabled</span>
+              {% endif %}
+            </h3>
+            <span style="color:#555; font-size:0.8em;">
+              {% for reason in row.match_reasons %}
+                <span style="background:#1a2a3a; color:#7ab3d4; border-radius:3px; padding:1px 7px; margin-right:4px;">{{ reason }}</span>
+              {% endfor %}
+            </span>
+          </div>
+          <p style="color:#555; font-size:0.85em; margin:0 0 1em 0;">{{ row.user.email|default:"no email" }}</p>
 
           {% if row.login_accounts %}
             {% for la in row.login_accounts %}
@@ -56,7 +63,7 @@
                             <tr>
                               <th style="text-align:left; padding:2px 10px; color:#666; border-bottom:1px solid #2a2a2a;">Name</th>
                               <th style="text-align:left; padding:2px 10px; color:#666; border-bottom:1px solid #2a2a2a;">Lvl</th>
-                              <th style="text-align:left; padding:2px 10px; color:#666; border-bottom:1px solid #2a2a2a;">Last Login</th>
+                              <th style="text-align:left; padding:2px 10px; color:#666; border-bottom:1px solid #2a2a2a;">Last Login (UTC)</th>
                             </tr>
                           </thead>
                           <tbody>
@@ -75,7 +82,7 @@
                     </div>
                   {% endfor %}
                 {% else %}
-                  <span style="margin-left:1.5em; color:#555; font-size:0.85em;">No world server account found for this login account</span>
+                  <span style="margin-left:1.5em; color:#555; font-size:0.85em;">No world server account found</span>
                 {% endif %}
               </div>
             {% endfor %}
@@ -85,12 +92,49 @@
 
         </div>
       {% endfor %}
-    {% else %}
-      <p style="color:#aaa;">No web users found matching <strong>{{ query }}</strong>.</p>
+    {% endif %}
+
+    {% if unlinked_results %}
+      <h3 style="color:#888; margin-top:2em; margin-bottom:0.5em;">Unlinked matches</h3>
+      <p style="color:#666; font-size:0.85em; margin-bottom:1em;">
+        These matched your search but have no web user linked via LoginAccountOwnership.
+      </p>
+      <table style="width:100%; border-collapse:collapse; font-size:0.88em;">
+        <thead>
+          <tr>
+            <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #333; color:#555;">Type</th>
+            <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #333; color:#555;">Name</th>
+            <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #333; color:#555;">World Account ID</th>
+            <th style="text-align:left; padding:5px 12px; border-bottom:1px solid #333; color:#555;">LS Account ID</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for u in unlinked_results %}
+          <tr>
+            <td style="padding:4px 12px; border-bottom:1px solid #222; color:#666;">{{ u.type }}</td>
+            <td style="padding:4px 12px; border-bottom:1px solid #222; font-family:monospace; color:#aaa;">
+              {% if u.type == 'world_account' %}
+                <a href="{% url 'admin:accounts_account_change' u.id %}" style="color:#8aa3ff;">{{ u.name }}</a>
+              {% else %}
+                {{ u.name }}
+              {% endif %}
+            </td>
+            <td style="padding:4px 12px; border-bottom:1px solid #222; color:#666;">
+              {% if u.type == 'character' %}{{ u.account_id }}{% else %}{{ u.id }}{% endif %}
+            </td>
+            <td style="padding:4px 12px; border-bottom:1px solid #222; color:#666;">{{ u.lsaccount_id|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% endif %}
+
+    {% if not results and not unlinked_results %}
+      <p style="color:#aaa;">No matches found for <strong>{{ query }}</strong>.</p>
     {% endif %}
   {% endif %}
 
-  <p style="margin-top:1.5em;">
+  <p style="margin-top:2em;">
     <a href="{{ changelist_url }}" class="button">Back to user list</a>
   </p>
 
