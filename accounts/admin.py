@@ -629,16 +629,19 @@ admin.site.register(User, CustomUserAdmin)
 # ---------------------------------------------------------------------------
 
 class LoginAccountsAdmin(admin.ModelAdmin):
-    list_display = ["id", "account_name", "account_email", "last_login_date", "source_loginserver"]
+    list_display = ["id", "account_name", "account_email", "last_login_date", "source_loginserver", "created_at"]
     search_fields = ["=id", "account_name", "account_email"]
+    readonly_fields = ["created_at", "updated_at"]
     fieldsets = [
         ("Account", {"fields": ["account_name", "account_password", "account_email"]}),
         ("Login Info", {"fields": ["last_ip_address", "last_login_date", "source_loginserver"]}),
+        ("Timestamps", {"fields": ["created_at", "updated_at"], "classes": ["collapse"]}),
     ]
 
 
 class ServerAdminRegistrationAdmin(admin.ModelAdmin):
-    list_display = ["id", "account_name", "email", "registration_date", "registration_ip_address"]
+    list_display = ["id", "account_name", "first_name", "last_name", "email", "registration_date", "registration_ip_address"]
+    search_fields = ["account_name", "email", "first_name", "last_name"]
 
 
 class ServerListTypeAdmin(admin.ModelAdmin):
@@ -647,8 +650,15 @@ class ServerListTypeAdmin(admin.ModelAdmin):
 
 
 class WorldServerRegistrationAdmin(admin.ModelAdmin):
-    list_display = ["long_name", "tag_description", "login_server_list_type_id", "is_server_trusted",
-                    "login_server_admin_id", "last_login_date"]
+    list_display = ["long_name", "short_name", "tag_description", "login_server_list_type_id",
+                    "is_server_trusted", "login_server_admin_id", "last_login_date", "last_ip_address"]
+    search_fields = ["long_name", "short_name", "tag_description"]
+    readonly_fields = ["last_login_date", "last_ip_address"]
+    fieldsets = [
+        ("Identity", {"fields": ["long_name", "short_name", "tag_description", "note"]}),
+        ("Configuration", {"fields": ["login_server_list_type_id", "login_server_admin_id", "is_server_trusted"]}),
+        ("Connection", {"fields": ["last_login_date", "last_ip_address"], "classes": ["collapse"]}),
+    ]
 
 
 admin.site.register(LoginAccounts, LoginAccountsAdmin)
@@ -684,18 +694,28 @@ admin.site.register(WebLoginHistory, WebLoginHistoryAdmin)
 
 class AccountAdmin(admin.ModelAdmin):
     change_list_template = 'admin/accounts/account/change_list.html'
-    list_display = ["name", "id", "lsaccount_id", "charname", "status"]
-    list_filter = ["name"]
+    list_display = ["name", "id", "lsaccount_id", "ls_id", "charname", "status", "revoked", "time_creation_display"]
+    list_filter = ["revoked", "status"]
     search_fields = ["id", "name", "lsaccount_id"]
-    readonly_fields = ["id", "karma", "time_creation"]
+    readonly_fields = ["id", "karma", "time_creation", "time_creation_display"]
     fieldsets = [
         ("General Information", {
-            "fields": ["name", "charname", "ls_id", "lsaccount_id", "karma", "time_creation"]
+            "fields": ["name", "charname", "auto_login_charname", "ls_id", "lsaccount_id",
+                       "sharedplat", "karma", "time_creation_display"]
         }),
         ("Administrative Actions",
          {"fields": ["revoked", "ban_reason", "suspendeduntil", "suspend_reason", "rulesflag"]}),
         ("GM Settings", {"fields": ["status", "gmspeed", "hideme", "invulnerable", "flymode", "ignore_tells"]}),
+        ("Network", {"fields": ["minilogin_ip"], "classes": ["collapse"]}),
     ]
+
+    def time_creation_display(self, obj):
+        if not obj.time_creation:
+            return '—'
+        from datetime import datetime, timezone as dt_timezone
+        return datetime.fromtimestamp(obj.time_creation, tz=dt_timezone.utc).strftime('%Y-%m-%d %H:%M UTC')
+    time_creation_display.short_description = 'Created (UTC)'
+    time_creation_display.admin_order_field = 'time_creation'
 
     def get_urls(self):
         urls = super().get_urls()
