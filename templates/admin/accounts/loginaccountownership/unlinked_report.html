@@ -1,0 +1,57 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+
+  <h2>Unlinked Login Accounts</h2>
+  <p style="color:#aaa; margin-bottom:0.5em;">
+    Login server accounts that have no <code>LoginAccountOwnership</code> entry — no web user has
+    claimed them. Players with these accounts can log into the game but cannot manage their account
+    through the web portal.
+  </p>
+  <p style="color:#888; font-size:0.9em; margin-bottom:1.5em;">
+    Use <strong>assign_ownership</strong> or the admin add form to link any of these to a web account.
+  </p>
+
+  {% if unlinked_accounts %}
+    <p style="margin-bottom:1em;">
+      <strong>{{ unlinked_count }}</strong> unlinked login account{{ unlinked_count|pluralize }}.
+    </p>
+
+    <table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+      <thead>
+        <tr>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">ID</th>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Account Name</th>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Email</th>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Last Login (UTC)</th>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for acct in unlinked_accounts %}
+        <tr>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; color:#aaa;">{{ acct.id }}</td>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; font-family:monospace;">
+            <a href="{% url 'admin:accounts_loginaccounts_change' acct.id %}" style="color:#8aa3ff;">{{ acct.account_name }}</a>
+          </td>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; color:#aaa;">{{ acct.account_email|default:"—" }}</td>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; color:#aaa;">{{ acct.last_login_date }}</td>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; color:#aaa;">{{ acct.source_loginserver|default:"—" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  {% else %}
+    <p style="color:#70bf2b; font-size:1.1em;">
+      ✓ All login accounts are linked to a web user.
+    </p>
+  {% endif %}
+
+  <p style="margin-top:1.5em;">
+    <a href="{{ changelist_url }}" class="button">Back to ownership list</a>
+  </p>
+
+</div>
+{% endblock %}

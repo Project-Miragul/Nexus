@@ -17,6 +17,7 @@ from .models import (
     LoginAccountOwnership,
     ServerAdminRegistration,
     ServerListType,
+    WebLoginHistory,
     WorldServerRegistration,
 )
 
@@ -163,7 +164,7 @@ admin.site.register(User, CustomUserAdmin)
 
 class LoginAccountsAdmin(admin.ModelAdmin):
     list_display = ["id", "account_name", "account_email", "last_login_date", "source_loginserver"]
-    search_fields = ["account_name", "account_email"]
+    search_fields = ["=id", "account_name", "account_email"]
     fieldsets = [
         ("Account", {"fields": ["account_name", "account_password", "account_email"]}),
         ("Login Info", {"fields": ["last_ip_address", "last_login_date", "source_loginserver"]}),
@@ -204,6 +205,105 @@ admin.site.register(LoginAccounts, LoginAccountsAdmin)
 admin.site.register(ServerAdminRegistration, ServerAdminRegistrationAdmin)
 admin.site.register(ServerListType, ServerListTypeAdmin)
 admin.site.register(WorldServerRegistration, WorldServerRegistrationAdmin)
+
+
+# ---------------------------------------------------------------------------
+# Web login history — read-only audit log
+# ---------------------------------------------------------------------------
+
+class WebLoginHistoryAdmin(admin.ModelAdmin):
+    list_display = ['timestamp', 'user', 'ip_address']
+    list_filter = ['timestamp']
+    search_fields = ['user__username', 'ip_address']
+    readonly_fields = ['user', 'timestamp', 'ip_address']
+    ordering = ['-timestamp']
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+
+admin.site.register(WebLoginHistory, WebLoginHistoryAdmin)
+
+
+# ---------------------------------------------------------------------------
+# Account (world server) admin — with suspended accounts dashboard
+# ---------------------------------------------------------------------------
+
+class AccountAdmin(admin.ModelAdmin):
+    change_list_template = 'admin/accounts/account/change_list.html'
+    list_display = ["name", "id", "lsaccount_id", "charname", "status"]
+    list_filter = ["name"]
+    search_fields = ["id", "name", "lsaccount_id"]
+    readonly_fields = ["id", "karma", "time_creation"]
+    fieldsets = [
+        ("General Information", {
+            "fields": ["name", "charname", "ls_id", "lsaccount_id", "karma", "time_creation"]
+        }),
+        ("Administrative Actions",
+         {"fields": ["revoked", "ban_reason", "suspendeduntil", "suspend_reason", "rulesflag"]}),
+        ("GM Settings", {"fields": ["status", "gmspeed", "hideme", "invulnerable", "flymode", "ignore_tells"]}),
+    ]
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path(
+                'suspended-dashboard/',
+                self.admin_site.admin_view(self.suspended_dashboard_view),
+                name='accounts_account_suspended_dashboard',
+            ),
+        ]
+        return custom + urls
+
+    def changelist_view(self, request, extra_context=None):
+        suspended_count = (
+            Account.objects.using('game_database')
+            .filter(suspendeduntil__gt=timezone.now())
+            .count()
+        )
+        extra_context = extra_context or {}
+        extra_context['suspended_count'] = suspended_count
+        extra_context['suspended_dashboard_url'] = reverse('admin:accounts_account_suspended_dashboard')
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def suspended_dashboard_view(self, request):
+        now = timezone.now()
+        suspended = list(
+            Account.objects.using('game_database')
+            .filter(suspendeduntil__gt=now)
+            .values('id', 'name', 'lsaccount_id', 'suspendeduntil', 'suspend_reason', 'status')
+            .order_by('suspendeduntil')
+        )
+
+        # Resolve web users via LoginAccountOwnership (default DB)
+        lsaccount_ids = [a['lsaccount_id'] for a in suspended if a['lsaccount_id']]
+        ownerships = (
+            LoginAccountOwnership.objects
+            .filter(login_account_id__in=lsaccount_ids)
+            .select_related('user')
+            .values('login_account_id', 'user__username', 'user__id')
+        )
+        web_user_map = {o['login_account_id']: o['user__username'] for o in ownerships}
+
+        for acct in suspended:
+            acct['web_username'] = web_user_map.get(acct['lsaccount_id'], '—')
+
+        return TemplateResponse(
+            request,
+            'admin/accounts/account/suspended_dashboard.html',
+            {
+                **self.admin_site.each_context(request),
+                'title': 'Suspended Accounts',
+                'suspended': suspended,
+                'suspended_count': len(suspended),
+                'changelist_url': reverse('admin:accounts_account_changelist'),
+            },
+        )
+
+
 admin.site.register(Account, AccountAdmin)
 
 
@@ -268,6 +368,11 @@ class LoginAccountOwnershipAdmin(admin.ModelAdmin):
                 self.admin_site.admin_view(self.shared_ip_report_view),
                 name='accounts_loginaccountownership_shared_ip',
             ),
+            path(
+                'unlinked-report/',
+                self.admin_site.admin_view(self.unlinked_report_view),
+                name='accounts_loginaccountownership_unlinked',
+            ),
         ]
         return custom + urls
 
@@ -280,11 +385,17 @@ class LoginAccountOwnershipAdmin(admin.ModelAdmin):
         orphan_count = LoginAccountOwnership.objects.exclude(
             login_account_id__in=existing_ids
         ).count()
+        linked_ids = set(
+            LoginAccountOwnership.objects.values_list('login_account_id', flat=True)
+        )
+        unlinked_count = len(existing_ids - linked_ids)
         extra_context = extra_context or {}
         extra_context['orphan_count'] = orphan_count
+        extra_context['unlinked_count'] = unlinked_count
         extra_context['cleanup_url'] = reverse('admin:accounts_loginaccountownership_cleanup')
         extra_context['ip_conflict_url'] = reverse('admin:accounts_loginaccountownership_ip_conflicts')
         extra_context['shared_ip_url'] = reverse('admin:accounts_loginaccountownership_shared_ip')
+        extra_context['unlinked_url'] = reverse('admin:accounts_loginaccountownership_unlinked')
         return super().changelist_view(request, extra_context=extra_context)
 
     def ls_account_status(self, obj):
@@ -563,6 +674,37 @@ class LoginAccountOwnershipAdmin(admin.ModelAdmin):
                 'flagged_count': len(ip_groups),
                 'min_count': min_count,
                 'default_min_count': DEFAULT_MIN_COUNT,
+                'changelist_url': reverse('admin:accounts_loginaccountownership_changelist'),
+            },
+        )
+
+    def unlinked_report_view(self, request):
+        all_ls_ids = set(
+            LoginAccounts.objects.using('login_server_database')
+            .values_list('id', flat=True)
+        )
+        linked_ids = set(
+            LoginAccountOwnership.objects.values_list('login_account_id', flat=True)
+        )
+        unlinked_ids = all_ls_ids - linked_ids
+
+        unlinked_accounts = []
+        if unlinked_ids:
+            unlinked_accounts = list(
+                LoginAccounts.objects.using('login_server_database')
+                .filter(id__in=unlinked_ids)
+                .values('id', 'account_name', 'account_email', 'last_login_date', 'source_loginserver')
+                .order_by('account_name')
+            )
+
+        return TemplateResponse(
+            request,
+            'admin/accounts/loginaccountownership/unlinked_report.html',
+            {
+                **self.admin_site.each_context(request),
+                'title': 'Unlinked Login Accounts',
+                'unlinked_accounts': unlinked_accounts,
+                'unlinked_count': len(unlinked_accounts),
                 'changelist_url': reverse('admin:accounts_loginaccountownership_changelist'),
             },
         )

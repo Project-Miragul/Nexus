@@ -2,6 +2,12 @@
 
 {% block object-tools-items %}
   <li>
+    <a href="{{ unlinked_url }}" class="button"
+       style="background:{% if unlinked_count %}#5a4a00{% else %}#417690{% endif %}; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">
+      {% if unlinked_count %}{{ unlinked_count }} Unlinked{% else %}Unlinked Accounts{% endif %}
+    </a>
+  </li>
+  <li>
     <a href="{{ shared_ip_url }}" class="button" style="background:#4a6741; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">
       Shared IP Report
     </a>

@@ -1,0 +1,58 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+
+  <h2>Suspended Accounts</h2>
+  <p style="color:#aaa; margin-bottom:1.5em;">
+    All world server accounts currently suspended (suspension end date is in the future).
+  </p>
+
+  {% if suspended %}
+    <p style="margin-bottom:1em;">
+      <strong>{{ suspended_count }}</strong> account{{ suspended_count|pluralize }} currently suspended.
+    </p>
+
+    <table style="width:100%; border-collapse:collapse; font-size:0.9em;">
+      <thead>
+        <tr>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Game Account</th>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Web User</th>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Suspended Until (UTC)</th>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Reason</th>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for acct in suspended %}
+        <tr>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; font-family:monospace;">
+            <a href="{% url 'admin:accounts_account_change' acct.id %}" style="color:#8aa3ff;">{{ acct.name }}</a>
+          </td>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a;">
+            {% if acct.web_username != '—' %}
+              <a href="{% url 'admin:auth_user_change' %}?q={{ acct.web_username }}" style="color:#8aa3ff;">{{ acct.web_username }}</a>
+            {% else %}
+              <span style="color:#666;">—</span>
+            {% endif %}
+          </td>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; color:#e8a060;">{{ acct.suspendeduntil }}</td>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; color:#aaa;">{{ acct.suspend_reason|default:"—" }}</td>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a;">{{ acct.status }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  {% else %}
+    <p style="color:#70bf2b; font-size:1.1em;">
+      ✓ No accounts are currently suspended.
+    </p>
+  {% endif %}
+
+  <p style="margin-top:1.5em;">
+    <a href="{{ changelist_url }}" class="button">Back to account list</a>
+  </p>
+
+</div>
+{% endblock %}
