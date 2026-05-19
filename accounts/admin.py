@@ -871,10 +871,15 @@ class AccountAdmin(admin.ModelAdmin):
             .select_related('user')
             .values('login_account_id', 'user__username', 'user__id')
         )
-        web_user_map = {o['login_account_id']: o['user__username'] for o in ownerships}
+        web_user_map = {
+            o['login_account_id']: {'username': o['user__username'], 'id': o['user__id']}
+            for o in ownerships
+        }
 
         for acct in suspended:
-            acct['web_username'] = web_user_map.get(acct['lsaccount_id'], '—')
+            web_user = web_user_map.get(acct['lsaccount_id'])
+            acct['web_username'] = web_user['username'] if web_user else '—'
+            acct['web_user_id'] = web_user['id'] if web_user else None
 
         return TemplateResponse(
             request,
