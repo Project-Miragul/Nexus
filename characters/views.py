@@ -147,7 +147,7 @@ def view_character(request, character_name):
 
         character_inventory = get_character_inventory(character_id=character.id)
 
-        character_list = get_owned_characters(forum_name=request.user.username)
+        character_list = get_owned_characters(request.user.username)
 
         last_login = datetime.datetime.fromtimestamp(character.last_login)
         birthday = datetime.datetime.fromtimestamp(character.birthday)
