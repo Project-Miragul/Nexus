@@ -441,72 +441,84 @@ def character_aas(request: HttpRequest, character_name: str) -> HttpResponse:
     if character is None:
         raise Http404("This character does not exist")
 
-    char_aas = CharacterAlternateAbility.objects.filter(id=character.id)
-    aa_map = {}
+    char_aas = list(CharacterAlternateAbility.objects.filter(id=character.id))
+    char_rank_ids = [ca.aa_id for ca in char_aas]
 
-    for character_aa in char_aas:
-        parent_id = character_aa.aa_id if character_aa.aa_value <= 1 else character_aa.aa_id - (character_aa.aa_value - 1)
-        aa_map[parent_id] = character_aa.aa_value
-        # $parent_id = $value["aa_value"] <= 1 ? $value["aa_id"]: $value["aa_id"] - ($value["aa_value"] - 1);
-        # $aa_array[$parent_id] = $value["aa_value"];
-
-    aa_tabs = {
-        1: 'General',
-        2: 'Archetype',
-        3: 'Class',
-        4: 'PoP Advance',
-        5: 'PoP Ability',
-    }
-
-    # Create tabs structure for template
-    tabs = [
-        {'id': key, 'name': name, 'color': 'FFFFFF'}
-        for key, name in aa_tabs.items()
-    ]
+    # ability_id -> {'current': rank_number, 'next_cost': int|str}
+    char_ability_map = {}
 
     from django.db import connections
     db_connection = connections['game_database']
+
     with db_connection.cursor() as cursor:
-        for key, value in aa_tabs.items():
-            # Create box data
-            box_data = {
-                'id': key,
-                'display': display,
-                'aas': []
-            }
-            display = "none"  # All subsequent boxes hidden
+        # Resolve purchased rank IDs to (ability_id, rank_number within ability)
+        if char_rank_ids:
+            cursor.execute("""
+                SELECT rn.id, rn.ability_id, rn.rank_number
+                FROM (
+                    SELECT ar.id, ar.ability_id,
+                           ROW_NUMBER() OVER (PARTITION BY ar.ability_id ORDER BY ar.id) AS rank_number
+                    FROM aa_ranks ar
+                    WHERE ar.ability_id IN (
+                        SELECT ability_id FROM aa_ranks WHERE id IN %s
+                    )
+                ) rn
+                WHERE rn.id IN %s
+            """, [tuple(char_rank_ids), tuple(char_rank_ids)])
 
-            query = """
-                    SELECT skill_id, name, cost, cost_inc, max_level
-                    FROM altadv_vars
-                    WHERE type = %s
-                      AND (classes & 1 << %s) != 0
-                      AND eqmacid not in (14, 22, 51, 54, 59, 83, 88, 91, 92, 93, 95, 96, 99, 105, 106, 145)
-                    ORDER BY eqmacid
-                    """
-            cursor.execute(query, [key, character.class_name])
-            results = cursor.fetchall()
-            for row in results:
-                skill_id, name, cost, cost_inc, max_level = row
-                # Calculate spent AA for this skill
-                current_level = aa_map.get(skill_id, 0)
-                for i in range(1, current_level + 1):
-                    spent_aa += cost + (cost_inc * (i - 1))
+            ability_max = {}  # ability_id -> {'rank_id': int, 'rank_number': int}
+            for rank_id, ability_id, rank_number in cursor.fetchall():
+                existing = ability_max.get(ability_id)
+                if existing is None or rank_number > existing['rank_number']:
+                    ability_max[ability_id] = {'rank_id': rank_id, 'rank_number': rank_number}
 
-                # Calculate next level cost
-                next_level_cost = ""
-                if max_level > current_level:
-                    next_level_cost = cost + cost_inc * current_level
+            if ability_max:
+                max_rank_ids = tuple(v['rank_id'] for v in ability_max.values())
+                cursor.execute(
+                    "SELECT prev_id, cost FROM aa_ranks WHERE prev_id IN %s",
+                    [max_rank_ids]
+                )
+                next_cost_by_prev = {row[0]: row[1] for row in cursor.fetchall()}
+                for ability_id, data in ability_max.items():
+                    char_ability_map[ability_id] = {
+                        'current': data['rank_number'],
+                        'next_cost': next_cost_by_prev.get(data['rank_id'], ''),
+                    }
 
-                # Add AA data
-                aa_data = {
-                    'COLOR': '#CCCCCC' if next_level_cost == "" else '#FFFFFF',
+        # Derive tabs from distinct type values present in aa_ability
+        cursor.execute("SELECT DISTINCT type FROM aa_ability WHERE type > 0 ORDER BY type")
+        type_ids = [row[0] for row in cursor.fetchall()]
+
+        type_names = {1: 'General', 2: 'Archetype', 3: 'Class', 4: 'Special', 5: 'Progression'}
+        tabs = [
+            {'id': t, 'name': type_names.get(t, f'Type {t}'), 'color': 'FFFFFF'}
+            for t in type_ids
+        ]
+
+        for i, type_id in enumerate(type_ids):
+            cursor.execute("""
+                SELECT aa.id, aa.name, COUNT(ar.id) AS total_ranks
+                FROM aa_ability aa
+                JOIN aa_ranks ar ON ar.ability_id = aa.id
+                WHERE aa.type = %s
+                  AND (aa.classes & (1 << (%s - 1))) != 0
+                GROUP BY aa.id, aa.name
+                ORDER BY aa.name
+            """, [type_id, character.class_name])
+
+            box_data = {'id': type_id, 'display': 'block' if i == 0 else 'none', 'aas': []}
+            for ability_id, name, total_ranks in cursor.fetchall():
+                data = char_ability_map.get(ability_id, {})
+                current_rank = data.get('current', 0)
+                next_cost = data.get('next_cost', '')
+                color = '#CCCCCC' if current_rank >= total_ranks else '#FFFFFF'
+                box_data['aas'].append({
+                    'COLOR': color,
                     'NAME': name,
-                    'CUR': current_level,
-                    'MAX': max_level,
-                    'COST': next_level_cost
-                }
-                box_data['aas'].append(aa_data)
+                    'CUR': current_rank,
+                    'MAX': total_ranks,
+                    'COST': next_cost,
+                })
             boxes.append(box_data)
 
     is_character_owner = valid_game_account_owner(request.user.username, str(character.account_id))
