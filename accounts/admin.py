@@ -829,6 +829,11 @@ class AccountAdmin(admin.ModelAdmin):
                 name='accounts_account_suspended_dashboard',
             ),
             path(
+                'banned-dashboard/',
+                self.admin_site.admin_view(self.banned_dashboard_view),
+                name='accounts_account_banned_dashboard',
+            ),
+            path(
                 'record-counts/',
                 self.admin_site.admin_view(self.record_count_dashboard_view),
                 name='accounts_account_record_counts',
@@ -889,6 +894,43 @@ class AccountAdmin(admin.ModelAdmin):
                 'title': 'Suspended Accounts',
                 'suspended': suspended,
                 'suspended_count': len(suspended),
+                'changelist_url': reverse('admin:accounts_account_changelist'),
+            },
+        )
+
+    def banned_dashboard_view(self, request):
+        banned = list(
+            Account.objects.using('game_database')
+            .filter(revoked=1)
+            .values('id', 'name', 'lsaccount_id', 'ban_reason', 'status')
+            .order_by('name')
+        )
+
+        lsaccount_ids = [a['lsaccount_id'] for a in banned if a['lsaccount_id']]
+        ownerships = (
+            LoginAccountOwnership.objects
+            .filter(login_account_id__in=lsaccount_ids)
+            .select_related('user')
+            .values('login_account_id', 'user__username', 'user__id')
+        )
+        web_user_map = {
+            o['login_account_id']: {'username': o['user__username'], 'id': o['user__id']}
+            for o in ownerships
+        }
+
+        for acct in banned:
+            web_user = web_user_map.get(acct['lsaccount_id'])
+            acct['web_username'] = web_user['username'] if web_user else '—'
+            acct['web_user_id'] = web_user['id'] if web_user else None
+
+        return TemplateResponse(
+            request,
+            'admin/accounts/account/banned_dashboard.html',
+            {
+                **self.admin_site.each_context(request),
+                'title': 'Banned Accounts',
+                'banned': banned,
+                'banned_count': len(banned),
                 'changelist_url': reverse('admin:accounts_account_changelist'),
             },
         )

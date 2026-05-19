@@ -1,0 +1,63 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<div id="content-main">
+
+  <h2>Banned Accounts</h2>
+  <p style="color:#aaa; margin-bottom:1.5em;">
+    All world server accounts permanently banned (revoked = 1).
+  </p>
+
+  {% if banned %}
+    <p style="margin-bottom:1em;">
+      <strong>{{ banned_count }}</strong> account{{ banned_count|pluralize }} currently banned.
+    </p>
+
+    <table style="width:100%; border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Game Account</th>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Web User</th>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Ban Reason</th>
+          <th style="text-align:left; padding:6px 12px; border-bottom:1px solid #555; color:#888;">Status</th>
+          <th style="padding:6px 12px; border-bottom:1px solid #555;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for acct in banned %}
+        <tr>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; font-family:monospace;">
+            <a href="{% url 'admin:accounts_account_change' acct.id %}" style="color:#e07070;">{{ acct.name }}</a>
+          </td>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a;">
+            {% if acct.web_username != '—' %}
+              <a href="{% url 'admin:auth_user_change' acct.web_user_id %}" style="color:#8aa3ff;">{{ acct.web_username }}</a>
+            {% else %}
+              <span style="color:#666;">—</span>
+            {% endif %}
+          </td>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; color:#aaa;">{{ acct.ban_reason|default:"—" }}</td>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a;">{{ acct.status }}</td>
+          <td style="padding:5px 12px; border-bottom:1px solid #2a2a2a; white-space:nowrap;">
+            {% if acct.web_username != '—' %}
+              <a href="{% url 'admin:accounts_user_character_map' %}?q={{ acct.web_username }}"
+                 style="font-size:0.875rem; color:#8aa3ff; text-decoration:none;">Investigate &rarr;</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  {% else %}
+    <p style="color:#70bf2b; font-size:1.1em;">
+      ✓ No accounts are currently banned.
+    </p>
+  {% endif %}
+
+  <p style="margin-top:1.5em;">
+    <a href="{{ changelist_url }}" class="button">Back to account list</a>
+  </p>
+
+</div>
+{% endblock %}
