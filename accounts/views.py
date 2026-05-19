@@ -834,7 +834,7 @@ def inventory_search(request):
                 Item = namedtuple('Item', ['itemid', 'icon', 'item_name', 'slot_id', 'charges', 'max_charges', 'stackable', 'stack_size',
                                            'char_name'])
                 items = [Item(*row) for row in character_inventory_results]
-                context["search_results"] = sorted(items)
+                context["search_results"] = sorted(items, key=lambda x: (x.item_name.lower(), x.char_name, x.slot_id))
 
             return render(request=request,
                           template_name="accounts/inventory_search.html",
