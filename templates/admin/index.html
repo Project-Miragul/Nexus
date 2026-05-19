@@ -108,7 +108,7 @@
       </div>
     </a>
 
-    <a href="{% url 'admin:accounts_account_changelist' %}?revoked__exact=1" class="nexus-tile-link" style="text-decoration:none;">
+    <a href="{% url 'admin:accounts_account_banned_dashboard' %}" class="nexus-tile-link" style="text-decoration:none;">
       <div class="nexus-tile {% if counts.banned %}nexus-tile--banned{% endif %}">
         <div class="tile-num">{{ counts.banned }}</div>
         <div class="tile-label">Banned</div>
