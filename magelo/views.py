@@ -451,41 +451,46 @@ def character_aas(request: HttpRequest, character_name: str) -> HttpResponse:
     db_connection = connections['game_database']
 
     with db_connection.cursor() as cursor:
-        # Resolve purchased rank IDs to (ability_id, rank_number within ability)
+        # aa_ranks uses a linked list (prev_id/next_id, sentinel -1); ability_id lives
+        # only in aa_ability.first_rank_id.  Walk backwards to root to find ability + rank#.
         if char_rank_ids:
-            cursor.execute("""
-                SELECT rn.id, rn.ability_id, rn.rank_number
-                FROM (
-                    SELECT ar.id, ar.ability_id,
-                           ROW_NUMBER() OVER (PARTITION BY ar.ability_id ORDER BY ar.id) AS rank_number
+            rank_ph = ', '.join(['%s'] * len(char_rank_ids))
+
+            cursor.execute(f"""
+                WITH RECURSIVE walk_back AS (
+                    SELECT id AS owned_rank_id, id AS cur_id, prev_id, 1 AS rank_num
+                    FROM aa_ranks
+                    WHERE id IN ({rank_ph})
+                    UNION ALL
+                    SELECT wb.owned_rank_id, ar.id, ar.prev_id, wb.rank_num + 1
                     FROM aa_ranks ar
-                    WHERE ar.ability_id IN (
-                        SELECT ability_id FROM aa_ranks WHERE id IN %s
-                    )
-                ) rn
-                WHERE rn.id IN %s
-            """, [tuple(char_rank_ids), tuple(char_rank_ids)])
-
-            ability_max = {}  # ability_id -> {'rank_id': int, 'rank_number': int}
-            for rank_id, ability_id, rank_number in cursor.fetchall():
-                existing = ability_max.get(ability_id)
-                if existing is None or rank_number > existing['rank_number']:
-                    ability_max[ability_id] = {'rank_id': rank_id, 'rank_number': rank_number}
-
-            if ability_max:
-                max_rank_ids = tuple(v['rank_id'] for v in ability_max.values())
-                cursor.execute(
-                    "SELECT prev_id, cost FROM aa_ranks WHERE prev_id IN %s",
-                    [max_rank_ids]
+                    INNER JOIN walk_back wb ON ar.id = wb.prev_id
+                    WHERE wb.prev_id <> -1
                 )
-                next_cost_by_prev = {row[0]: row[1] for row in cursor.fetchall()}
-                for ability_id, data in ability_max.items():
-                    char_ability_map[ability_id] = {
-                        'current': data['rank_number'],
-                        'next_cost': next_cost_by_prev.get(data['rank_id'], ''),
-                    }
+                SELECT aa.id, wb.owned_rank_id, wb.rank_num
+                FROM walk_back wb
+                INNER JOIN aa_ability aa ON aa.first_rank_id = wb.cur_id
+                WHERE wb.prev_id = -1
+            """, char_rank_ids)
 
-        # Derive tabs from distinct type values present in aa_ability
+            owned_to_ability = {}
+            for ability_id, owned_rank_id, rank_num in cursor.fetchall():
+                owned_to_ability[owned_rank_id] = (ability_id, rank_num)
+
+            cursor.execute(f"""
+                SELECT ar.id, ar_next.cost
+                FROM aa_ranks ar
+                JOIN aa_ranks ar_next ON ar_next.id = ar.next_id
+                WHERE ar.id IN ({rank_ph}) AND ar.next_id <> -1
+            """, char_rank_ids)
+            next_cost_map = {row[0]: row[1] for row in cursor.fetchall()}
+
+            for owned_rank_id, (ability_id, rank_num) in owned_to_ability.items():
+                char_ability_map[ability_id] = {
+                    'current': rank_num,
+                    'next_cost': next_cost_map.get(owned_rank_id, ''),
+                }
+
         cursor.execute("SELECT DISTINCT type FROM aa_ability WHERE type > 0 ORDER BY type")
         type_ids = [row[0] for row in cursor.fetchall()]
 
@@ -497,13 +502,23 @@ def character_aas(request: HttpRequest, character_name: str) -> HttpResponse:
 
         for i, type_id in enumerate(type_ids):
             cursor.execute("""
-                SELECT aa.id, aa.name, COUNT(ar.id) AS total_ranks
-                FROM aa_ability aa
-                JOIN aa_ranks ar ON ar.ability_id = aa.id
-                WHERE aa.type = %s
-                  AND (aa.classes & (1 << (%s - 1))) != 0
-                GROUP BY aa.id, aa.name
-                ORDER BY aa.name
+                WITH RECURSIVE chain AS (
+                    SELECT aa.id AS ability_id, aa.name AS ability_name,
+                           aa.first_rank_id AS rank_id, 1 AS rank_num
+                    FROM aa_ability aa
+                    WHERE aa.type = %s
+                      AND (aa.classes & (1 << (%s - 1))) != 0
+                      AND aa.first_rank_id <> -1
+                    UNION ALL
+                    SELECT c.ability_id, c.ability_name, ar.next_id, c.rank_num + 1
+                    FROM chain c
+                    JOIN aa_ranks ar ON ar.id = c.rank_id
+                    WHERE ar.next_id <> -1
+                )
+                SELECT ability_id, ability_name, MAX(rank_num) AS total_ranks
+                FROM chain
+                GROUP BY ability_id, ability_name
+                ORDER BY ability_name
             """, [type_id, character.class_name])
 
             box_data = {'id': type_id, 'display': 'block' if i == 0 else 'none', 'aas': []}
