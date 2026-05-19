@@ -150,7 +150,7 @@ def character_profile(request: HttpRequest, character_name: str) -> HttpResponse
 
     # Get inventory items with related Items data
     inventory_items = CharacterInventory.objects.filter(
-        id=character.id
+        character_id=character.id
     ).values('slot_id', 'item_id', 'charges')
 
     # Process items and build all_items dictionary
