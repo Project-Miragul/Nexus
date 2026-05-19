@@ -12,6 +12,16 @@
     </a>
   </li>
   <li>
+    <a href="{{ banned_dashboard_url }}" class="button"
+       style="background:{% if banned_count %}#6b1111{% else %}#417690{% endif %}; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">
+      {% if banned_count %}
+        {{ banned_count }} Banned Account{{ banned_count|pluralize }}
+      {% else %}
+        Banned Accounts
+      {% endif %}
+    </a>
+  </li>
+  <li>
     <a href="{{ record_counts_url }}" class="button"
        style="background:#417690; color:#fff; padding:5px 12px; border-radius:4px; font-weight:bold;">
       Record Counts

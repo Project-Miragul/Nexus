@@ -847,14 +847,22 @@ class AccountAdmin(admin.ModelAdmin):
         return custom + urls
 
     def changelist_view(self, request, extra_context=None):
+        now = timezone.now()
         suspended_count = (
             Account.objects.using('game_database')
-            .filter(suspendeduntil__gt=timezone.now())
+            .filter(suspendeduntil__gt=now)
+            .count()
+        )
+        banned_count = (
+            Account.objects.using('game_database')
+            .filter(revoked=1)
             .count()
         )
         extra_context = extra_context or {}
         extra_context['suspended_count'] = suspended_count
         extra_context['suspended_dashboard_url'] = reverse('admin:accounts_account_suspended_dashboard')
+        extra_context['banned_count'] = banned_count
+        extra_context['banned_dashboard_url'] = reverse('admin:accounts_account_banned_dashboard')
         extra_context['record_counts_url'] = reverse('admin:accounts_account_record_counts')
         extra_context['item_history_url'] = reverse('admin:accounts_account_item_history')
         return super().changelist_view(request, extra_context=extra_context)
