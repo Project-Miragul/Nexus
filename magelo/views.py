@@ -859,7 +859,7 @@ def character_flags(request: HttpRequest, character_name: str) -> HttpResponse:
 
     with connections['game_database'].cursor() as cur:
         cur.execute(
-            f"SELECT DISTINCT zoneID FROM character_zone_flags WHERE id = %s AND zoneID IN ({placeholders})",
+            f"SELECT DISTINCT zoneID FROM zone_flags WHERE charID = %s AND zoneID IN ({placeholders})",
             [character.id] + all_zone_ids,
         )
         flagged_zone_ids = {row[0] for row in cur.fetchall()}
