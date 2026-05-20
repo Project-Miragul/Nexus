@@ -345,6 +345,7 @@ def create_account(request):
         if form.is_valid():
             account = form.save(commit=False)
             account.account_password = sha1_password(form.cleaned_data['account_password'])
+            account.source_loginserver = 'local'
             account.last_ip_address = get_client_ip(request)
             account.last_login_date = timezone.now()
             account.created_at = timezone.now()
