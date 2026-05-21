@@ -17,7 +17,7 @@ def index(request):
     """
     if request.method == "GET":
 
-        zone_data = Zone.objects.all()
+        zone_data = Zone.objects.filter(version=0)
 
         return render(request=request,
                       template_name="zones/index.html",
