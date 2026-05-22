@@ -121,6 +121,13 @@
                         <div class="keys-container">
                             <div class="content-window-title">Planes of Power Flags &mdash; {{ character.name }}</div>
                             <div class="ItemInner">
+                                <div style="margin-bottom:12px; font-size:13px; color:#a09078;">
+                                    Zone access flags recorded on the server for {{ character.name }}.
+                                    <a href="{% url 'characters:pop_flags' %}?character={{ character.name }}"
+                                       style="color:#8aa3ff; margin-left:4px; white-space:nowrap;">
+                                        Not sure what to do next? Use the PoP Flags Checker &rarr;
+                                    </a>
+                                </div>
                                 <div class="flags-progress-wrap">
                                     <span>{{ flags_earned }} / {{ flags_total }} flags</span>
                                     <div class="flags-progress-bar-outer">

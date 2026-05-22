@@ -1,4 +1,5 @@
 import datetime
+import json
 from django.http import Http404
 from django.shortcuts import redirect
 from django.shortcuts import render
@@ -35,6 +36,92 @@ def index_request(request):
     if request.method == "GET":
         return render(request=request, template_name="characters/index.html")
     return redirect("accounts:login")
+
+
+# Zone flag ID → checkbox IDs to pre-check.
+# Each entry represents: "having zone access to X means these quest steps are complete."
+_ZONE_FLAG_CHECKBOXES = {
+    # Crypt of Decay — requires completing the Grummus/Fuirstel chain
+    200: ['grummus1', 'grummus2', 'grummus3', 'grummus4'],
+    # Plane of Torment — requires Bertoxxulous + Terris done, then Fahlia Shadyglade pre-flag
+    207: ['grummus4', 'bert4', 'terris5', 'saryrn1'],
+    # Plane of Valor — requires PoJ trial
+    208: ['poj1', 'poj2', 'poj3'],
+    # Plane of Storms — requires PoJ trial to enter
+    210: ['poj1', 'poj2', 'poj3', 'pos1'],
+    # Bastion of Thunder — requires Askr quest in PoStorms
+    209: ['poj1', 'poj2', 'poj3', 'pos1', 'pos2'],
+    # Halls of Honor — requires killing Aerin'Dar
+    211: ['poj1', 'poj2', 'poj3', 'aerin1', 'aerin2'],
+    # Temple of Marr — requires all 3 HoH trials
+    220: ['poj1', 'poj2', 'poj3', 'aerin1', 'aerin2', 'hoh1', 'hoh2', 'hoh3', 'hoh4', 'marr1'],
+    # Plane of Nightmare B (Terris Thule) — requires Hedge event complete
+    221: ['terris1', 'terris2'],
+    # Plane of Tactics — requires Manaetic Behemoth
+    214: ['poi1', 'poi2'],
+    # Tower of Solusek Ro — requires all Tier 1-3 content + Combined 2 flag
+    212: [
+        'poj1', 'poj2', 'poj3',
+        'grummus1', 'grummus2', 'grummus3', 'grummus4',
+        'terris1', 'terris2', 'terris3', 'terris4', 'terris5',
+        'poi2',
+        'aerin1', 'aerin2',
+        'bert1', 'bert2', 'bert3', 'bert4',
+        'saryrn1', 'saryrn2', 'saryrn3', 'saryrn4', 'saryrn5', 'saryrn6',
+        'pos1', 'pos2',
+        'bot1', 'bot2', 'bot3',
+        'vallon1', 'vallon2', 'tallon1', 'tallon2', 'rztw1',
+        'hoh1', 'hoh2', 'hoh3', 'hoh4',
+        'marr1', 'marr2', 'marr3', 'marr4',
+        'combined2', 'tosr_pre',
+    ],
+    # Elemental Planes (Earth, Air, Water, Earth B) — requires Tier 3 Combined flag
+    215: ['combined1', 'combined3', 'elem1'],
+    216: ['combined1', 'combined3', 'elem1'],
+    218: ['combined1', 'combined3', 'elem1'],
+    222: ['combined1', 'combined3', 'elem1'],
+    # Plane of Fire — requires Solusek Ro + fire flagging
+    217: ['combined1', 'combined3', 'elem1', 'tosr_solro', 'elem2'],
+    # Plane of Time
+    223: ['potime'],
+}
+
+
+def pop_flags(request):
+    pre_checked = []
+    loaded_character = None
+    owned_character_names = []
+
+    if request.user.is_authenticated:
+        owned_chars = get_owned_characters(request.user.username)
+        for account_data in owned_chars.values():
+            owned_character_names.extend(account_data['characters'].keys())
+        owned_character_names.sort()
+
+        character_name = request.GET.get('character')
+        if character_name:
+            character = Characters.objects.filter(name=character_name).first()
+            if character:
+                account = Account.objects.filter(id=character.account_id).first()
+                if account and valid_game_account_owner(request.user.username, str(account.id)):
+                    with connections['game_database'].cursor() as cur:
+                        cur.execute(
+                            "SELECT DISTINCT zoneID FROM zone_flags WHERE charID = %s",
+                            [character.id],
+                        )
+                        zone_ids = {row[0] for row in cur.fetchall()}
+                    checked = set()
+                    for zid in zone_ids:
+                        checked.update(_ZONE_FLAG_CHECKBOXES.get(zid, []))
+                    pre_checked = sorted(checked)
+                    loaded_character = character_name
+
+    return render(request=request, template_name="characters/pop_flags.html", context={
+        'pre_checked': json.dumps(pre_checked),
+        'loaded_character': loaded_character,
+        'owned_character_names': owned_character_names,
+    })
+
 
 def experience(request, race_id=None):
     if race_id is not None:

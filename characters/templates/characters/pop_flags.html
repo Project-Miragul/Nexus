@@ -1,0 +1,756 @@
+{% extends 'characters/base.html' %}
+{% load static %}
+
+{% block title %}PoP Flags Checker - Miragul{% endblock %}
+
+{% block content %}
+<style>
+.pop-flags-page { max-width: 960px; margin: 0 auto; }
+.pop-section-header {
+    background: rgba(100,90,60,0.3);
+    border-left: 3px solid #8a7a50;
+    padding: 5px 10px;
+    margin: 14px 0 5px;
+    font-family: menuetto, serif;
+    color: #c4a050;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+}
+.pop-cb-grid { padding: 0 4px 6px; }
+.pop-cb-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 14px;
+    color: #b0a88c;
+    line-height: 1.4;
+    padding: 4px 0;
+    cursor: pointer;
+}
+.pop-cb-row input[type=checkbox] {
+    flex-shrink: 0;
+    margin-top: 3px;
+    accent-color: #8a7a50;
+    cursor: pointer;
+}
+.pop-cb-row:hover { color: #d4c89e; }
+.result-section {
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 3px;
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+.result-section-title {
+    padding: 8px 16px;
+    font-family: menuetto, serif;
+    font-size: 17px;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.result-section-body {
+    padding: 10px 16px;
+    font-size: 14px;
+    line-height: 1.7;
+}
+.result-section-body ul { margin: 0; padding-left: 20px; }
+.result-section-body li { margin-bottom: 4px; }
+.sect-solo .result-section-title    { background: rgba(30,55,80,0.5);  color: #80b4d8; }
+.sect-solo .result-section-body     { color: #80b4d8; }
+.sect-group .result-section-title   { background: rgba(60,55,25,0.5);  color: #c4a050; }
+.sect-group .result-section-body    { color: #c4a050; }
+.sect-raid .result-section-title    { background: rgba(30,70,30,0.5);  color: #7dbf7d; }
+.sect-raid .result-section-body     { color: #c4dfc4; }
+.sect-fire .result-section-title    { background: rgba(90,35,10,0.5);  color: #e07540; }
+.sect-fire .result-section-body     { color: #e0b090; }
+.sect-ele .result-section-title     { background: rgba(25,50,100,0.5); color: #6090e0; }
+.sect-ele .result-section-body      { color: #90b0e0; }
+.sect-blocked .result-section-title { background: rgba(80,15,15,0.5);  color: #d06060; }
+.sect-blocked .result-section-body  { color: #c09090; }
+.sect-done .result-section-title    { background: rgba(15,55,15,0.5);  color: #5ab85a; }
+.sect-done .result-section-body     { color: #90c890; }
+.status-banner {
+    border: 1px solid rgba(180,160,80,0.25);
+    border-radius: 3px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    font-size: 15px;
+    line-height: 1.7;
+    background: rgba(50,45,20,0.35);
+    color: #c4a050;
+}
+.status-banner.s-time  { border-color: rgba(80,190,80,0.3);  background: rgba(15,65,15,0.4);  color: #90d890; }
+.status-banner.s-ele   { border-color: rgba(80,120,220,0.3); background: rgba(15,35,90,0.4);  color: #90b0e0; }
+.status-banner.s-tosr  { border-color: rgba(200,140,40,0.3); background: rgba(70,55,10,0.4);  color: #d4b050; }
+.pop-opt-header {
+    font-family: menuetto, serif;
+    font-size: 17px;
+    color: #fcc721;
+    text-shadow: 0 0 3px #000, 1px 2px 5px #000;
+    border-bottom: 1px solid rgba(200,170,60,0.2);
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+    letter-spacing: 0.03em;
+}
+.pop-or-divider {
+    display: flex; align-items: center; justify-content: center;
+    color: #504838; font-size: 11px; letter-spacing: 0.12em;
+    text-transform: uppercase; gap: 8px;
+}
+.pop-or-divider::before, .pop-or-divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: rgba(255,255,255,0.06);
+}
+</style>
+
+<div class="container-fluid py-4 pop-flags-page">
+    <h2 class="eq-header text-center mb-1" style="font-size: 180%;">Planes of Power Flags Checker</h2>
+    <p class="text-center mb-4" style="color:#a09078; font-size:15px;">
+        Find <strong style="color:#c4a050;">Seer Mal Nei'Shi</strong> at <strong style="color:#c4a050;">-40, -200</strong>
+        in Plane of Knowledge (building near the Soulbinder). Sit, target her, and say
+        <em>unlock memories</em> then <em>guided meditation</em>.
+    </p>
+
+    {% if user.is_authenticated and owned_character_names %}
+    <div class="eq-window-nested-tan" style="padding:12px 16px; margin-bottom:14px;">
+        <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+            <span style="font-family:menuetto,serif; font-size:15px; color:#c4a050; white-space:nowrap;">
+                Load from character:
+            </span>
+            <select id="char-select" class="form-select"
+                style="width:auto; min-width:180px; background:#1a1810;
+                       border:1px solid rgba(255,255,255,0.15); color:#c0b89a; font-size:14px;">
+                {% for name in owned_character_names %}
+                    <option value="{{ name }}"{% if name == loaded_character %} selected{% endif %}>{{ name }}</option>
+                {% endfor %}
+            </select>
+            <button class="eq-button" onclick="loadCharacter()">Load Flags</button>
+            {% if loaded_character %}
+            <span style="font-size:14px; color:#7dbf7d;">
+                &#10003; Loaded approximate flags for <strong>{{ loaded_character }}</strong> &mdash;
+                review and adjust before clicking Check My Flags.
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="eq-window-nested-tan" style="padding: 16px;">
+        <div class="row g-3">
+
+            <!-- Left: Paste area -->
+            <div class="col-md-5">
+                <div class="pop-opt-header">Option 1 &mdash; Paste Log Text</div>
+                <p style="font-size:14px; color:#908070; margin-bottom:6px;">
+                    Enable logging, run the commands below, then paste everything the Seer said here:
+                </p>
+                <pre style="font-size:13px; color:#806858; background:rgba(0,0,0,0.25); padding:8px; border-radius:3px; margin-bottom:8px; line-height:1.6;">/log on
+/sit
+/target seer
+/say unlock memories
+/say guided meditation
+/log off</pre>
+                <textarea id="seertext" class="form-control" rows="18"
+                    style="background:#1a1810; border:1px solid rgba(255,255,255,0.1); color:#c0b89a;
+                           font-size:13px; font-family:monospace; resize:vertical; min-height:320px;"
+                    placeholder="Paste your log output here (no need to trim it)..."></textarea>
+            </div>
+
+            <!-- Middle: OR divider -->
+            <div class="col-md-2 d-flex align-items-center">
+                <div class="pop-or-divider w-100 flex-column" style="height:100%; gap:4px;">
+                    <div style="flex:1; width:1px; background:rgba(255,255,255,0.06);"></div>
+                    <span style="white-space:nowrap; color:#504838; font-size:11px; letter-spacing:.1em;">or</span>
+                    <div style="flex:1; width:1px; background:rgba(255,255,255,0.06);"></div>
+                </div>
+            </div>
+
+            <!-- Right: Checkboxes -->
+            <div class="col-md-5">
+                <div class="pop-opt-header">Option 2 &mdash; Manual Checkboxes</div>
+                <p style="font-size:14px; color:#908070; margin-bottom:6px;">
+                    Check the memories the Seer said to you:
+                </p>
+                <div style="max-height:400px; overflow-y:auto; padding-right:6px;">
+
+                    <div class="pop-section-header">Tier 1 — Plane of Justice</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="poj1"> The evidence of Mavuin is the only thing that can save him now.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="poj2"> Having endured the trials, the Tribunal has agreed to reconsider Mavuin's case.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="poj3"> Mavuin is grateful to you for taking his case before the Tribunal.</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 1 — Plane of Disease (Grummus)</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="grummus1"> Alder Fuirstel wishes you to obtain the Ward from the Plane of Disease and take it to his ill brother Milyk.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="grummus2"> For a moment you pause, sticking your hand into your pocket. Inside you find the small ward that was lying near Grummus' body.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="grummus3"> Grummus has been destroyed, about his corpse you found a small ward to protect from disease.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="grummus4"> Now that Grummus has been destroyed, the entrance to the Crypt of Bertoxxulous should open before your might.</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 1 — Plane of Nightmare (Terris Thule)</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="terris1"> Thelin being tormented by the imagery of Terris Thule needs assistance escaping from the Plane of Nightmares.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="terris2"> Thelin has completed his pact with Terris Thule, but has been refused. The only way to escape his torment is to destroy Terris Thule.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="terris3"> Terris still haunts your nightmares whenever you attempt to recall your battle with her.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="terris4"> Terris Thule's grasp over Thelin has been released.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="terris5"> Saved from a world of eternal nightmares, Thelin is forever in your debt.</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 1 — Plane of Innovation (Manaetic Behemoth)</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="poi1"> You remember Nitram's words — 'three small turns to the right on the bottommost rivet should open the door'.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="poi2"> Giwin would like you to find him in Drunder so he can present you to Rallos Zek.</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 2 — Plane of Valor (Aerin'Dar)</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="aerin1"> You have defeated Aerin'Dar but have yet to learn the true meaning of Justice.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="aerin2"> You have bested Aerin'Dar and proven yourself honorable enough to pass into Mithaniel's Halls.</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 2 — Plane of Storms (Askr)</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="pos1"> You have shown your prowess in battle to Askr, now you must make strides to get to the Bastion of Thunder.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="pos2"> You have obtained the Talisman of Thunderous Foyer from Askr; he seeks further assistance in the Bastion of Thunder.</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 2 — Crypt of Decay (Bertoxxulous)</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="bert1"> Milyk has been saved from certain death, but is not recovering. Only by destroying the ruler of all things pestilent will his curse be lifted.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="bert2"> Bertoxxulous has been slain. The curse from Milyk has been lifted.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="bert3"> As you recall your memory of your battle against the Plaguebringer, an image of the Fuirstel brothers flashes through your mind.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="bert4"> Saved from certain doom, Milyk and Adler are forever in your debt.</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 2 — Plane of Torment (Saryrn)</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="saryrn1"> Tylis is being tortured by Saryrn. The only way for him to get away from his misery is to escape from the Plane of Torment.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="saryrn2"> Although it was kind of you to help him, Tylis still seems to have no idea who you are.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="saryrn3"> Tylis has been removed from his agony.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="saryrn4"> You attempt to recall your defeat of Saryrn, but whenever you try to focus you feel a searing pain on your arm.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="saryrn5"> You feel the searing pain of torment as half of the Cipher of the Gods glows on your arm.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="saryrn6"> Saryrn has been destroyed. An aura surrounds the mystical symbols that have appeared on your arm.</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 3 — Plane of Tactics (Vallon, Tallon, Rallos Zek)</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="vallon1"> Vallon fell before you with great ease; you seem to remember some strange pouches around his body...</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="vallon2"> The pack of notes from Vallon are scribbled in a language that you cannot comprehend.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="tallon1"> Tallon fell before you with great ease; you seem to remember some strange pouches around his body...</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="tallon2"> The pack of notes from Tallon are scribbled in a language that you cannot comprehend.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="rztw1"> The parchments of Rallos are scribed in a language that you cannot comprehend; they have detailed drawings of the manaetic behemoth.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="rztw2"> Your heart beats speeds as you recall the Warlord's flaming axe, behind the dark sockets of his helm you sense darker intentions.</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 3 — Bastion of Thunder (Agnarr)</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="bot1"> You recall meeting with Karana, but the memory is clouded. You sense that the answer you seek may be in Storms.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="bot2"> The information obtained from Karana is written in a language that you cannot comprehend.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="bot3"> As you think back to your meeting with Karana the Talisman in your chest warms and a light rain falls from the sky.</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 3 — Halls of Honor</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="hoh1"> You have beaten Rydda'Dar in the first of Honor's trials.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="hoh2"> You have saved the villagers in the second of Honor's trials.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="hoh3"> You have defeated the nomads in the third of Honor's trials.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="hoh4"> You have completed all of Honor's Trials. (shortcut — checks all three above)</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 3b — Temple of Marr (Mithaniel Marr)</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="marr1"> An image of Mithaniel flashes before you, "you have yet to earn a place of Honor. When you have, we will speak again."</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="marr2"> An image of Mithaniel flashes before you. He looks up from a small book... "You have not yet earned the Honor to see these words."</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="marr3"> The information obtained from Mithaniel is written in a language that you cannot comprehend.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="marr4"> Mithaniel has been bested. An aura surrounds the mystical symbols that have appeared on your arm.</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 3 — Combined (Librarian Maelin)</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="combined1"> The History translated for you reveals the fate of Zebuxoruk. Trapped in the Plane of Time you must gain the power of the elements to gain entrance.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="combined2"> The Cipher of the Divine Language appears on your arms for a brief moment then fades.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="combined3"> The words of Maelin echo in your mind, 'The Zeks and Solusek are planning an invasion in Norrath...'</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 3 — Tower of Solusek Ro</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="tosr_pre"> The portal into the Plane of Fire has been altered. Miak needs you to find the correct way to channel the portal.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="tosr_arly"> Arlyxir's wealth of knowledge flows through your mind.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="tosr_jiva"> Jiva's strength fills your body.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="tosr_dres"> The power of Dresolik surges through you.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="tosr_xuzl"> Xuzl's arcane wisdom pulses in your mind.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="tosr_rizl"> Rizlona's song slips through your thoughts.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="tosr_solro"> Besting the Burning Prince proves your might, but you still must prove your warrior's spirit.</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 4 — Elemental Planes</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="elem1"> Learning of Zebuxoruk's fate, the only way to save him is gather materials... Maelin has charged you with finding an elemental power source.</label>
+                        <label class="pop-cb-row"><input type="checkbox" id="elem2"> The true route to the Plane of Fire is now clear in your mind.</label>
+                    </div>
+
+                    <div class="pop-section-header">Tier 5 — Plane of Time</div>
+                    <div class="pop-cb-grid">
+                        <label class="pop-cb-row"><input type="checkbox" id="potime"> Your soul has formed a bond with the Plane of Time. You can now pass through the portal in the Plane of Tranquility safely.</label>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4" style="display:flex; gap:12px; justify-content:center;">
+            <button class="eq-button-fancy" onclick="calcFlags()">Check My Flags</button>
+            <button class="eq-button" onclick="clearAll()">Clear</button>
+        </div>
+    </div>
+
+    <!-- Results -->
+    <div id="flagResults" style="display:none; margin-top:20px;">
+        <div id="status-banner"></div>
+        <div id="result-solo"></div>
+        <div id="result-group"></div>
+        <div id="result-raid"></div>
+        <div id="result-fire"></div>
+        <div id="result-ele"></div>
+        <div id="result-blocked"></div>
+        <div id="result-done"></div>
+    </div>
+</div>
+
+<script>
+const PRE_CHECKED = {{ pre_checked|safe }};
+
+document.addEventListener('DOMContentLoaded', function () {
+    PRE_CHECKED.forEach(function (id) {
+        const cb = document.getElementById(id);
+        if (cb) cb.checked = true;
+    });
+});
+
+function loadCharacter() {
+    const name = document.getElementById('char-select').value;
+    if (name) window.location = '{% url "characters:pop_flags" %}?character=' + encodeURIComponent(name);
+}
+
+function clearAll() {
+    document.getElementById('seertext').value = '';
+    document.querySelectorAll('input[type=checkbox]').forEach(cb => cb.checked = false);
+    document.getElementById('flagResults').style.display = 'none';
+}
+
+function calcFlags() {
+    const seer = document.getElementById("seertext").value.toLowerCase();
+
+    function has(id, text) {
+        const cb = document.getElementById(id);
+        return (cb && cb.checked) || seer.includes(text);
+    }
+
+    // ---- Plane of Justice ----
+    let poj_trial = 0;
+    if (has("poj1", "the evidence of mavuin is the only thing that can save him now")) poj_trial = 1;
+    if (has("poj2", "having endured the trials, the tribunal has agreed to reconsider mavuin's case")) poj_trial = 2;
+    if (has("poj3", "mavuin is grateful to you for taking his case before the tribunal")) poj_trial = 3;
+
+    // ---- Grummus / Plane of Disease ----
+    let grummus = 0;
+    if (has("grummus1", "fuirstel wishes you to obtain the ward from the plane of disease and take it to his ill brother milyk")) grummus = 1;
+    if (has("grummus2", "for a moment you pause, sticking your hand into your pocket")) grummus = 2;
+    if (has("grummus3", "grummus has been destroyed, about his corpse you found a small ward to protect from disease")) grummus = 3;
+    if (has("grummus4", "now that grummus has been destroyed, the entrance to the crypt of bertoxxulous should open before your might")) grummus = 4;
+
+    // ---- Terris Thule / Nightmare ----
+    let nightmare = 0;
+    if (has("terris1", "thelin being tormented by the imagery of terris thule needs assistance escaping from the plane of nightmares") ||
+        has("terris1", "thelin being tormented by the imagery of terris thule needs assisstance escaping from the plane of nightmares")) nightmare = 1;
+    if (has("terris2", "thelin has completed his pact with terris thule, but has been refused")) nightmare = 2;
+    if (has("terris3", "terris still haunts your nightmares whenever you attemt to recall your battle with her") ||
+        has("terris3", "terris still haunts your nightmares whenever you attempt to recall your battle with her")) nightmare = 3;
+    if (has("terris4", "terris thule's grasp over thelin has been released")) nightmare = 4;
+    if (has("terris5", "saved from a world of eternal nightmares, thelin is forever in your debt")) nightmare = 5;
+
+    // ---- Plane of Innovation ----
+    const poi_factory = has("poi1", "you remember nitram's words") ? 1 : 0;
+    let behemoth = has("poi2", "giwin would like you to find him in drunder so he can present you to rallos zek") ? 1 : 0;
+
+    // ---- Aerin'Dar / Plane of Valor ----
+    let aerin = 0;
+    if (has("aerin1", "you have defeated aerin`dar but have yet to learn the true meaning of justice")) aerin = 1;
+    if (has("aerin2", "you have bested aerin`dar and proven yourself honorable enough to pass into mithaniel's halls")) aerin = 2;
+
+    // ---- Bertoxxulous / Crypt of Decay ----
+    let bertox = 0;
+    if (has("bert1", "milyk has been saved from certain death, but is not recovering")) bertox = 1;
+    if (has("bert2", "bertoxxulous has been slain")) bertox = 2;
+    if (has("bert3", "as you recall your memory of your battle against the plaguebringer")) bertox = 3;
+    if (has("bert4", "saved from certain doom, milyk and adler are forever in your debt")) bertox = 4;
+
+    // ---- Saryrn / Plane of Torment ----
+    let saryrn = 0;
+    if (has("saryrn1", "tylis is being tortured by saryrn")) saryrn = 1;
+    if (has("saryrn2", "although it was kind of you to help him, tylis still seems to have no idea who you are")) saryrn = 2;
+    if (has("saryrn3", "tylis has been removed from his agony")) saryrn = 3;
+    if (has("saryrn4", "you attempt to recall your defeat of saryrn, but whenever you try to focus you feel a searing pain on your arm")) saryrn = 4;
+    if (has("saryrn5", "you feel the searing pain of torment as half of the cipher of the gods glows on your arm")) saryrn = 5;
+    if (has("saryrn6", "saryrn has been destroyed") || has("saryrn6", "saryrn been destroyed")) saryrn = 6;
+
+    // ---- Askr / Plane of Storms ----
+    let askr = 0;
+    if (has("pos1", "you have shown your prowess in battle to askr")) askr = 1;
+    if (has("pos2", "you have obtained the talisman of thunderous foyer from askr")) askr = 2;
+
+    // ---- Agnarr / Bastion of Thunder ----
+    let bot = 0;
+    if (has("bot1", "you recall meeting with karana, but the memory is clouded")) bot = 1;
+    if (has("bot2", "the information obtained from karana is written in a language that you cannot comprehend")) { bot = 2; askr = 10; }
+    if (has("bot3", "as you think back to your meeting with karana the talisman in your chest warms and a light rain falls from the sky")) bot = 3;
+
+    // ---- Plane of Tactics ----
+    let vallon = 0;
+    if (has("vallon1", "vallon fell before you with great ease")) vallon = 1;
+    if (has("vallon2", "the pack of notes from vallon are scribbled in a language that you cannot comprehend")) vallon = 2;
+
+    let tallon = 0;
+    if (has("tallon1", "tallon fell before you with great ease")) tallon = 1;
+    if (has("tallon2", "the pack of notes from tallon are scribbled in a language that you cannot comprehend")) tallon = 2;
+
+    let rztw1 = has("rztw1", "the parchments of rallos are scribed in a language that you cannot comprehend") ? 1 : 0;
+    let rztw2 = has("rztw2", "your heart beat speeds as you recall the warlord's flaming axe") ? 1 : 0;
+
+    // ---- Halls of Honor ----
+    let hoh1 = has("hoh1", "you have beaten rydda`dar in the first of honor's trials") ? 1 : 0;
+    let hoh2 = has("hoh2", "you have saved the villagers in the second of honor's trials") ? 1 : 0;
+    let hoh3 = has("hoh3", "you have defeated the nomads in the third of honor's trials") ? 1 : 0;
+    if (has("hoh4", "you have completed all of honor's trials")) { hoh1 = 1; hoh2 = 1; hoh3 = 1; }
+
+    // ---- Mithaniel Marr / Temple of Marr ----
+    let marr = 0;
+    if (has("marr1", "an image of mithaniel flashes before you")) marr = 1;
+    if (has("marr2", "an image of mithaniel flashes before you")) marr = 2;
+    if (has("marr3", "the information obtained from mithaniel is written in a language that you cannot comprehend")) marr = 3;
+    if (has("marr4", "mithaniel has been bested")) marr = 5;
+
+    // ---- Combined / Librarian Maelin ----
+    let combined1 = has("combined1", "the history translated for you reveals the fate of zebuxoruk") ? 1 : 0;
+    let combined2 = has("combined2", "the cipher of the divine language appears on your arms for a brief moment then fades") ? 1 : 0;
+    let combined3 = has("combined3", "the words of maelin echo in your mind") ? 1 : 0;
+
+    // ---- Tower of Solusek Ro ----
+    let tosr_pre  = has("tosr_pre",  "the portal into the plane of fire has been altered") ? 1 : 0;
+    let tosr_arly = has("tosr_arly", "arlyxir's wealth of knowledge flows through your mind") ? 1 : 0;
+    let tosr_jiva = has("tosr_jiva", "jiva's strength fills your body") ? 1 : 0;
+    let tosr_dres = has("tosr_dres", "the power of dresolik surges through you") ? 1 : 0;
+    let tosr_xuzl = has("tosr_xuzl", "xuzl's arcane wisdom pulses in your mind") ? 1 : 0;
+    let tosr_rizl = has("tosr_rizl", "rizlona's song slips through your thoughts") ? 1 : 0;
+    let tosr_solro= has("tosr_solro","besting the burning prince proves your might") ? 1 : 0;
+
+    // ---- Elemental Planes ----
+    let elem1 = 0, elem2 = 0;
+    if (has("elem1", "learning of zebuxoruk's fate, the only way to save him is gather materials that will allow you to power up the machine")) { elem1 = 1; rztw1 = 1; }
+    if (has("elem2", "the true route to the plane of fire is now clear in your mind")) { elem2 = 1; rztw1 = 1; }
+
+    // ---- Plane of Time ----
+    const potime = has("potime", "your soul has formed a bond with the plane of time") ? 1 : 0;
+
+    // ---- Implied flag propagation ----
+    if (elem2)    tosr_solro = 1;
+    if (elem1)    { combined1 = 1; combined3 = 1; }
+    if (combined1){ marr = 10; bot = 10; askr = 10; }
+    if (combined2){ saryrn = 10; marr = 10; }
+    if (combined3){ tallon = 10; vallon = 10; saryrn = 10; marr = 10; }
+    if (marr >= 3){ hoh1 = 1; hoh2 = 1; hoh3 = 1; }
+    if (rztw1)    { tallon = 10; vallon = 10; }
+    if (tallon >= 2 || vallon >= 2) behemoth = 10;
+    if (tosr_solro){ tosr_pre = 1; tosr_arly = 1; tosr_jiva = 1; tosr_dres = 1; tosr_xuzl = 1; tosr_rizl = 1; }
+
+    // ---- Can enter Tower of Solusek Ro? ----
+    const can_enter_tosr = (
+        poj_trial >= 3 && hoh1 && hoh2 && hoh3 && marr >= 1 &&
+        nightmare >= 5 && grummus >= 4 && bertox >= 4 && saryrn >= 5 &&
+        behemoth >= 1 && vallon >= 1 && tallon >= 1 && combined2
+    ) ? 1 : 0;
+
+    // ---- Librarian Maelin trips needed ----
+    let librarian = 0;
+    if (!combined1 && saryrn >= 6 && marr >= 4 && bot >= 2)                              librarian = 1;
+    if (!combined2 && saryrn >= 6 && marr >= 4)                                           librarian = 2;
+    if (!combined3 && !elem2 && saryrn >= 6 && marr >= 4 && tallon >= 2 && vallon >= 2)  librarian = 3;
+    if (!elem1 && can_enter_tosr && bot >= 2 && (rztw1 || rztw2))                        librarian = 4;
+
+    // ---- Build result lists ----
+    const solo = [], group = [], raid = [], fire = [], ele = [], blocked = [], done = [];
+
+    // PoJ
+    if (poj_trial === 0) {
+        group.push("Hail Mavuin in Plane of Justice and say \"what information\" to start the PoJ trial pre-flag.");
+    } else if (poj_trial === 1) {
+        group.push("Complete a PoJ trial, loot a Mark, say \"What evidence of Mavuin?\" to the Tribunal, then hail Mavuin again.");
+        done.push("PoJ Trial pre-flag done.");
+    } else if (poj_trial === 2) {
+        group.push("Hail Mavuin in Plane of Justice one more time.");
+        done.push("PoJ trial partially done.");
+    } else {
+        done.push("PoJ trial done.");
+    }
+
+    // Grummus
+    if (grummus === 0) {
+        solo.push("Talk to Adler Fuirstel just outside the Plane of Disease entrance and say \"What ward\" for the Grummus pre-flag.");
+        blocked.push("Grummus (missing pre-flag)");
+    } else if (grummus === 1) {
+        raid.push("Grummus (Plane of Disease)");
+        done.push("Grummus pre-flag done.");
+    } else if (grummus === 2) {
+        solo.push("Return to Adler Fuirstel outside Plane of Disease and say \"What ward\".");
+        done.push("Grummus flag partially complete.");
+    } else if (grummus === 3) {
+        solo.push("Visit the sick bay in Plane of Torment and hail Elder Fuirstel.");
+        done.push("Grummus flag partially complete.");
+    } else {
+        done.push("Grummus flag complete.");
+    }
+
+    // Nightmare / Terris
+    if (nightmare === 0) {
+        solo.push("Hail Elder Poxbourne in the sick bay, then hail Adroha Jezith and say 'tortured by nightmares' for the Hedge pre-flag.");
+        blocked.push("Hedge (missing pre-flag)");
+        blocked.push("Terris Thule (cannot enter zone without completing the Hedge event)");
+    } else if (nightmare === 1) {
+        raid.push("Hedge event, then return to sick bay and hail Elder Poxbourne and Adroha Jezith.");
+        done.push("Hedge pre-flag done.");
+        blocked.push("Terris Thule (cannot enter zone without completing the Hedge event)");
+    } else if (nightmare === 2) {
+        raid.push("Terris Thule (Plane of Nightmare B)");
+        done.push("Hedge flag done — you can now zone into Plane of Nightmare B.");
+    } else if (nightmare === 3) {
+        raid.push("Hedge event, then return to sick bay and hail Elder Poxbourne and Adroha Jezith.");
+        done.push("Terris Thule flag partially complete.");
+    } else if (nightmare === 4) {
+        solo.push("Visit the sick bay in Plane of Torment and hail Elder Poxbourne.");
+        done.push("Terris Thule flag partially complete.");
+    } else {
+        done.push("Terris Thule complete.");
+    }
+
+    if (poi_factory) done.push("You can open the door to the Plane of Innovation factory.");
+
+    if (behemoth >= 1) done.push("Manaetic Behemoth done.");
+    else raid.push("Manaetic Behemoth (Plane of Innovation)");
+
+    // Aerin'Dar
+    if (aerin === 0) {
+        if (poj_trial >= 3) raid.push("Aerin'Dar (Plane of Valor)");
+        else blocked.push("Aerin'Dar (cannot enter zone without PoJ trial)");
+    } else if (aerin === 1) {
+        done.push("Aerin'Dar flag partly done — missing PoJ trial.");
+    } else {
+        done.push("Aerin'Dar done.");
+    }
+
+    // Bertoxxulous
+    if (bertox === 0) {
+        if (grummus >= 4) {
+            solo.push("Hail both Adler Fuirstel and Elder Fuirstel for the Bertoxxulous pre-flag.");
+            blocked.push("Bertoxxulous (missing pre-flag — talk to the Fuirstels first)");
+        } else {
+            blocked.push("Bertoxxulous (need Grummus first)");
+        }
+    } else if (bertox === 1) {
+        raid.push("Bertoxxulous (Crypt of Decay)");
+        done.push("Bertoxxulous pre-flag done.");
+    } else if (bertox === 2) {
+        solo.push("Hail both Adler Fuirstel and Elder Fuirstel.");
+        done.push("Bertoxxulous flag partly done.");
+    } else if (bertox === 3) {
+        done.push("Bertoxxulous flag partly done — still missing Grummus flag.");
+    } else {
+        done.push("Bertoxxulous done.");
+    }
+
+    // Saryrn
+    if (saryrn === 0) {
+        if (bertox >= 4 && nightmare >= 5) {
+            solo.push("Hail Fahlia Shadyglade in the sick bay and say 'I will go' for the Saryrn pre-flag.");
+            blocked.push("Saryrn and Keeper of Sorrows (missing pre-flag)");
+        } else {
+            const missing = [];
+            if (bertox < 4) missing.push("Bertoxxulous");
+            if (nightmare < 5) missing.push("Terris Thule");
+            blocked.push("Saryrn and Keeper of Sorrows (need: " + missing.join(" and ") + ")");
+        }
+    } else if (saryrn === 1) {
+        raid.push("Saryrn and Keeper of Sorrows (Plane of Torment)");
+        done.push("Saryrn pre-flag done.");
+    } else if (saryrn <= 3) {
+        raid.push("Saryrn (Plane of Torment)");
+        done.push("Got Keeper of Sorrows flag but not Saryrn yet.");
+    } else if (saryrn === 4) {
+        done.push("Got Saryrn flag but an earlier flag is missing.");
+    } else {
+        done.push("Saryrn and Keeper of Sorrows done.");
+    }
+
+    // Askr / Storms
+    if (askr === 0) {
+        if (poj_trial >= 3) ele.push("Askr quest (Plane of Storms)");
+        else blocked.push("Askr quest in Plane of Storms (need PoJ trial first)");
+    } else if (askr === 1) {
+        ele.push("Finish Askr quest (Plane of Storms)");
+        done.push("Askr quest partially done.");
+    } else {
+        done.push("Askr quest in Plane of Storms done.");
+    }
+
+    // Agnarr / BoT
+    if (bot === 0) {
+        if (poj_trial >= 3 && askr >= 2) ele.push("Agnarr (Bastion of Thunder)");
+        else blocked.push("Agnarr (need PoJ trial and Askr quest)");
+    } else if (bot === 1) {
+        done.push("Agnarr partly done — missing Plane of Storms Askr quest.");
+    } else {
+        done.push("Agnarr done.");
+    }
+
+    // HoH Trials
+    if (hoh1) done.push("HoH trial 1 — Rydda'Dar done.");
+    else {
+        if (aerin >= 2) raid.push("HoH trial 1 — Rydda'Dar (Halls of Honor)");
+        else blocked.push("HoH trial 1 — Rydda'Dar (need Aerin'Dar first)");
+    }
+    if (hoh2) done.push("HoH trial 2 — Villagers done.");
+    else {
+        if (aerin >= 2) raid.push("HoH trial 2 — Villagers (Halls of Honor)");
+        else blocked.push("HoH trial 2 — Villagers (need Aerin'Dar first)");
+    }
+    if (hoh3) done.push("HoH trial 3 — Nomads done.");
+    else {
+        if (aerin >= 2) raid.push("HoH trial 3 — Nomads (Halls of Honor)");
+        else blocked.push("HoH trial 3 — Nomads (need Aerin'Dar first)");
+    }
+
+    // Mithaniel Marr
+    if (marr === 0) {
+        if (hoh1 && hoh2 && hoh3) raid.push("Mithaniel Marr (Temple of Marr)");
+        else blocked.push("Mithaniel Marr (need all 3 Halls of Honor trials)");
+    } else if (marr <= 2) {
+        done.push("Mithaniel Marr partly done — missing earlier flags.");
+    } else {
+        done.push("Mithaniel Marr done.");
+    }
+
+    // Vallon / Tallon
+    if (vallon === 0) {
+        if (behemoth >= 1) raid.push("Vallon Zek (Plane of Tactics)");
+        else blocked.push("Vallon Zek (need Manaetic Behemoth first)");
+    } else done.push("Vallon Zek done.");
+
+    if (tallon === 0) {
+        if (behemoth >= 1) raid.push("Tallon Zek (Plane of Tactics)");
+        else blocked.push("Tallon Zek (need Manaetic Behemoth first)");
+    } else done.push("Tallon Zek done.");
+
+    // Rallos Zek the Warlord
+    if (rztw1 || rztw2) done.push("Rallos Zek the Warlord done.");
+    else {
+        if (behemoth >= 1) raid.push("Rallos Zek the Warlord (Plane of Tactics)");
+        else blocked.push("Rallos Zek the Warlord (need Manaetic Behemoth first)");
+    }
+
+    // Librarian Maelin
+    if (librarian) {
+        solo.push("Hail Librarian Maelin in the Plane of Knowledge library and say \"what lore\" then \"what information.\" (step " + librarian + ")");
+    }
+
+    // ToSR
+    if (!tosr_pre) {
+        fire.push("Hail Miak in Plane of Tranquility and say \"portal's destination\" for the Tower of Solusek Ro pre-flag.");
+    } else {
+        done.push("Tower of Solusek Ro pre-flag done.");
+    }
+
+    const tosrNames = ["Arlyxir", "Jiva", "Dresolik", "Xuzl", "Rizlona"];
+    const tosrDone  = [tosr_arly, tosr_jiva, tosr_dres, tosr_xuzl, tosr_rizl];
+    tosrNames.forEach((name, i) => {
+        if (tosrDone[i]) {
+            done.push(name + " (Tower of Solusek Ro) done.");
+        } else if (can_enter_tosr) {
+            fire.push(name + " (Tower of Solusek Ro)" + (tosr_pre ? "" : " — get Miak pre-flag first"));
+        } else {
+            blocked.push(name + " in Tower of Solusek Ro (not yet flagged for zone)");
+        }
+    });
+
+    if (tosr_solro) {
+        done.push("Solusek Ro done.");
+    } else if (can_enter_tosr) {
+        if (tosr_arly && tosr_jiva && tosr_dres && tosr_xuzl && tosr_rizl && (rztw1 || rztw2)) {
+            fire.push("Solusek Ro (Tower of Solusek Ro)");
+        } else {
+            blocked.push("Solusek Ro (need all 5 ToSR mini-bosses and Rallos Zek the Warlord first)");
+        }
+    } else {
+        blocked.push("Solusek Ro (not yet flagged for Tower of Solusek Ro)");
+    }
+
+    // Elemental Planes
+    if (elem1) {
+        done.push("Elemental Planes flag (Earth, Air, Water) done.");
+    } else if (can_enter_tosr && bot >= 2 && (rztw1 || rztw2)) {
+        ele.push("Elemental Planes (Earth, Air, Water) — hail Librarian Maelin after completing the qualifying raids");
+    } else {
+        blocked.push("Elemental Planes (Earth, Air, Water) — need ToSR flagged + Agnarr + Rallos Zek the Warlord");
+    }
+
+    if (elem2) {
+        done.push("Plane of Fire flag done.");
+    } else if (tosr_solro) {
+        fire.push("Plane of Fire — hail Librarian Maelin after defeating Solusek Ro");
+    } else {
+        blocked.push("Plane of Fire — need Solusek Ro first");
+    }
+
+    if (potime) done.push("Plane of Time flag done.");
+
+    // ---- Status Banner ----
+    const statusLines = [];
+    let statusClass = "";
+    if (potime)          { statusLines.push("&#10022; You are flagged for the <strong>Plane of Time</strong>."); statusClass = "s-time"; }
+    if (elem1 && elem2)  { statusLines.push("&#10022; You are flagged for <strong>all Elemental Planes</strong>."); if (!statusClass) statusClass = "s-time"; }
+    else if (elem1)      { statusLines.push("&#10022; You are flagged for the <strong>Elemental Planes of Earth, Air, and Water</strong>."); if (!statusClass) statusClass = "s-ele"; }
+    else if (elem2)      { statusLines.push("&#10022; You are flagged for the <strong>Plane of Fire</strong>."); if (!statusClass) statusClass = "s-ele"; }
+    if (can_enter_tosr)  {
+        const note = librarian ? " (Visit Librarian Maelin to unlock further memories.)" : "";
+        statusLines.push("&#10022; You are flagged for the <strong>Tower of Solusek Ro</strong>." + note);
+        if (!statusClass) statusClass = "s-tosr";
+    } else {
+        statusLines.push("Complete the raids listed below to become flagged for the <strong>Tower of Solusek Ro</strong>.");
+    }
+
+    document.getElementById("status-banner").innerHTML =
+        '<div class="status-banner ' + statusClass + '">' + statusLines.join("<br>") + '</div>';
+
+    // ---- Render sections ----
+    function renderSect(id, cls, title, items) {
+        const el = document.getElementById(id);
+        if (!items.length) { el.innerHTML = ''; return; }
+        el.innerHTML = '<div class="result-section ' + cls + '">' +
+            '<div class="result-section-title">' + title + '</div>' +
+            '<div class="result-section-body"><ul>' +
+            items.map(i => '<li>' + i + '</li>').join('') +
+            '</ul></div></div>';
+    }
+
+    renderSect("result-solo",    "sect-solo",    "Things to Do Solo",                    solo);
+    renderSect("result-group",   "sect-group",   "Things to Do with a Group",            group);
+    renderSect("result-raid",    "sect-raid",    "Raids You Can Do Now",                 raid);
+    renderSect("result-fire",    "sect-fire",    "Tower of Solusek Ro / Plane of Fire",  fire);
+    renderSect("result-ele",     "sect-ele",     "Elemental Planes / Agnarr Chain",      ele);
+    renderSect("result-blocked", "sect-blocked", "Raids You Cannot Do Yet",              blocked);
+    renderSect("result-done",    "sect-done",    "Completed",                            done);
+
+    const results = document.getElementById("flagResults");
+    results.style.display = "block";
+    results.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+</script>
+{% endblock %}
