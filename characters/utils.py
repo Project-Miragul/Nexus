@@ -22,7 +22,8 @@ def get_character_inventory(character_id: int) -> tuple:
     cursor = connections['game_database'].cursor()
     cursor.execute("""SELECT ci.item_id, i.name, i.icon, ci.slot_id, ci.charges, i.maxcharges, i.stackable, i.stacksize
                       FROM inventory ci LEFT OUTER JOIN items i ON ci.item_id = i.id
-                      WHERE ci.character_id = %s""", [character_id])
+                      WHERE ci.character_id = %s
+                      ORDER BY ci.slot_id""", [character_id])
     character_inventory = cursor.fetchall()
     return character_inventory
 
