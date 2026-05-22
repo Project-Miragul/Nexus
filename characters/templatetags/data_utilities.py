@@ -701,7 +701,7 @@ def datetime_delta(value):
 
 @register.filter(name="datetime_from_timestamp")
 def datetime_delta(value):
-    return datetime.datetime.fromtimestamp(value)
+    return datetime.datetime.fromtimestamp(int(value)) if value else value
 
 
 @register.filter(name='guild_rank')
