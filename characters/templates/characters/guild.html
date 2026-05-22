@@ -109,6 +109,41 @@
                                         </tbody>
                                     </table>
                                 </div>
+
+                                {% if guild_relations %}
+                                <div class="eq-window-nested-tan">
+                                    <div class="eq-window-nested-tan eq-header">
+                                        <h5>Guild Relations</h5>
+                                    </div>
+                                    <div style="overflow-x: auto;">
+                                        <table class="eq-table eq-highlight-rows bordered">
+                                            <thead class="eq-table-floating-header">
+                                            <tr>
+                                                <th>Guild</th>
+                                                <th>Standing</th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            {% for rel in guild_relations %}
+                                                <tr>
+                                                    <td>{{ rel.guild_name }}</td>
+                                                    <td>
+                                                        {% if rel.relation == 1 %}
+                                                            <span style="color: #00cc00;">Ally</span>
+                                                        {% elif rel.relation == 2 %}
+                                                            <span style="color: #cc0000;">Enemy</span>
+                                                        {% else %}
+                                                            Neutral
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                            {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                {% endif %}
+
                             </div>
                         </div>
                     </div>

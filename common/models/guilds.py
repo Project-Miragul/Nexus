@@ -63,3 +63,19 @@ class GuildRanks(models.Model):
     class Meta:
         db_table = 'guild_ranks'
         managed = False
+
+
+class GuildRelations(models.Model):
+    """
+    Maps to guild_relations — declared relationships between guilds.
+    Composite PK (guild1, guild2); guild1 declared primary_key for Django compatibility.
+    relation: 0=Neutral, 1=Ally, 2=Enemy
+    """
+
+    guild1 = models.IntegerField(primary_key=True, default=0)
+    guild2 = models.IntegerField(null=False, default=0)
+    relation = models.SmallIntegerField(null=False, default=0)
+
+    class Meta:
+        db_table = 'guild_relations'
+        managed = False

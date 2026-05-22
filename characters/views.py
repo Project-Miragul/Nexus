@@ -9,7 +9,9 @@ from django.db import connections
 from common.models.characters import Characters
 from common.models.characters import CharacterCurrency
 from common.models.characters import CharacterLanguages
-from common.models.guilds import GuildMembers, GuildRanks
+from django.db.models import Q
+from common.models.guilds import GuildMembers, GuildRanks, GuildRelations
+from common.models.guilds import Guilds
 from common.models.zones import Zone
 from common.models.items import DiscoveredItems
 from common.utils import valid_game_account_owner
@@ -154,6 +156,7 @@ def view_character(request, character_name):
         }
         guild_zone_map = {}
         guild_leader_name = None
+        guild_relations = []
         if guild is not None:
             for gr in GuildRanks.objects.filter(guild_id=guild.id):
                 if gr.title:
@@ -165,6 +168,17 @@ def view_character(request, character_name):
             }
             guild_leader_name = Characters.objects.filter(id=guild.leader).values_list('name', flat=True).first()
             guild_members = guild_members.order_by('-rank', '-char_id__level')
+
+            relation_rows = GuildRelations.objects.filter(Q(guild1=guild.id) | Q(guild2=guild.id))
+            other_guild_ids = [r.guild2 if r.guild1 == guild.id else r.guild1 for r in relation_rows]
+            other_guilds = {g.id: g.name for g in Guilds.objects.filter(id__in=other_guild_ids)}
+            guild_relations = [
+                {
+                    'guild_name': other_guilds.get(r.guild2 if r.guild1 == guild.id else r.guild1, 'Unknown'),
+                    'relation': r.relation,
+                }
+                for r in relation_rows
+            ]
 
         character_inventory = get_character_inventory(character_id=character.id)
 
@@ -196,6 +210,7 @@ def view_character(request, character_name):
                           "guild_leader_name": guild_leader_name,
                           "guild_members": guild_members,
                           "guild_rank_titles": guild_rank_titles,
+                          "guild_relations": guild_relations,
                           "guild_zone_map": guild_zone_map,
                           "user_is_guild_leader": guild is not None and character.id == guild.leader,
                           "last_login": last_login,

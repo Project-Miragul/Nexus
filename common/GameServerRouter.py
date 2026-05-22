@@ -14,6 +14,7 @@ from common.models.faction import FactionListMod
 from common.models.guilds import Guilds
 from common.models.guilds import GuildMembers
 from common.models.guilds import GuildRanks
+from common.models.guilds import GuildRelations
 from common.models.items import DiscoveredItems
 from common.models.items import Items
 from common.models.loot import LootTable
@@ -55,6 +56,7 @@ class GameServerRouter:
                           Guilds,
                           GuildMembers,
                           GuildRanks,
+                          GuildRelations,
                           LootTable,
                           LootTableEntries,
                           LootDropEntries,
