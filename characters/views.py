@@ -164,6 +164,7 @@ def view_character(request, character_name):
                 for z in Zone.objects.filter(zone_id_number__in=zone_ids)
             }
             guild_leader_name = Characters.objects.filter(id=guild.leader).values_list('name', flat=True).first()
+            guild_members = guild_members.order_by('-rank', '-char_id__level')
 
         character_inventory = get_character_inventory(character_id=character.id)
 
