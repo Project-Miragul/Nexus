@@ -42,8 +42,8 @@
                                                 <td>{{ member.char_id.level }}</td>
                                                 <td>{{ member.char_id.class_name|player_class }}</td>
                                                 <td>{{ member.char_id.race|player_race }}</td>
-                                                <td>{{ member.rank|guild_rank }}</td>
-                                                <td>{{ member.char_id.zone_id|zone_filter:"long" }}</td>
+                                                <td>{{ guild_rank_titles|dict_get:member.rank }}</td>
+                                                <td>{{ guild_zone_map|dict_get:member.char_id.zone_id|default:"Unknown" }}</td>
                                                 <td>
                                                     <input id="alt-{{ member.char_id.id }}"
                                                            class="eq-checkbox"
@@ -62,9 +62,9 @@
                                                           style="display: flex; gap: 5px; align-items: center;">
                                                         {% csrf_token %}
                                                         <select name="new_rank">
-                                                            <option value="0" {% if member.rank == 0 %}selected{% endif %}>Member</option>
-                                                            <option value="1" {% if member.rank == 1 %}selected{% endif %}>Officer</option>
-                                                            <option value="2" {% if member.rank == 2 %}selected{% endif %}>Leader</option>
+                                                            {% for rank_val, rank_name in guild_rank_titles.items %}
+                                                                <option value="{{ rank_val }}" {% if member.rank == rank_val %}selected{% endif %}>{{ rank_name }}</option>
+                                                            {% endfor %}
                                                         </select>
                                                         <button type="submit" class="eq-button-fancy">Update</button>
                                                     </form>

@@ -48,3 +48,18 @@ class GuildMembers(models.Model):
     class Meta:
         db_table = 'guild_members'
         managed = False
+
+
+class GuildRanks(models.Model):
+    """
+    Maps to guild_ranks — per-guild custom rank title overrides.
+    Composite PK (guild_id, rank); guild_id declared primary_key for Django compatibility.
+    """
+
+    guild_id = models.IntegerField(primary_key=True, default=0, db_column='guild_id')
+    rank = models.PositiveSmallIntegerField(null=False, default=0)
+    title = models.CharField(max_length=128, null=False, default='')
+
+    class Meta:
+        db_table = 'guild_ranks'
+        managed = False

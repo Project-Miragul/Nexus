@@ -868,3 +868,7 @@ def divide(value, arg):
 def split(value, arg):
     return value.split(arg)
 
+@register.filter(name="dict_get")
+def dict_get(d, key):
+    return d.get(key)
+

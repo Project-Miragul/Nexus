@@ -9,7 +9,8 @@ from django.db import connections
 from common.models.characters import Characters
 from common.models.characters import CharacterCurrency
 from common.models.characters import CharacterLanguages
-from common.models.guilds import GuildMembers
+from common.models.guilds import GuildMembers, GuildRanks
+from common.models.zones import Zone
 from common.models.items import DiscoveredItems
 from common.utils import valid_game_account_owner
 from common.constants import PLAYER_RACIAL_EXP_MODIFIERS
@@ -146,6 +147,22 @@ def view_character(request, character_name):
 
         guild, guild_members = get_guild_information(character_id=character.id)
 
+        guild_rank_titles = {
+            0: "Member", 1: "Officer", 2: "Leader",
+            3: "Rank 3", 4: "Rank 4", 5: "Rank 5",
+            6: "Rank 6", 7: "Rank 7", 8: "Rank 8",
+        }
+        guild_zone_map = {}
+        if guild is not None:
+            for gr in GuildRanks.objects.filter(guild_id=guild.id):
+                if gr.title:
+                    guild_rank_titles[gr.rank] = gr.title
+            zone_ids = set(guild_members.values_list('char_id__zone_id', flat=True))
+            guild_zone_map = {
+                z.zone_id_number: z.long_name
+                for z in Zone.objects.filter(zone_id_number__in=zone_ids)
+            }
+
         character_inventory = get_character_inventory(character_id=character.id)
 
         character_list = get_owned_characters(request.user.username)
@@ -174,6 +191,8 @@ def view_character(request, character_name):
                           "face_image": face_image,
                           "guild": guild,
                           "guild_members": guild_members,
+                          "guild_rank_titles": guild_rank_titles,
+                          "guild_zone_map": guild_zone_map,
                           "user_is_guild_leader": guild is not None and character.id == guild.leader,
                           "last_login": last_login,
                           "non_casters": non_casters,
@@ -192,7 +211,7 @@ def promote_member(request, char_id):
 
     try:
         new_rank = int(request.POST.get('new_rank', -1))
-        if new_rank not in (0, 1, 2):
+        if new_rank not in range(9):
             raise ValueError
     except (TypeError, ValueError):
         messages.error(request, "Invalid rank value.")
