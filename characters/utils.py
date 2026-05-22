@@ -76,14 +76,11 @@ def get_faction_information(character_id: int, race_id: int, class_id: int, deit
 
 
 def get_guild_information(character_id: int):
-    guild_members = GuildMembers.objects.filter(char_id=character_id).first()
-    if guild_members is not None:
-        guild_id = guild_members.guild_id
-        guild = Guilds.objects.filter(id=int(guild_id.id)).first()
-        guild_members = GuildMembers.objects.filter(guild_id=guild.id)
-    else:
-        guild = None
-
+    member = GuildMembers.objects.filter(char_id=character_id).first()
+    if member is None:
+        return None, None
+    guild = member.guild_id
+    guild_members = GuildMembers.objects.filter(guild_id=guild.id)
     return guild, guild_members
 
 

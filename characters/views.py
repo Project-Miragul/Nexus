@@ -9,6 +9,7 @@ from django.db import connections
 from common.models.characters import Characters
 from common.models.characters import CharacterCurrency
 from common.models.characters import CharacterLanguages
+from common.models.guilds import GuildMembers
 from common.models.items import DiscoveredItems
 from common.utils import valid_game_account_owner
 from common.constants import PLAYER_RACIAL_EXP_MODIFIERS
@@ -173,6 +174,7 @@ def view_character(request, character_name):
                           "face_image": face_image,
                           "guild": guild,
                           "guild_members": guild_members,
+                          "user_is_guild_leader": guild is not None and character.id == guild.leader,
                           "last_login": last_login,
                           "non_casters": non_casters,
                           "time_played": time_played,
@@ -181,3 +183,37 @@ def view_character(request, character_name):
                       )
 
     return redirect("accounts:login")
+
+
+@login_required
+def promote_member(request, char_id):
+    if request.method != 'POST':
+        return redirect('characters:index')
+
+    try:
+        new_rank = int(request.POST.get('new_rank', -1))
+        if new_rank not in (0, 1, 2):
+            raise ValueError
+    except (TypeError, ValueError):
+        messages.error(request, "Invalid rank value.")
+        return redirect('characters:index')
+
+    member = GuildMembers.objects.filter(char_id=char_id).first()
+    if member is None:
+        raise Http404
+
+    guild = member.guild_id
+    leader_char = Characters.objects.filter(id=guild.leader).first()
+    if leader_char is None:
+        raise Http404
+
+    leader_account = Account.objects.filter(id=leader_char.account_id).first()
+    if leader_account is None or not valid_game_account_owner(request.user.username, str(leader_account.id)):
+        raise Http404
+
+    member.rank = new_rank
+    member.save()
+
+    messages.success(request, "Rank updated.")
+    referer = request.META.get('HTTP_REFERER', '/characters/')
+    return redirect(referer)

@@ -9,4 +9,5 @@ urlpatterns = [
     path("exp/<int:race_id>", views.experience, name="exp_race_id"),
     path("list/<str:game_account_name>", views.list_characters, name="list"),
     path("view/<str:character_name>", views.view_character, name="view"),
+    path("promote_member/<int:char_id>", views.promote_member, name="promote_member"),
 ]

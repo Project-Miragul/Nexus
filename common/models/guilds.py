@@ -1,4 +1,5 @@
 from django.db import models
+from common.models.characters import Characters
 
 
 class Guilds(models.Model):
@@ -33,7 +34,7 @@ class GuildMembers(models.Model):
     def __str__(self):
         return str(self.char_id)
 
-    char_id = models.IntegerField(primary_key=True, null=False, default=0)
+    char_id = models.OneToOneField(Characters, on_delete=models.RESTRICT, db_column='char_id', primary_key=True)
     guild_id = models.ForeignKey(Guilds, on_delete=models.RESTRICT, db_column='guild_id')
     rank = models.PositiveSmallIntegerField(null=False, default=0)
     tribute_enable = models.PositiveSmallIntegerField(null=False, default=0)
