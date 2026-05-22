@@ -153,6 +153,7 @@ def view_character(request, character_name):
             6: "Rank 6", 7: "Rank 7", 8: "Rank 8",
         }
         guild_zone_map = {}
+        guild_leader_name = None
         if guild is not None:
             for gr in GuildRanks.objects.filter(guild_id=guild.id):
                 if gr.title:
@@ -162,6 +163,7 @@ def view_character(request, character_name):
                 z.zone_id_number: z.long_name
                 for z in Zone.objects.filter(zone_id_number__in=zone_ids)
             }
+            guild_leader_name = Characters.objects.filter(id=guild.leader).values_list('name', flat=True).first()
 
         character_inventory = get_character_inventory(character_id=character.id)
 
@@ -190,6 +192,7 @@ def view_character(request, character_name):
                           "discovered_items": discovered_items,
                           "face_image": face_image,
                           "guild": guild,
+                          "guild_leader_name": guild_leader_name,
                           "guild_members": guild_members,
                           "guild_rank_titles": guild_rank_titles,
                           "guild_zone_map": guild_zone_map,

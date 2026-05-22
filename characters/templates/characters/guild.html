@@ -17,6 +17,20 @@
                                     <p>{{ guild.motd }}</p>
                                 </div>
 
+                                <div class="eq-window-nested-tan">
+                                    <div class="eq-window-nested-tan eq-header">
+                                        <h5>Guild Info</h5>
+                                    </div>
+                                    <div style="display: flex; flex-wrap: wrap; gap: 2rem; padding: 0.5rem 0.25rem;">
+                                        <div><strong>Leader:</strong> {{ guild_leader_name }}</div>
+                                        <div><strong>Members:</strong> {{ guild_members|length }}</div>
+                                        <div><strong>Favor:</strong> {{ guild.favor|intcomma }}</div>
+                                        {% if guild.url %}
+                                            <div><strong>Website:</strong> <a href="{{ guild.url }}" target="_blank" rel="noopener">{{ guild.url }}</a></div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
                                 <div class="eq-window-nested-tan" style="overflow-x: auto;">
                                     <table class="eq-table eq-highlight-rows bordered">
                                         <thead class="eq-table-floating-header">
