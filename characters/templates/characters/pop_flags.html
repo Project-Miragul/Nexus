@@ -339,7 +339,14 @@ function clearAll() {
 }
 
 function calcFlags() {
-    const seer = document.getElementById("seertext").value.toLowerCase();
+    // Normalise backticks to apostrophes — EQ log files use ` for NPC names
+    // (Aerin`Dar, Rydda`Dar) and sometimes possessives; collapse whitespace so
+    // chat-window pastes with soft-wrapped lines still match.
+    const seer = document.getElementById("seertext").value
+        .toLowerCase()
+        .replace(/`/g, "'")
+        .replace(/\r?\n/g, " ")
+        .replace(/\s+/g, " ");
 
     function has(id, text) {
         const cb = document.getElementById(id);
@@ -375,8 +382,8 @@ function calcFlags() {
 
     // ---- Aerin'Dar / Plane of Valor ----
     let aerin = 0;
-    if (has("aerin1", "you have defeated aerin`dar but have yet to learn the true meaning of justice")) aerin = 1;
-    if (has("aerin2", "you have bested aerin`dar and proven yourself honorable enough to pass into mithaniel's halls")) aerin = 2;
+    if (has("aerin1", "you have defeated aerin'dar but have yet to learn the true meaning of justice")) aerin = 1;
+    if (has("aerin2", "you have bested aerin'dar and proven yourself honorable enough to pass into mithaniel's halls")) aerin = 2;
 
     // ---- Bertoxxulous / Crypt of Decay ----
     let bertox = 0;
@@ -418,7 +425,7 @@ function calcFlags() {
     let rztw2 = has("rztw2", "your heart beat speeds as you recall the warlord's flaming axe") ? 1 : 0;
 
     // ---- Halls of Honor ----
-    let hoh1 = has("hoh1", "you have beaten rydda`dar in the first of honor's trials") ? 1 : 0;
+    let hoh1 = has("hoh1", "you have beaten rydda'dar in the first of honor's trials") ? 1 : 0;
     let hoh2 = has("hoh2", "you have saved the villagers in the second of honor's trials") ? 1 : 0;
     let hoh3 = has("hoh3", "you have defeated the nomads in the third of honor's trials") ? 1 : 0;
     if (has("hoh4", "you have completed all of honor's trials")) { hoh1 = 1; hoh2 = 1; hoh3 = 1; }
@@ -426,7 +433,7 @@ function calcFlags() {
     // ---- Mithaniel Marr / Temple of Marr ----
     let marr = 0;
     if (has("marr1", "an image of mithaniel flashes before you")) marr = 1;
-    if (has("marr2", "an image of mithaniel flashes before you")) marr = 2;
+    if (has("marr2", "you have not yet earned the honor to see these words")) marr = 2;
     if (has("marr3", "the information obtained from mithaniel is written in a language that you cannot comprehend")) marr = 3;
     if (has("marr4", "mithaniel has been bested")) marr = 5;
 
