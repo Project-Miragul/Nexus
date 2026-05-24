@@ -5,13 +5,9 @@ from spells.models import SpellExpansion, SpellPatchHistory, SpellScroll, SpellV
 
 @admin.register(SpellExpansion)
 class SpellExpansionAdmin(admin.ModelAdmin):
-    list_display = ('id', 'expansion', 'spell_name_display')
+    list_display = ('id', 'spell_name', 'expansion')
     list_filter = ('expansion',)
-    search_fields = ('id',)
-
-    def spell_name_display(self, obj):
-        return f"Spell ID: {obj.id}"
-    spell_name_display.short_description = 'Spell'
+    search_fields = ('id', 'spell_name')
 
 
 class SpellVendorInline(admin.TabularInline):

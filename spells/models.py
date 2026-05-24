@@ -31,6 +31,8 @@ class SpellExpansion(models.Model):
     MAX_EXPANSION = 5  # Legacy of Ykesha
 
     id = models.IntegerField(primary_key=True, null=False, default=0)
+    spell_name = models.CharField(max_length=64, blank=True, default='',
+                                  help_text="Denormalized name for display (game DB is read-only).")
     # 0 - Original, 1 - Kunark, 2 - Velious, 3- Luclin, 4- PoP, 5 - LoY, etc...
     expansion = models.IntegerField(null=False, default=0, choices=EXPANSION_CHOICES)
 
