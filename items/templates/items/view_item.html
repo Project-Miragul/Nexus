@@ -7,9 +7,11 @@
 {% block og_type %}article{% endblock %}
 {% block og_title %}{{ item.get_clean_name }}{% endblock %}
 {% block og_description %}{{ og_description }}{% endblock %}
-{% block og_image %}https://{{ request.get_host }}/static/images/items/item_{{ item.icon }}.png{% endblock %}
+{% block og_image %}{{ request.scheme }}://{{ request.get_host }}/static/images/items/item_{{ item.icon }}.png{% endblock %}
+{% block twitter_card %}summary{% endblock %}
 {% block twitter_title %}{{ item.get_clean_name }}{% endblock %}
 {% block twitter_description %}{{ og_description }}{% endblock %}
+{% block twitter_image %}{{ request.scheme }}://{{ request.get_host }}/static/images/items/item_{{ item.icon }}.png{% endblock %}
 {% block extra_meta %}
     {% if item.Name %}
         <meta name="description" content="Miragul Item Information for {{ item.get_clean_name }}">

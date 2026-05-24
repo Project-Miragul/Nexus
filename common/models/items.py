@@ -584,17 +584,17 @@ class Items(models.Model):
         if focus_mods:
             lines.extend(focus_mods)
 
-        if self.stackable == 3 and effect_name:
+        if effect_name:
             effects = []
             if self.click_type in [1, 3, 4, 5]:
-                effect_parts = [f"Effect: {effect_name}"]
-                if self.click_type == 1:
-                    effect_parts.append("(Any Slot,")
-                elif self.click_type == 4:
-                    effect_parts.append("(Must Equip,")
                 cast_time = "Instant" if self.cast_time in [0, -1] else f"{self.cast_time / 1000:.1f} sec"
-                effect_parts.append(f"Casting Time: {cast_time})")
-                effects.append(" ".join(effect_parts))
+                if self.click_type == 1:
+                    detail = f"(Any Slot, Casting Time: {cast_time})"
+                elif self.click_type == 4:
+                    detail = f"(Must Equip, Casting Time: {cast_time})"
+                else:
+                    detail = f"(Casting Time: {cast_time})"
+                effects.append(f"Effect: {effect_name} {detail}")
             if self.worn_type == 2:
                 worn_effect = f"Effect: {effect_name} (Worn)"
                 if self.worn_effect == 998 and self.worn_level:
