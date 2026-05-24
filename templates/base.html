@@ -6,13 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
     <!-- Default meta description and OG tags (overridden per-page via extra_meta block) -->
-    <meta name="description" content="{% block meta_description %}{{ site_name }} — a community database and account portal for the EverQuest Mac emulator server.{% endblock %}">
+    <meta name="description" content="{% block meta_description %}{{ site_name }} — community database and player portal for the Project Miragul EverQuest emulator.{% endblock %}">
     <meta property="og:site_name" content="{{ site_name }}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     <meta property="og:title" content="{% block og_title %}{{ site_name }}{% endblock %}">
-    <meta property="og:description" content="{% block og_description %}{{ site_name }} — a community database and account portal for the EverQuest Mac emulator server.{% endblock %}">
-    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% load static %}{% static 'images/eqalogo.png' %}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ site_name }} — community database and player portal for the Project Miragul EverQuest emulator.{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-image.png' %}{% endblock %}">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
     <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ site_name }}{% endblock %}">
+    <meta name="twitter:description" content="{% block twitter_description %}{{ site_name }} — community database and player portal for the Project Miragul EverQuest emulator.{% endblock %}">
+    <meta name="twitter:image" content="{{ request.scheme }}://{{ request.get_host }}{% static 'images/og-image.png' %}">
     <!-- App-specific meta tags -->
     {% block extra_meta %}{% endblock %}
 

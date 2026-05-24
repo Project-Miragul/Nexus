@@ -166,7 +166,7 @@ def list_spells(request, class_id):
         }
         for spell in queryset:
             expansion = expansion_map.get(spell.id)
-            if expansion is not None and expansion > SpellExpansion.MAX_EXPANSION:
+            if expansion is None or expansion > SpellExpansion.MAX_EXPANSION:
                 continue
             spell_effects = prep_spell_data(spell)
             spells.setdefault(spell.level, []).append(

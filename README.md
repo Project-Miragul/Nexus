@@ -1,6 +1,6 @@
 # Nexus Website
 
-A self-contained Django web application for [EverQuest Emulator](https://www.eqemulator.org/) servers. A live instance runs at [www.eqarchives.com](https://www.eqarchives.com).
+A self-contained Django web application for [EverQuest Emulator](https://www.eqemulator.org/) servers. Live instances run at [www.projectmiragul.org](https://www.projectmiragul.org).
 
 ## Features
 
