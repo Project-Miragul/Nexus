@@ -5,12 +5,13 @@
 {% load humanize %}
 {% load expansion_filters %}
 {% load markdown_extras %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ npc_data.name|clean_name }} - {{ site_name }}{% endblock %}
+{% block og_description %}{{ npc_data.name|clean_name }} — NPC information on {{ site_name }} including drops, faction, and stats.{% endblock %}
+{% block twitter_title %}{{ npc_data.name|clean_name }} - {{ site_name }}{% endblock %}
+{% block twitter_description %}{{ npc_data.name|clean_name }} — NPC information on {{ site_name }} including drops, faction, and stats.{% endblock %}
 {% block extra_meta %}
     <meta name="description" content="{{ npc_data.name|clean_name }} — NPC information on {{ site_name }} including drops, faction, and stats.">
-    <meta property="og:title" content="{{ npc_data.name|clean_name }} - {{ site_name }}">
-    <meta property="og:description" content="{{ npc_data.name|clean_name }} — NPC information on {{ site_name }} including drops, faction, and stats.">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
 {% endblock %}
 {% block title %}{{ npc_data.name|clean_name }} - {{ site_name }}{% endblock %}
 {% block extra_css %}

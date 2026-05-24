@@ -4,15 +4,15 @@
 {% load tradeskill_filters %}
 {% load static %}
 {% load humanize %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ item.get_clean_name }}{% endblock %}
+{% block og_description %}{{ og_description }}{% endblock %}
+{% block og_image %}https://{{ request.get_host }}/static/images/items/item_{{ item.icon }}.png{% endblock %}
+{% block twitter_title %}{{ item.get_clean_name }}{% endblock %}
+{% block twitter_description %}{{ og_description }}{% endblock %}
 {% block extra_meta %}
     {% if item.Name %}
-        <meta content="{{ site_name }}" property="og:site_name">
-        <meta content="article" property="og:type">
-        <meta content="{{ item.get_clean_name }}" property="og:title">
-        <meta content="{{ og_description }}" property="og:description">
         <meta name="description" content="Miragul Item Information for {{ item.get_clean_name }}">
-        <meta content="https://{{ request.get_host }}/static/images/items/item_{{ item.icon }}.png" property="og:image">
-        <meta property="og:url" content="https://{{ request.get_host }}/items/view/{{ item.id }}">
         <link rel="canonical" href="https://{{ request.get_host }}/items/view/{{ item.id }}">
     {% endif %}
 {% endblock %}

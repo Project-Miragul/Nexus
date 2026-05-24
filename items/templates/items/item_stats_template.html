@@ -59,33 +59,29 @@
                       target="_blank">{{ focus_effect_name }}</a><br/>
         {% endif %}
         {% if item.rec_level %}Recommended level of {{ item.rec_level }}.<br/>{% endif %}
-        {# stackable == 3 means Spell Effect; this field is perhaps poorly named  #}
-        {% if item.stackable == 3 %}
-            {% if item.click_type == 1 or item.click_type == 3 or item.click_type == 4 or item.click_type == 5 %}
-                Effect:&nbsp;<a style="text-decoration:none;color:#00ba00;"
-                                href="/spells/view/{{ item.click_effect }}"
-                                target="_blank">{{ effect_name }}</a>
-                ({% if item.click_type == 1 %}Any Slot,{% endif %}{% if item.click_type == 4 %}
-                Must Equip.{% endif %}
-                Casting Time:&nbsp;{% if item.cast_time == 0 or item.cast_time == -1 %}Instant
-                {% else %}{{ item.cast_time|ms_to_seconds }} sec{% endif %})<br/>
-            {% endif %}
-            {% if item.worn_type == 2 %}
-                Effect:&nbsp;<a style="text-decoration: none; color:#00ba00;"
-                                href="https://lucy.alkabor.com/spell_{{ item.worn_effect }}.html"
-                                target="_blank">{{ effect_name }}</a>&nbsp;
-                {% if item.worn_type == 2 %}(Worn){% endif %}
-                {% if item.worn_effect == 998 and item.worn_level %}&nbsp;({{ item.worn_level|add:1 }}%){% endif %}
-                <br/>
-            {% endif %}
-            {% if item.proc_type == 0 and item.proc_effect > 0 %}
-                Effect:&nbsp;<a style="text-decoration:none;color:#00ba00;"
-                                href="https://lucy.alkabor.com/spell_{{ item.proc_effect }}.html"
-                                target="_blank">{{ effect_name }}</a>&nbsp;(Combat, Casting Time:
-                {% if item.cast_time == 0 %}
-                    Instant{% else %}{{ item.cast_time|ms_to_seconds }} sec{% endif %}) at Level
-                {{ item.proc_level }}<br/>
-            {% endif %}
+        {% if item.click_type == 1 or item.click_type == 3 or item.click_type == 4 or item.click_type == 5 %}
+            Effect:&nbsp;<a style="text-decoration:none;color:#00ba00;"
+                            href="/spells/view/{{ item.click_effect }}"
+                            target="_blank">{{ effect_name }}</a>
+            ({% if item.click_type == 1 %}Any Slot,{% endif %}{% if item.click_type == 4 %}
+            Must Equip.{% endif %}
+            Casting Time:&nbsp;{% if item.cast_time == 0 or item.cast_time == -1 %}Instant
+            {% else %}{{ item.cast_time|ms_to_seconds }} sec{% endif %})<br/>
+        {% endif %}
+        {% if item.worn_type == 2 %}
+            Effect:&nbsp;<a style="text-decoration: none; color:#00ba00;"
+                            href="/spells/view/{{ item.worn_effect }}"
+                            target="_blank">{{ effect_name }}</a>&nbsp;(Worn)
+            {% if item.worn_effect == 998 and item.worn_level %}&nbsp;({{ item.worn_level|add:1 }}%){% endif %}
+            <br/>
+        {% endif %}
+        {% if item.proc_type == 0 and item.proc_effect > 0 %}
+            Effect:&nbsp;<a style="text-decoration:none;color:#00ba00;"
+                            href="/spells/view/{{ item.proc_effect }}"
+                            target="_blank">{{ effect_name }}</a>&nbsp;(Combat, Casting Time:
+            {% if item.cast_time == 0 %}
+                Instant{% else %}{{ item.cast_time|ms_to_seconds }} sec{% endif %}) at Level
+            {{ item.proc_level }}<br/>
         {% endif %}
         WT:&nbsp;{{ item.weight|item_weight }}&nbsp;{% if item.bag_type %}{% if item.bag_wr %}
         Weight Reduction: {{ item.bag_wr }}%<br/>{% endif %}Capacity:&nbsp;

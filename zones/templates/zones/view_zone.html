@@ -2,12 +2,13 @@
 {% load static %}
 {% load data_utilities %}
 {% load humanize %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ zone_data.long_name }} - {{ site_name }}{% endblock %}
+{% block og_description %}{{ zone_data.long_name }} — zone information on {{ site_name }} including NPCs, items, and quests.{% endblock %}
+{% block twitter_title %}{{ zone_data.long_name }} - {{ site_name }}{% endblock %}
+{% block twitter_description %}{{ zone_data.long_name }} — zone information on {{ site_name }} including NPCs, items, and quests.{% endblock %}
 {% block extra_meta %}
     <meta name="description" content="{{ zone_data.long_name }} — zone information on {{ site_name }} including NPCs, items, and quests.">
-    <meta property="og:title" content="{{ zone_data.long_name }} - {{ site_name }}">
-    <meta property="og:description" content="{{ zone_data.long_name }} — zone information on {{ site_name }} including NPCs, items, and quests.">
-    <meta property="og:type" content="article">
-    <meta property="og:url" content="{{ request.scheme }}://{{ request.get_host }}{{ request.path }}">
 {% endblock %}
 {% block title %}{{ zone_data.long_name }} - {{ site_name }}{% endblock %}
 {% block content %}
