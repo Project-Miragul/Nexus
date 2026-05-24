@@ -1,4 +1,3 @@
-import json
 from django.http import Http404
 from django.shortcuts import render
 from django.core.exceptions import ObjectDoesNotExist
@@ -7,7 +6,7 @@ from django.views.decorators.http import require_http_methods
 
 from common.models.spells import SpellsNew
 from common.models.items import Items
-from spells.models import SpellExpansion, SpellPatchHistory
+from spells.models import SpellExpansion, SpellPatchHistory, SpellScroll
 from spells.utils import calc_buff_duration
 from spells.utils import prep_spell_data
 from django.db.models import Q
@@ -189,39 +188,58 @@ def buy_spells(request, class_id):
     :param class_id: a class id field unique identifier
     :return: Http response
     """
-    clsid = str(class_id) if class_id in [2, 3, 4, 5, 6, 8, 10, 11, 12, 13, 14, 15] else None
-    filename = f'static/spell_data/spell_buy.json'
-    with open(filename, 'r') as json_file:
-        spell_list = json.load(json_file)
-    try:
-        spells = spell_list[clsid]
-    except KeyError:
+    clsid = class_id if class_id in [2, 3, 4, 5, 6, 8, 10, 11, 12, 13, 14, 15] else None
+    if clsid is None:
         raise Http404("Sorry, that class id doesn't exist, or the class doesn't cast spells.")
 
-    spell_ids = [s['id'] for s in spells]
-    expansion_map = {
-        se.id: se.expansion
-        for se in SpellExpansion.objects.filter(id__in=spell_ids)
-    }
-    spells = [s for s in spells if expansion_map.get(s['id'], 0) <= SpellExpansion.MAX_EXPANSION]
+    level_field = f'classes{clsid}'
 
-    for spell in spells:
-        if spell['purchase_location_info'] != "None":
-            grouped_locations = {}
-            purchase_locations = spell['purchase_location_info'].split(';')
-            for location in purchase_locations:
-                merchant = location.split(',')
-                zone_key = merchant[3]
-                merchant_id = merchant[0].replace(' ', '')
-                merchant_info = merchant[1]
-                if zone_key not in grouped_locations:
-                    grouped_locations.update({zone_key: []})
-                grouped_locations[zone_key].append({'id': merchant_id, 'info': merchant_info})
-                spell['purchase_location_info'] = grouped_locations
+    # Spell IDs valid for this class + their class-specific level
+    spell_level_map = {
+        row['id']: row[level_field]
+        for row in SpellsNew.objects.filter(
+            **{f'{level_field}__lt': 255}
+        ).values('id', level_field)
+    }
+
+    # Restrict to scrolls within the current expansion
+    valid_spell_ids = set(
+        SpellExpansion.objects.filter(
+            id__in=spell_level_map.keys(),
+            expansion__lte=SpellExpansion.MAX_EXPANSION,
+        ).values_list('id', flat=True)
+    )
+
+    scrolls = (
+        SpellScroll.objects
+        .filter(spell_id__in=valid_spell_ids)
+        .prefetch_related('vendors')
+    )
+
+    spells = []
+    for scroll in scrolls:
+        vendors_by_zone = {}
+        for v in scroll.vendors.all():
+            vendors_by_zone.setdefault(v.zone_long_name, []).append(
+                {'id': v.merchant_id, 'info': v.merchant_name}
+            )
+        spells.append({
+            'id': scroll.spell_id,
+            'name': scroll.spell_name,
+            'item_id': scroll.scroll_item_id,
+            'item_name': scroll.scroll_item_name,
+            'item_price': scroll.scroll_price,
+            'item_rate': scroll.scroll_rate,
+            'new_icon': scroll.icon,
+            'level': spell_level_map.get(scroll.spell_id, 0),
+            'purchase_location_info': vendors_by_zone or 'None',
+        })
+
+    spells.sort(key=lambda s: s['level'])
+
     return render(request=request,
                   template_name="spells/buy.html",
-                  context={"class_id": clsid,
-                           "spells": spells},
+                  context={"class_id": str(clsid), "spells": spells},
                   )
 
 

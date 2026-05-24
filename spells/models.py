@@ -38,6 +38,46 @@ class SpellExpansion(models.Model):
         db_table = 'spell_expansion'
 
 
+class SpellScroll(models.Model):
+    """
+    Spell scrolls available for purchase from vendors.
+    One row per unique spell — class associations and levels are read
+    from SpellsNew (game DB) at query time so there is no per-class duplication.
+    """
+    spell_id = models.IntegerField(unique=True, help_text="Game-DB spell id (spells_new.id)")
+    spell_name = models.CharField(max_length=64)
+    scroll_item_id = models.IntegerField()
+    scroll_item_name = models.CharField(max_length=64)
+    scroll_price = models.IntegerField(default=0)
+    scroll_rate = models.IntegerField(default=1, help_text="Merchant price modifier from the game DB")
+    icon = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.spell_name} (spell {self.spell_id})"
+
+    class Meta:
+        db_table = 'spell_scroll'
+        ordering = ['spell_name']
+
+
+class SpellVendor(models.Model):
+    """A merchant that sells a spell scroll."""
+    scroll = models.ForeignKey(SpellScroll, on_delete=models.CASCADE, related_name='vendors')
+    merchant_id = models.IntegerField()
+    merchant_name = models.CharField(max_length=64)
+    zone_short_name = models.CharField(max_length=32)
+    zone_long_name = models.CharField(max_length=64)
+    zone_id = models.IntegerField()
+    zone_expansion = models.IntegerField(default=0, help_text="Expansion the vendor's zone was introduced in")
+
+    def __str__(self):
+        return f"{self.merchant_name} ({self.zone_long_name})"
+
+    class Meta:
+        db_table = 'spell_vendor'
+        unique_together = ['scroll', 'merchant_id']
+
+
 class SpellPatchHistory(models.Model):
     """
     Links a spell (by game-DB id) to a patch message that changed it.
