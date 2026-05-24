@@ -25,6 +25,11 @@ class SpellExpansion(models.Model):
         (9, 'Dragons of Norrath'),
         (10, 'Depths of Darkhollow'),
     ]
+
+    # Spells introduced in expansions beyond this value are hidden from class lists.
+    # Update when the server progresses to a new expansion.
+    MAX_EXPANSION = 5  # Legacy of Ykesha
+
     id = models.IntegerField(primary_key=True, null=False, default=0)
     # 0 - Original, 1 - Kunark, 2 - Velious, 3- Luclin, 4- PoP, 5 - LoY, etc...
     expansion = models.IntegerField(null=False, default=0, choices=EXPANSION_CHOICES)

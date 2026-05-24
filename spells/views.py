@@ -119,58 +119,64 @@ def list_spells(request, class_id):
     clsid = class_id if class_id in [2, 3, 4, 5, 6, 8, 10, 11, 12, 13, 14, 15] else 0
     match clsid:
         case 2:
-            result = (SpellsNew.objects.filter(classes2__lt=255)
-                      .annotate(level=F('classes2')).order_by(f"classes{clsid}"))
+            queryset = (SpellsNew.objects.filter(classes2__lt=255)
+                        .annotate(level=F('classes2')).order_by(f"classes{clsid}"))
         case 3:
-            result = (SpellsNew.objects.filter(classes3__lt=255)
-                      .annotate(level=F('classes3')).order_by(f"classes{clsid}"))
+            queryset = (SpellsNew.objects.filter(classes3__lt=255)
+                        .annotate(level=F('classes3')).order_by(f"classes{clsid}"))
         case 4:
-            result = (SpellsNew.objects.filter(classes4__lt=255)
-                      .annotate(level=F('classes4')).order_by(f"classes{clsid}"))
+            queryset = (SpellsNew.objects.filter(classes4__lt=255)
+                        .annotate(level=F('classes4')).order_by(f"classes{clsid}"))
         case 5:
-            result = (SpellsNew.objects.filter(classes5__lt=255)
-                      .annotate(level=F('classes5')).order_by(f"classes{clsid}"))
+            queryset = (SpellsNew.objects.filter(classes5__lt=255)
+                        .annotate(level=F('classes5')).order_by(f"classes{clsid}"))
         case 6:
-            result = (SpellsNew.objects.filter(classes6__lt=255)
-                      .annotate(level=F('classes6')).order_by(f"classes{clsid}"))
+            queryset = (SpellsNew.objects.filter(classes6__lt=255)
+                        .annotate(level=F('classes6')).order_by(f"classes{clsid}"))
         case 8:
-            result = (SpellsNew.objects.filter(classes8__lt=255)
-                      .annotate(level=F('classes8')).order_by(f"classes{clsid}"))
+            queryset = (SpellsNew.objects.filter(classes8__lt=255)
+                        .annotate(level=F('classes8')).order_by(f"classes{clsid}"))
         case 10:
-            result = (SpellsNew.objects.filter(classes10__lt=255)
-                      .annotate(level=F('classes10')).order_by(f"classes{clsid}"))
+            queryset = (SpellsNew.objects.filter(classes10__lt=255)
+                        .annotate(level=F('classes10')).order_by(f"classes{clsid}"))
         case 11:
-            result = (SpellsNew.objects.filter(classes11__lt=255)
-                      .annotate(level=F('classes11')).order_by(f"classes{clsid}"))
+            queryset = (SpellsNew.objects.filter(classes11__lt=255)
+                        .annotate(level=F('classes11')).order_by(f"classes{clsid}"))
         case 12:
-            result = (SpellsNew.objects.filter(classes12__lt=255)
-                      .annotate(level=F('classes12')).order_by(f"classes{clsid}"))
+            queryset = (SpellsNew.objects.filter(classes12__lt=255)
+                        .annotate(level=F('classes12')).order_by(f"classes{clsid}"))
         case 13:
-            result = (SpellsNew.objects.filter(classes13__lt=255)
-                      .annotate(level=F('classes13')).order_by(f"classes{clsid}"))
+            queryset = (SpellsNew.objects.filter(classes13__lt=255)
+                        .annotate(level=F('classes13')).order_by(f"classes{clsid}"))
         case 14:
-            result = (SpellsNew.objects.filter(classes14__lt=255)
-                      .annotate(level=F('classes14')).order_by(f"classes{clsid}"))
+            queryset = (SpellsNew.objects.filter(classes14__lt=255)
+                        .annotate(level=F('classes14')).order_by(f"classes{clsid}"))
         case 15:
-            result = (SpellsNew.objects.filter(classes15__lt=255)
-                      .annotate(level=F('classes15')).order_by(f"classes{clsid}"))
+            queryset = (SpellsNew.objects.filter(classes15__lt=255)
+                        .annotate(level=F('classes15')).order_by(f"classes{clsid}"))
         case _:
-            result = None
-    spells = dict()
-    if result is not None:
-        for spell in result:
-            result = SpellExpansion.objects.filter(id=spell.id).first()
-            print(result)
-            expansion = result.expansion if result else None
+            queryset = None
+
+    spells = {}
+    if queryset is not None:
+        spell_ids = list(queryset.values_list('id', flat=True))
+        expansion_map = {
+            se.id: se.expansion
+            for se in SpellExpansion.objects.filter(id__in=spell_ids)
+        }
+        for spell in queryset:
+            expansion = expansion_map.get(spell.id)
+            if expansion is not None and expansion > SpellExpansion.MAX_EXPANSION:
+                continue
             spell_effects = prep_spell_data(spell)
-            if spell.level in spells:
-                spells[spell.level].append({"spell": spell, "spell_effects": spell_effects, "expansion": expansion})
-            else:
-                spells[spell.level] = [{"spell": spell, "spell_effects": spell_effects, "expansion": expansion}]
+            spells.setdefault(spell.level, []).append(
+                {"spell": spell, "spell_effects": spell_effects, "expansion": expansion}
+            )
+
     return render(request=request,
                   template_name="spells/list.html",
-                  context={"class_id": clsid,
-                           "spells": spells},
+                  context={"class_id": clsid, "spells": spells,
+                           "max_expansion": SpellExpansion.MAX_EXPANSION},
                   )
 
 
@@ -191,6 +197,13 @@ def buy_spells(request, class_id):
         spells = spell_list[clsid]
     except KeyError:
         raise Http404("Sorry, that class id doesn't exist, or the class doesn't cast spells.")
+
+    spell_ids = [s['id'] for s in spells]
+    expansion_map = {
+        se.id: se.expansion
+        for se in SpellExpansion.objects.filter(id__in=spell_ids)
+    }
+    spells = [s for s in spells if expansion_map.get(s['id'], 0) <= SpellExpansion.MAX_EXPANSION]
 
     for spell in spells:
         if spell['purchase_location_info'] != "None":
