@@ -101,9 +101,7 @@
 }
 
 /* Scrollable checkbox panel with bottom-fade hint */
-.pop-cb-scroll-wrap {
-    position: relative;
-}
+.pop-cb-scroll-wrap { position: relative; }
 .pop-cb-scroll-wrap::after {
     content: '';
     position: absolute;
@@ -115,12 +113,7 @@
     transition: opacity 0.25s;
 }
 .pop-cb-scroll-wrap.at-bottom::after { opacity: 0; }
-.pop-cb-scroll {
-    max-height: 420px;
-    overflow-y: auto;
-    padding-right: 6px;
-    padding-bottom: 4px;
-}
+.pop-cb-scroll { max-height: 420px; overflow-y: auto; padding-right: 6px; padding-bottom: 4px; }
 
 /* Progress bar */
 .pop-progress-wrap {
@@ -136,26 +129,79 @@
     border-radius: 3px;
     transition: width 0.5s ease;
 }
-.pop-progress-label {
+.pop-progress-label { font-size: 13px; color: #6a8868; letter-spacing: 0.02em; margin-bottom: 12px; }
+
+/* "Back to form" link */
+.pop-adjust-link { font-size: 12px; color: #5a5040; text-decoration: none; letter-spacing: 0.03em; }
+.pop-adjust-link:hover { color: #9a8a60; text-decoration: none; }
+
+/* Zone access grid */
+.pop-zone-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px 8px;
+    padding: 4px 0;
+}
+@media (max-width: 991px) { .pop-zone-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 575px) { .pop-zone-grid { grid-template-columns: 1fr; } }
+.pop-zone-tier {
+    grid-column: 1 / -1;
+    font-family: menuetto, serif;
+    font-size: 11px;
+    color: #6a5a40;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 10px 0 3px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    margin-top: 2px;
+}
+.pop-zone-tier:first-child { padding-top: 2px; margin-top: 0; }
+.pop-zone-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 13px;
-    color: #6a8868;
-    letter-spacing: 0.02em;
-    margin-bottom: 12px;
+    padding: 5px 8px;
+    border-radius: 2px;
+    border-left: 3px solid;
+    line-height: 1.3;
+}
+.pop-zone-item.z-open   { border-color: #5ab85a; background: rgba(15,50,15,0.3);  color: #88c488; }
+.pop-zone-item.z-level  { border-color: #b08a30; background: rgba(55,45,10,0.3);  color: #a08030; }
+.pop-zone-item.z-locked { border-color: #503030; background: rgba(35,12,12,0.2);  color: #6a5858; }
+.pop-zone-item.z-sub    { margin-left: 14px; }
+.pop-zone-item          { cursor: default; }
+.pop-zone-tip {
+    position: fixed;
+    background: rgba(10,9,6,0.97);
+    border: 1px solid rgba(180,150,60,0.25);
+    border-radius: 3px;
+    padding: 9px 13px;
+    font-size: 12px;
+    color: #b0a88c;
+    max-width: 290px;
+    line-height: 1.6;
+    white-space: pre-line;
+    pointer-events: none;
+    z-index: 9999;
+    display: none;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.65);
+}
+.pop-zone-name { flex: 1; }
+.pop-zone-short { display: block; font-family: monospace; font-size: 11px; opacity: 0.6; margin-top: 1px; }
+.pop-zone-badge {
+    font-size: 11px;
+    white-space: nowrap;
+    opacity: 0.85;
+    flex-shrink: 0;
+    text-align: right;
 }
 
-/* "Back to form" link above results */
-.pop-adjust-link {
-    font-size: 12px;
-    color: #5a5040;
-    text-decoration: none;
-    letter-spacing: 0.03em;
-}
-.pop-adjust-link:hover { color: #9a8a60; text-decoration: none; }
 </style>
 
 <div class="container-fluid py-4 pop-flags-page">
     <h2 class="eq-header text-center mb-1" style="font-size: 180%;">Planes of Power Flags Checker</h2>
-    <p class="text-center mb-4" style="color:#a09078; font-size:15px;">
+    <p class="text-center mb-3" style="color:#a09078; font-size:15px;">
         Find <strong style="color:#c4a050;">Seer Mal Nae'Shi</strong> at <strong style="color:#c4a050;">-40, -200</strong>
         in Plane of Knowledge (building near the Soulbinder). Sit, target her, and say
         <em>unlock memories</em> then <em>guided meditation</em>.
@@ -359,6 +405,7 @@
         </div>
         <div class="pop-progress-wrap"><div class="pop-progress-bar" id="pop-progress-bar" style="width:0%"></div></div>
         <div id="status-banner" style="margin-top:10px;"></div>
+        <div id="result-zones"></div>
         <div id="result-solo"></div>
         <div id="result-group"></div>
         <div id="result-raid"></div>
@@ -378,15 +425,33 @@ document.addEventListener('DOMContentLoaded', function () {
         if (cb) cb.checked = true;
     });
 
-    // Checkbox scroll fade hint
     const cbScroll = document.getElementById('cb-scroll');
     const cbWrap   = cbScroll.closest('.pop-cb-scroll-wrap');
     function updateCbFade() {
-        const atBottom = cbScroll.scrollTop + cbScroll.clientHeight >= cbScroll.scrollHeight - 4;
-        cbWrap.classList.toggle('at-bottom', atBottom);
+        cbWrap.classList.toggle('at-bottom', cbScroll.scrollTop + cbScroll.clientHeight >= cbScroll.scrollHeight - 4);
     }
     cbScroll.addEventListener('scroll', updateCbFade);
     updateCbFade();
+
+    // Zone access tooltip
+    const zoneTip = document.createElement('div');
+    zoneTip.className = 'pop-zone-tip';
+    document.body.appendChild(zoneTip);
+    document.getElementById('result-zones').addEventListener('mouseover', function(e) {
+        const item = e.target.closest('.pop-zone-item');
+        if (!item || !item.dataset.tip) { zoneTip.style.display = 'none'; return; }
+        zoneTip.textContent = item.dataset.tip;
+        zoneTip.style.display = 'block';
+    });
+    document.getElementById('result-zones').addEventListener('mouseleave', function() {
+        zoneTip.style.display = 'none';
+    });
+    document.addEventListener('mousemove', function(e) {
+        if (zoneTip.style.display === 'none') return;
+        const x = e.clientX + 16, y = e.clientY + 16;
+        zoneTip.style.left = Math.min(x, window.innerWidth  - zoneTip.offsetWidth  - 8) + 'px';
+        zoneTip.style.top  = Math.min(y, window.innerHeight - zoneTip.offsetHeight - 8) + 'px';
+    });
 });
 
 function scrollToForm() {
@@ -405,9 +470,6 @@ function clearAll() {
 }
 
 function calcFlags() {
-    // Normalise backticks to apostrophes — EQ log files use ` for NPC names
-    // (Aerin`Dar, Rydda`Dar) and sometimes possessives; collapse whitespace so
-    // chat-window pastes with soft-wrapped lines still match.
     const seer = document.getElementById("seertext").value
         .toLowerCase()
         .replace(/`/g, "'")
@@ -526,19 +588,13 @@ function calcFlags() {
     let potime = has("potime", "your soul has formed a bond with the plane of time") ? 1 : 0;
 
     // ---- Unlock Memories format ("You have / You have NOT" structured output) ----
-    // Handles logs from saying "unlock memories" to Seer Mal Nae`Shi, which uses
-    // a different phrasing than the narrative "guided meditation" memories above.
-
-    // PoJ
     if (seer.includes("you have talked to mavuin, and have agreed to plea his case to the tribunal"))
         poj_trial = Math.max(poj_trial, 1);
-    if (seer.includes("you have returned to mavuin, letting him know the tribunal will hear his case"))
+    if (seer.includes("you have shown the tribunal the mark from the trial you have completed"))
         poj_trial = Math.max(poj_trial, 2);
-    if (["trial of execution","trial of flame","trial of hanging","trial of lashing","trial of stoning","trial of torture"]
-            .every(t => seer.includes("you have completed the " + t)) && poj_trial >= 2)
-        poj_trial = 3;
+    if (seer.includes("you have returned to mavuin, letting him know the tribunal will hear his case"))
+        poj_trial = Math.max(poj_trial, 3);
 
-    // Grummus / Disease
     if (seer.includes("you have talked to adler fuirstel outside of the plane of disease"))
         grummus = Math.max(grummus, 1);
     if (seer.includes("you have defeated grummus"))
@@ -546,7 +602,6 @@ function calcFlags() {
     if (seer.includes("you have talked to elder fuirstel in the plane of tranquility") && grummus >= 3)
         grummus = 4;
 
-    // Nightmare / Hedge / Terris Thule
     if (seer.includes("you have spoken to jezith within the plane of tranquility for the hedge preflag"))
         nightmare = Math.max(nightmare, 1);
     if (seer.includes("you have killed the construct of nightmares"))
@@ -556,23 +611,19 @@ function calcFlags() {
     if (seer.includes("you have talked to poxbourne in the plane of tranquility after defeating terris thule"))
         nightmare = Math.max(nightmare, 5);
 
-    // Plane of Innovation
     if (seer.includes("you have talked to the gnome within the plane of innovation factory"))
         poi_factory = 1;
     if (seer.includes("you have defeated the behemoth within the plane of innovation"))
         behemoth = Math.max(behemoth, 1);
 
-    // Aerin'Dar / Plane of Valor
     if (seer.includes("you have defeated the prismatic dragon, aerin'dar, within the plane of valor"))
         aerin = Math.max(aerin, 2);
 
-    // Bertoxxulous / Crypt of Decay
     if (seer.includes("you have killed bertox and hailed the planar projection"))
         bertox = Math.max(bertox, 2);
     if (seer.includes("you have talked to adler fuirstel after killing bertox"))
         bertox = Math.max(bertox, 3);
 
-    // Saryrn / Torment
     if (seer.includes("you have talked to shadyglade within the plane of tranquility"))
         saryrn = Math.max(saryrn, 1);
     if (seer.includes("you have killed the keeper of sorrows"))
@@ -582,31 +633,25 @@ function calcFlags() {
     if (seer.includes("you have talked to shadyglade after killing saryrn"))
         saryrn = Math.max(saryrn, 6);
 
-    // Askr / Plane of Storms
     if (seer.includes("you have completed part one of askr"))
         askr = Math.max(askr, 1);
     if (seer.includes("you have killed the giants within the plane of storms to complete askr"))
         askr = Math.max(askr, 2);
 
-    // Agnarr / Bastion of Thunder
     if (seer.includes("you have defeated agnarr, the storm lord"))
         bot = Math.max(bot, 3);
 
-    // Plane of Tactics
     if (seer.includes("you have killed vallon zek"))   vallon = Math.max(vallon, 2);
     if (seer.includes("you have killed tallon zek"))   tallon = Math.max(tallon, 2);
     if (seer.includes("you have killed rallos zek the warlord")) rztw1 = 1;
 
-    // Halls of Honor
     if (seer.includes("you have completed the halls of honor trial given by faye"))        hoh1 = 1;
     if (seer.includes("you have completed the halls of honor trial given by rhaliq trell")) hoh2 = 1;
     if (seer.includes("you have completed the halls of honor trial given by alekson garn")) hoh3 = 1;
 
-    // Mithaniel Marr / Temple of Marr
     if (seer.includes("you have defeated lord marr within his temple"))
         marr = Math.max(marr, 5);
 
-    // Tower of Solusek Ro
     if (seer.includes("you have defeated arlyxir within the tower of solusek ro"))                   tosr_arly  = 1;
     if (seer.includes("you have defeated the protector of dresolik within the tower of solusek ro")) tosr_dres  = 1;
     if (seer.includes("you have defeated jiva within the tower of solusek ro"))                      tosr_jiva  = 1;
@@ -614,11 +659,8 @@ function calcFlags() {
     if (seer.includes("you have defeated xuzl within the tower of solusek ro"))                      tosr_xuzl  = 1;
     if (seer.includes("you have defeated solusek ro within the tower of solusek ro"))                tosr_solro = 1;
 
-    // Elemental Planes / Librarian Maelin
     if (seer.includes("you have spoken with the grand librarian to receive access to the elemental planes"))
         elem1 = 1;
-
-    // Plane of Time
     if (seer.includes("you have completed your plane of time flag"))
         potime = 1;
 
@@ -674,7 +716,7 @@ function calcFlags() {
         solo.push("Return to Adler Fuirstel outside Plane of Disease and say \"What ward\".");
         done.push("Grummus flag partially complete.");
     } else if (grummus === 3) {
-        solo.push("Visit the sick bay in Plane of Torment and hail Elder Fuirstel.");
+        solo.push("Visit the sick bay in Plane of Tranquility and hail Elder Fuirstel.");
         done.push("Grummus flag partially complete.");
     } else {
         done.push("Grummus flag complete.");
@@ -696,7 +738,7 @@ function calcFlags() {
         raid.push("Hedge event, then return to sick bay and hail Elder Poxbourne and Adroha Jezith.");
         done.push("Terris Thule flag partially complete.");
     } else if (nightmare === 4) {
-        solo.push("Visit the sick bay in Plane of Torment and hail Elder Poxbourne.");
+        solo.push("Visit the sick bay in Plane of Tranquility and hail Elder Poxbourne.");
         done.push("Terris Thule flag partially complete.");
     } else {
         done.push("Terris Thule complete.");
@@ -832,10 +874,12 @@ function calcFlags() {
     }
 
     // ToSR
-    if (!tosr_pre) {
+    if (tosr_pre) {
+        done.push("Tower of Solusek Ro pre-flag done.");
+    } else if (can_enter_tosr) {
         fire.push("Hail Miak in Plane of Tranquility and say \"portal's destination\" for the Tower of Solusek Ro pre-flag.");
     } else {
-        done.push("Tower of Solusek Ro pre-flag done.");
+        blocked.push("Tower of Solusek Ro pre-flag (Hail Miak) — requires all Tier 1–3 flags first.");
     }
 
     const tosrNames = ["Arlyxir", "Jiva", "Dresolik", "Xuzl", "Rizlona"];
@@ -895,10 +939,93 @@ function calcFlags() {
     ];
     const flagsDone  = flagChecks.filter(Boolean).length;
     const flagsTotal = flagChecks.length;
-    const pct = Math.round(flagsDone / flagsTotal * 100);
-
-    document.getElementById('pop-progress-bar').style.width = pct + '%';
+    document.getElementById('pop-progress-bar').style.width = Math.round(flagsDone / flagsTotal * 100) + '%';
     document.getElementById('pop-progress-label').textContent = flagsDone + ' / ' + flagsTotal + ' milestones complete';
+
+    // ---- Zone access grid ----
+    // [name, shortname, canEnter, levelAlt, lockReason, isSub, desc]
+    // desc: shown in tooltip — for locked/level zones, describes how to get the flag
+    const zoneTiers = [
+        { label: 'Tier 1', zones: [
+            ['Plane of Justice',               'pojustice',    true,                           null, null,                    false, 'Complete any PoJ trial, present the Mark to the Tribunal, then return to Mavuin for the PoJ trial flag.'],
+            ['Plane of Nightmare',             'ponightmare',  true,                           null, null,                    false, 'Complete the Hedge event here to unlock access to Lair of Terris Thule.'],
+            ['Lair of Terris Thule',           'ponightmareb', nightmare >= 2,                 null, 'Hedge event',           true,  "Hail Elder Poxbourne in the PoT sick bay, then hail Adroha Jezith and say 'tortured by nightmares'. Then complete the Hedge event in Plane of Nightmare."],
+            ['Plane of Disease',               'podisease',    true,                           null, null,                    false, 'Kill Grummus here for the Ruins of Lxanvom / Bertoxxulous flagging chain.'],
+            ['Plane of Innovation',            'poiinnovation',true,                           null, null,                    false, 'Defeat the Manaetic Behemoth here for Drunder (Plane of Tactics) access.'],
+        ]},
+        { label: 'Tier 2', zones: [
+            ['Plane of Storms',                'postorms',     poj_trial >= 3,                 55,   'PoJ trial',             false, 'Complete any PoJ trial in Plane of Justice, present the Mark to the Tribunal, then return to Mavuin.'],
+            ['Plane of Valor',                 'povalor',      poj_trial >= 3,                 55,   'PoJ trial',             false, 'Complete any PoJ trial in Plane of Justice, present the Mark to the Tribunal, then return to Mavuin.'],
+            ['Plane of Torment',               'potorment',    bertox >= 4 && nightmare >= 5,  55,   'Bertox + Terris flags', false, 'Requires the complete Bertoxxulous chain (Grummus → Crypt of Decay) and the complete Terris Thule chain (Hedge event → Lair of Terris Thule).'],
+            ['Ruins of Lxanvom',               'codecay',      grummus >= 4,                   55,   'Grummus flag',          false, "Hail Adler Fuirstel outside Plane of Disease and say 'what ward'. Kill Grummus and loot the ward. Return to Adler Fuirstel, then hail Elder Fuirstel in the Plane of Tranquility sick bay."],
+        ]},
+        { label: 'Tier 3', zones: [
+            ['Halls of Honor',                 'hohonora',     aerin >= 2,                     62,   "Aerin'Dar",             false, "Kill Aerin'Dar in Plane of Valor."],
+            ['Temple of Marr',                 'hohonorb',     hoh1 && hoh2 && hoh3,           null, 'all 3 HoH trials',      true,  "Complete all 3 Halls of Honor trials: Rydda'Dar (given by Faye), Villagers (Rhaliq Trell), and Nomads (Alekson Garn)."],
+            ['Torden, Bastion of Thunder',     'bothunder',    poj_trial >= 3 && askr >= 2,    62,   'PoJ trial + Askr quest',false, "Requires the PoJ trial flag. Then complete both parts of Askr's quest in Plane of Storms."],
+            ['Drunder, Fortress of Zek',       'potactics',    behemoth >= 1,                  60,   'Manaetic Behemoth',     false, 'Defeat the Manaetic Behemoth in Plane of Innovation, then quickly hail the Gnome inside the factory.'],
+        ]},
+        { label: 'Tier 4', zones: [
+            ["Solusek Ro's Tower",             'solrotower',   can_enter_tosr,                 null, 'all Tier 1–3 flags',false, 'Requires all Tier 1–3 flag content to be complete. Hail Miak in Plane of Tranquility for the pre-flag once requirements are met.'],
+            ['Doomfire, the Burning Lands',    'doomfire',     elem2,                          null, 'Solusek Ro + Maelin',   false, 'Kill Solusek Ro in the Tower, then visit Librarian Maelin in the Plane of Knowledge library.'],
+            ['Eryslai, the Kingdom of Wind',   'eryslai',      elem1,                          null, 'Elemental flag',        false, "Obtain the Elemental flag from Librarian Maelin after completing Solusek Ro's Tower, Agnarr (Bastion of Thunder), and Rallos Zek the Warlord (Plane of Tactics)."],
+            ['Reef of Coirnav',                'reef',         elem1,                          null, 'Elemental flag',        false, "Obtain the Elemental flag from Librarian Maelin after completing Solusek Ro's Tower, Agnarr (Bastion of Thunder), and Rallos Zek the Warlord (Plane of Tactics)."],
+            ['Vegarlson, the Earthen Badlands','vegarlson',    elem1,                          null, 'Elemental flag',        false, "Obtain the Elemental flag from Librarian Maelin after completing Solusek Ro's Tower, Agnarr (Bastion of Thunder), and Rallos Zek the Warlord (Plane of Tactics)."],
+            ['Ragrax, Stronghold of the Twelve','ragrax',      elem1,                          null, 'Elemental flag',        true,  'Accessed through Vegarlson. Requires the same Elemental flag from Librarian Maelin.'],
+        ]},
+        { label: 'Tier 5', zones: [
+            ['Plane of Time A',                'potimea',      potime,                         null, 'all 4 elemental gods',  false, 'Defeat all 4 elemental gods: Fennin Ro (Doomfire), Xegony (Eryslai), Coirnav (Reef), and the Rathe Council (Vegarlson/Ragrax). Then hail Maelin Starpyre.'],
+            ['Plane of Time B',                'potimeb',      potime,                         null, 'all 4 elemental gods',  true,  'Accessed from Plane of Time A. Requires the same Plane of Time flag.'],
+        ]},
+    ];
+
+    let zhtml = '<div class="result-section" style="margin-bottom:10px;">' +
+        '<div class="result-section-title" style="background:rgba(40,35,20,0.6); color:#b09050; font-size:15px;">Zone Access</div>' +
+        '<div class="result-section-body" style="padding:8px 12px;">' +
+        '<div style="display:flex; gap:20px; flex-wrap:wrap; margin-bottom:10px; font-size:12px;">' +
+          '<span style="display:inline-flex; align-items:center; gap:6px;">' +
+            '<span style="display:inline-block; width:12px; height:12px; border-left:3px solid #5ab85a; background:rgba(15,50,15,0.3);"></span>' +
+            '<span style="color:#88c488;">Flagged / open</span>' +
+          '</span>' +
+          '<span style="display:inline-flex; align-items:center; gap:6px;">' +
+            '<span style="display:inline-block; width:12px; height:12px; border-left:3px solid #b08a30; background:rgba(55,45,10,0.3);"></span>' +
+            '<span style="color:#a08030;">Level bypass only — entering without the flag can cause checklist issues</span>' +
+          '</span>' +
+          '<span style="display:inline-flex; align-items:center; gap:6px;">' +
+            '<span style="display:inline-block; width:12px; height:12px; border-left:3px solid #503030; background:rgba(35,12,12,0.2);"></span>' +
+            '<span style="color:#6a5858;">Locked — flag required</span>' +
+          '</span>' +
+        '</div>' +
+        '<div class="pop-zone-grid">';
+
+    zoneTiers.forEach(function(tier) {
+        zhtml += '<div class="pop-zone-tier">' + tier.label + '</div>';
+        tier.zones.forEach(function(z) {
+            const name = z[0], short = z[1], canEnter = z[2], levelAlt = z[3], lockReason = z[4], isSub = z[5], desc = z[6];
+            let cls, badge, tipText;
+            if (canEnter) {
+                cls = 'z-open';
+                badge = '&#10003;';
+                tipText = (lockReason ? 'You have the ' + lockReason + ' flag.' : 'Always accessible.') + (desc ? '\n\n' + desc : '');
+            } else if (levelAlt) {
+                cls = 'z-level';
+                badge = 'L' + levelAlt;
+                tipText = 'Level ' + levelAlt + ' bypass available — you can enter but lack the proper flag.\nEntering this way may cause checklist issues.\n\nTo get the flag:\n' + (desc || lockReason);
+            } else {
+                cls = 'z-locked';
+                badge = lockReason || '&#10005;';
+                tipText = 'Cannot enter yet.\n\n' + (desc || lockReason);
+            }
+            zhtml += '<div class="pop-zone-item ' + cls + (isSub ? ' z-sub' : '') + '" data-tip="' + tipText.replace(/"/g, '&quot;') + '">' +
+                '<span class="pop-zone-name">' + name +
+                '<span class="pop-zone-short">' + short + '</span>' +
+                '</span>' +
+                '<span class="pop-zone-badge">' + badge + '</span>' +
+                '</div>';
+        });
+    });
+    zhtml += '</div></div></div>';
+    document.getElementById('result-zones').innerHTML = zhtml;
 
     // ---- Status Banner ----
     const statusLines = [];
