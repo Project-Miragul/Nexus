@@ -457,7 +457,104 @@ function calcFlags() {
     if (has("elem2", "the true route to the plane of fire is now clear in your mind")) { elem2 = 1; rztw1 = 1; }
 
     // ---- Plane of Time ----
-    const potime = has("potime", "your soul has formed a bond with the plane of time") ? 1 : 0;
+    let potime = has("potime", "your soul has formed a bond with the plane of time") ? 1 : 0;
+
+    // ---- Unlock Memories format ("You have / You have NOT" structured output) ----
+    // Handles logs from saying "unlock memories" to Seer Mal Nae`Shi, which uses
+    // a different phrasing than the narrative "guided meditation" memories above.
+
+    // PoJ
+    if (seer.includes("you have talked to mavuin, and have agreed to plea his case to the tribunal"))
+        poj_trial = Math.max(poj_trial, 1);
+    if (seer.includes("you have returned to mavuin, letting him know the tribunal will hear his case"))
+        poj_trial = Math.max(poj_trial, 2);
+    if (["trial of execution","trial of flame","trial of hanging","trial of lashing","trial of stoning","trial of torture"]
+            .every(t => seer.includes("you have completed the " + t)) && poj_trial >= 2)
+        poj_trial = 3;
+
+    // Grummus / Disease
+    if (seer.includes("you have talked to adler fuirstel outside of the plane of disease"))
+        grummus = Math.max(grummus, 1);
+    if (seer.includes("you have defeated grummus"))
+        grummus = Math.max(grummus, 3);
+    if (seer.includes("you have talked to elder fuirstel in the plane of tranquility") && grummus >= 3)
+        grummus = 4;
+
+    // Nightmare / Hedge / Terris Thule
+    if (seer.includes("you have spoken to jezith within the plane of tranquility for the hedge preflag"))
+        nightmare = Math.max(nightmare, 1);
+    if (seer.includes("you have killed the construct of nightmares"))
+        nightmare = Math.max(nightmare, 2);
+    if (seer.includes("you have killed terris thule"))
+        nightmare = Math.max(nightmare, 4);
+    if (seer.includes("you have talked to poxbourne in the plane of tranquility after defeating terris thule"))
+        nightmare = Math.max(nightmare, 5);
+
+    // Plane of Innovation
+    if (seer.includes("you have talked to the gnome within the plane of innovation factory"))
+        poi_factory = 1;
+    if (seer.includes("you have defeated the behemoth within the plane of innovation"))
+        behemoth = Math.max(behemoth, 1);
+
+    // Aerin'Dar / Plane of Valor
+    if (seer.includes("you have defeated the prismatic dragon, aerin'dar, within the plane of valor"))
+        aerin = Math.max(aerin, 2);
+
+    // Bertoxxulous / Crypt of Decay
+    if (seer.includes("you have killed bertox and hailed the planar projection"))
+        bertox = Math.max(bertox, 2);
+    if (seer.includes("you have talked to adler fuirstel after killing bertox"))
+        bertox = Math.max(bertox, 3);
+
+    // Saryrn / Torment
+    if (seer.includes("you have talked to shadyglade within the plane of tranquility"))
+        saryrn = Math.max(saryrn, 1);
+    if (seer.includes("you have killed the keeper of sorrows"))
+        saryrn = Math.max(saryrn, 3);
+    if (seer.includes("you have killed saryrn and hailed the planar projection"))
+        saryrn = Math.max(saryrn, 6);
+    if (seer.includes("you have talked to shadyglade after killing saryrn"))
+        saryrn = Math.max(saryrn, 6);
+
+    // Askr / Plane of Storms
+    if (seer.includes("you have completed part one of askr"))
+        askr = Math.max(askr, 1);
+    if (seer.includes("you have killed the giants within the plane of storms to complete askr"))
+        askr = Math.max(askr, 2);
+
+    // Agnarr / Bastion of Thunder
+    if (seer.includes("you have defeated agnarr, the storm lord"))
+        bot = Math.max(bot, 3);
+
+    // Plane of Tactics
+    if (seer.includes("you have killed vallon zek"))   vallon = Math.max(vallon, 2);
+    if (seer.includes("you have killed tallon zek"))   tallon = Math.max(tallon, 2);
+    if (seer.includes("you have killed rallos zek the warlord")) rztw1 = 1;
+
+    // Halls of Honor
+    if (seer.includes("you have completed the halls of honor trial given by faye"))        hoh1 = 1;
+    if (seer.includes("you have completed the halls of honor trial given by rhaliq trell")) hoh2 = 1;
+    if (seer.includes("you have completed the halls of honor trial given by alekson garn")) hoh3 = 1;
+
+    // Mithaniel Marr / Temple of Marr
+    if (seer.includes("you have defeated lord marr within his temple"))
+        marr = Math.max(marr, 5);
+
+    // Tower of Solusek Ro
+    if (seer.includes("you have defeated arlyxir within the tower of solusek ro"))                   tosr_arly  = 1;
+    if (seer.includes("you have defeated the protector of dresolik within the tower of solusek ro")) tosr_dres  = 1;
+    if (seer.includes("you have defeated jiva within the tower of solusek ro"))                      tosr_jiva  = 1;
+    if (seer.includes("you have defeated rizlona within the tower of solusek ro"))                   tosr_rizl  = 1;
+    if (seer.includes("you have defeated xuzl within the tower of solusek ro"))                      tosr_xuzl  = 1;
+    if (seer.includes("you have defeated solusek ro within the tower of solusek ro"))                tosr_solro = 1;
+
+    // Elemental Planes / Librarian Maelin
+    if (seer.includes("you have spoken with the grand librarian to receive access to the elemental planes"))
+        elem1 = 1;
+
+    // Plane of Time
+    if (seer.includes("you have completed your plane of time flag"))
+        potime = 1;
 
     // ---- Implied flag propagation ----
     if (elem2)    tosr_solro = 1;
