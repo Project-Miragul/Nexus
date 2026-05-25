@@ -912,6 +912,7 @@
             if (selected.has(t.id)) return false;
             if (!query) return true;
             return t.name.toLowerCase().indexOf(query) !== -1
+                || (t.zone && t.zone.toLowerCase().indexOf(query) !== -1)
                 || t.description.toLowerCase().indexOf(query) !== -1;
         });
     }
@@ -936,15 +937,15 @@
             return;
         }
 
-        var lastExpansion = null;
+        var lastZone = null;
         visible.forEach(function (t) {
-            // Insert expansion header when group changes (only when not searching)
-            if (!query && t.expansion && t.expansion !== lastExpansion) {
+            // Insert zone header when group changes (only when not searching)
+            if (!query && t.zone && t.zone !== lastZone) {
                 var hdr = document.createElement('div');
                 hdr.className = 'rsf-expansion-hdr';
-                hdr.textContent = t.expansion;
+                hdr.textContent = t.zone;
                 availEl.appendChild(hdr);
-                lastExpansion = t.expansion;
+                lastZone = t.zone;
             }
 
             var row = document.createElement('div');
