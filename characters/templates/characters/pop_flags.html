@@ -72,7 +72,7 @@
     border: 1px solid rgba(180,160,80,0.25);
     border-radius: 3px;
     padding: 12px 16px;
-    margin-bottom: 14px;
+    margin-bottom: 10px;
     font-size: 15px;
     line-height: 1.7;
     background: rgba(50,45,20,0.35);
@@ -91,21 +91,72 @@
     margin-bottom: 8px;
     letter-spacing: 0.03em;
 }
-.pop-or-divider {
-    display: flex; align-items: center; justify-content: center;
-    color: #504838; font-size: 11px; letter-spacing: 0.12em;
-    text-transform: uppercase; gap: 8px;
+
+/* Checkbox column — vertical separator on md+ screens */
+@media (min-width: 768px) {
+    .pop-cb-col {
+        border-left: 1px solid rgba(255,255,255,0.06);
+        padding-left: 20px !important;
+    }
 }
-.pop-or-divider::before, .pop-or-divider::after {
-    content: ''; flex: 1; height: 1px;
-    background: rgba(255,255,255,0.06);
+
+/* Scrollable checkbox panel with bottom-fade hint */
+.pop-cb-scroll-wrap {
+    position: relative;
 }
+.pop-cb-scroll-wrap::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 8px;
+    height: 52px;
+    background: linear-gradient(to bottom, transparent, #0e0d09);
+    pointer-events: none;
+    border-radius: 0 0 3px 3px;
+    transition: opacity 0.25s;
+}
+.pop-cb-scroll-wrap.at-bottom::after { opacity: 0; }
+.pop-cb-scroll {
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 6px;
+    padding-bottom: 4px;
+}
+
+/* Progress bar */
+.pop-progress-wrap {
+    background: rgba(0,0,0,0.35);
+    border-radius: 3px;
+    height: 6px;
+    overflow: hidden;
+    margin: 4px 0 4px;
+}
+.pop-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #4a7a4a, #7dbf7d);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+.pop-progress-label {
+    font-size: 13px;
+    color: #6a8868;
+    letter-spacing: 0.02em;
+    margin-bottom: 12px;
+}
+
+/* "Back to form" link above results */
+.pop-adjust-link {
+    font-size: 12px;
+    color: #5a5040;
+    text-decoration: none;
+    letter-spacing: 0.03em;
+}
+.pop-adjust-link:hover { color: #9a8a60; text-decoration: none; }
 </style>
 
 <div class="container-fluid py-4 pop-flags-page">
     <h2 class="eq-header text-center mb-1" style="font-size: 180%;">Planes of Power Flags Checker</h2>
     <p class="text-center mb-4" style="color:#a09078; font-size:15px;">
-        Find <strong style="color:#c4a050;">Seer Mal Nei'Shi</strong> at <strong style="color:#c4a050;">-40, -200</strong>
+        Find <strong style="color:#c4a050;">Seer Mal Nae'Shi</strong> at <strong style="color:#c4a050;">-40, -200</strong>
         in Plane of Knowledge (building near the Soulbinder). Sit, target her, and say
         <em>unlock memories</em> then <em>guided meditation</em>.
     </p>
@@ -125,9 +176,9 @@
             </select>
             <button class="eq-button" onclick="loadCharacter()">Load Flags</button>
             {% if loaded_character %}
-            <span style="font-size:14px; color:#7dbf7d;">
-                &#10003; Loaded approximate flags for <strong>{{ loaded_character }}</strong> &mdash;
-                review and adjust before clicking Check My Flags.
+            <span style="font-size:13px; color:#7dbf7d;">
+                &#10003; Loaded zone flags for <strong>{{ loaded_character }}</strong> &mdash;
+                pre-flag quest steps aren't stored in the DB, so tick any the Seer confirmed before checking.
             </span>
             {% endif %}
         </div>
@@ -135,13 +186,16 @@
     {% endif %}
 
     <div class="eq-window-nested-tan" style="padding: 16px;">
+        <p style="font-size:13px; color:#6a6050; text-align:center; margin-bottom:12px; margin-top:0;">
+            Paste your log <em>and</em> tick boxes — both are used together.
+        </p>
         <div class="row g-3">
 
             <!-- Left: Paste area -->
-            <div class="col-md-5">
-                <div class="pop-opt-header">Option 1 &mdash; Paste Log Text</div>
+            <div class="col-md-6">
+                <div class="pop-opt-header">Paste Log Text</div>
                 <p style="font-size:14px; color:#908070; margin-bottom:6px;">
-                    Enable logging, run the commands below, then paste everything the Seer said here:
+                    Enable logging, run the commands below, then paste the Seer's output here:
                 </p>
                 <pre style="font-size:13px; color:#806858; background:rgba(0,0,0,0.25); padding:8px; border-radius:3px; margin-bottom:8px; line-height:1.6;">/log on
 /sit
@@ -149,152 +203,145 @@
 /say unlock memories
 /say guided meditation
 /log off</pre>
-                <textarea id="seertext" class="form-control" rows="18"
+                <textarea id="seertext" class="form-control" rows="18" spellcheck="false"
                     style="background:#1a1810; border:1px solid rgba(255,255,255,0.1); color:#c0b89a;
                            font-size:13px; font-family:monospace; resize:vertical; min-height:320px;"
                     placeholder="Paste your log output here (no need to trim it)..."></textarea>
             </div>
 
-            <!-- Middle: OR divider -->
-            <div class="col-md-2 d-flex align-items-center">
-                <div class="pop-or-divider w-100 flex-column" style="height:100%; gap:4px;">
-                    <div style="flex:1; width:1px; background:rgba(255,255,255,0.06);"></div>
-                    <span style="white-space:nowrap; color:#504838; font-size:11px; letter-spacing:.1em;">or</span>
-                    <div style="flex:1; width:1px; background:rgba(255,255,255,0.06);"></div>
-                </div>
-            </div>
-
             <!-- Right: Checkboxes -->
-            <div class="col-md-5">
-                <div class="pop-opt-header">Option 2 &mdash; Manual Checkboxes</div>
+            <div class="col-md-6 pop-cb-col">
+                <div class="pop-opt-header">Tick What You Remember</div>
                 <p style="font-size:14px; color:#908070; margin-bottom:6px;">
-                    Check the memories the Seer said to you:
+                    Manually check any memories the Seer told you:
                 </p>
-                <div style="max-height:400px; overflow-y:auto; padding-right:6px;">
+                <div class="pop-cb-scroll-wrap">
+                    <div class="pop-cb-scroll" id="cb-scroll">
 
-                    <div class="pop-section-header">Tier 1 — Plane of Justice</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="poj1"> The evidence of Mavuin is the only thing that can save him now.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="poj2"> Having endured the trials, the Tribunal has agreed to reconsider Mavuin's case.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="poj3"> Mavuin is grateful to you for taking his case before the Tribunal.</label>
-                    </div>
+                        <div class="pop-section-header">Tier 1 — Plane of Justice</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="poj1"> The evidence of Mavuin is the only thing that can save him now.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="poj2"> Having endured the trials, the Tribunal has agreed to reconsider Mavuin's case.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="poj3"> Mavuin is grateful to you for taking his case before the Tribunal.</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 1 — Plane of Disease (Grummus)</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="grummus1"> Alder Fuirstel wishes you to obtain the Ward from the Plane of Disease and take it to his ill brother Milyk.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="grummus2"> For a moment you pause, sticking your hand into your pocket. Inside you find the small ward that was lying near Grummus' body.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="grummus3"> Grummus has been destroyed, about his corpse you found a small ward to protect from disease.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="grummus4"> Now that Grummus has been destroyed, the entrance to the Crypt of Bertoxxulous should open before your might.</label>
-                    </div>
+                        <div class="pop-section-header">Tier 1 — Plane of Disease (Grummus)</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="grummus1"> Alder Fuirstel wishes you to obtain the Ward from the Plane of Disease and take it to his ill brother Milyk.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="grummus2"> For a moment you pause, sticking your hand into your pocket. Inside you find the small ward that was lying near Grummus' body.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="grummus3"> Grummus has been destroyed, about his corpse you found a small ward to protect from disease.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="grummus4"> Now that Grummus has been destroyed, the entrance to the Crypt of Bertoxxulous should open before your might.</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 1 — Plane of Nightmare (Terris Thule)</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="terris1"> Thelin being tormented by the imagery of Terris Thule needs assistance escaping from the Plane of Nightmares.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="terris2"> Thelin has completed his pact with Terris Thule, but has been refused. The only way to escape his torment is to destroy Terris Thule.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="terris3"> Terris still haunts your nightmares whenever you attempt to recall your battle with her.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="terris4"> Terris Thule's grasp over Thelin has been released.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="terris5"> Saved from a world of eternal nightmares, Thelin is forever in your debt.</label>
-                    </div>
+                        <div class="pop-section-header">Tier 1 — Plane of Nightmare (Terris Thule)</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="terris1"> Thelin being tormented by the imagery of Terris Thule needs assistance escaping from the Plane of Nightmares.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="terris2"> Thelin has completed his pact with Terris Thule, but has been refused. The only way to escape his torment is to destroy Terris Thule.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="terris3"> Terris still haunts your nightmares whenever you attempt to recall your battle with her.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="terris4"> Terris Thule's grasp over Thelin has been released.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="terris5"> Saved from a world of eternal nightmares, Thelin is forever in your debt.</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 1 — Plane of Innovation (Manaetic Behemoth)</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="poi1"> You remember Nitram's words — 'three small turns to the right on the bottommost rivet should open the door'.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="poi2"> Giwin would like you to find him in Drunder so he can present you to Rallos Zek.</label>
-                    </div>
+                        <div class="pop-section-header">Tier 1 — Plane of Innovation (Manaetic Behemoth)</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="poi1"> You remember Nitram's words — 'three small turns to the right on the bottommost rivet should open the door'.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="poi2"> Giwin would like you to find him in Drunder so he can present you to Rallos Zek.</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 2 — Plane of Valor (Aerin'Dar)</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="aerin1"> You have defeated Aerin'Dar but have yet to learn the true meaning of Justice.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="aerin2"> You have bested Aerin'Dar and proven yourself honorable enough to pass into Mithaniel's Halls.</label>
-                    </div>
+                        <div class="pop-section-header">Tier 2 — Plane of Valor (Aerin'Dar)</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="aerin1"> You have defeated Aerin'Dar but have yet to learn the true meaning of Justice.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="aerin2"> You have bested Aerin'Dar and proven yourself honorable enough to pass into Mithaniel's Halls.</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 2 — Plane of Storms (Askr)</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="pos1"> You have shown your prowess in battle to Askr, now you must make strides to get to the Bastion of Thunder.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="pos2"> You have obtained the Talisman of Thunderous Foyer from Askr; he seeks further assistance in the Bastion of Thunder.</label>
-                    </div>
+                        <div class="pop-section-header">Tier 2 — Plane of Storms (Askr)</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="pos1"> You have shown your prowess in battle to Askr, now you must make strides to get to the Bastion of Thunder.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="pos2"> You have obtained the Talisman of Thunderous Foyer from Askr; he seeks further assistance in the Bastion of Thunder.</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 2 — Crypt of Decay (Bertoxxulous)</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="bert1"> Milyk has been saved from certain death, but is not recovering. Only by destroying the ruler of all things pestilent will his curse be lifted.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="bert2"> Bertoxxulous has been slain. The curse from Milyk has been lifted.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="bert3"> As you recall your memory of your battle against the Plaguebringer, an image of the Fuirstel brothers flashes through your mind.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="bert4"> Saved from certain doom, Milyk and Adler are forever in your debt.</label>
-                    </div>
+                        <div class="pop-section-header">Tier 2 — Crypt of Decay (Bertoxxulous)</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="bert1"> Milyk has been saved from certain death, but is not recovering. Only by destroying the ruler of all things pestilent will his curse be lifted.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="bert2"> Bertoxxulous has been slain. The curse from Milyk has been lifted.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="bert3"> As you recall your memory of your battle against the Plaguebringer, an image of the Fuirstel brothers flashes through your mind.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="bert4"> Saved from certain doom, Milyk and Adler are forever in your debt.</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 2 — Plane of Torment (Saryrn)</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="saryrn1"> Tylis is being tortured by Saryrn. The only way for him to get away from his misery is to escape from the Plane of Torment.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="saryrn2"> Although it was kind of you to help him, Tylis still seems to have no idea who you are.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="saryrn3"> Tylis has been removed from his agony.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="saryrn4"> You attempt to recall your defeat of Saryrn, but whenever you try to focus you feel a searing pain on your arm.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="saryrn5"> You feel the searing pain of torment as half of the Cipher of the Gods glows on your arm.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="saryrn6"> Saryrn has been destroyed. An aura surrounds the mystical symbols that have appeared on your arm.</label>
-                    </div>
+                        <div class="pop-section-header">Tier 2 — Plane of Torment (Saryrn)</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="saryrn1"> Tylis is being tortured by Saryrn. The only way for him to get away from his misery is to escape from the Plane of Torment.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="saryrn2"> Although it was kind of you to help him, Tylis still seems to have no idea who you are.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="saryrn3"> Tylis has been removed from his agony.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="saryrn4"> You attempt to recall your defeat of Saryrn, but whenever you try to focus you feel a searing pain on your arm.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="saryrn5"> You feel the searing pain of torment as half of the Cipher of the Gods glows on your arm.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="saryrn6"> Saryrn has been destroyed. An aura surrounds the mystical symbols that have appeared on your arm.</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 3 — Plane of Tactics (Vallon, Tallon, Rallos Zek)</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="vallon1"> Vallon fell before you with great ease; you seem to remember some strange pouches around his body...</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="vallon2"> The pack of notes from Vallon are scribbled in a language that you cannot comprehend.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="tallon1"> Tallon fell before you with great ease; you seem to remember some strange pouches around his body...</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="tallon2"> The pack of notes from Tallon are scribbled in a language that you cannot comprehend.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="rztw1"> The parchments of Rallos are scribed in a language that you cannot comprehend; they have detailed drawings of the manaetic behemoth.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="rztw2"> Your heart beats speeds as you recall the Warlord's flaming axe, behind the dark sockets of his helm you sense darker intentions.</label>
-                    </div>
+                        <div class="pop-section-header">Tier 3 — Plane of Tactics (Vallon, Tallon, Rallos Zek)</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="vallon1"> Vallon fell before you with great ease; you seem to remember some strange pouches around his body...</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="vallon2"> The pack of notes from Vallon are scribbled in a language that you cannot comprehend.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="tallon1"> Tallon fell before you with great ease; you seem to remember some strange pouches around his body...</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="tallon2"> The pack of notes from Tallon are scribbled in a language that you cannot comprehend.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="rztw1"> The parchments of Rallos are scribed in a language that you cannot comprehend; they have detailed drawings of the manaetic behemoth.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="rztw2"> Your heart beats speeds as you recall the Warlord's flaming axe, behind the dark sockets of his helm you sense darker intentions.</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 3 — Bastion of Thunder (Agnarr)</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="bot1"> You recall meeting with Karana, but the memory is clouded. You sense that the answer you seek may be in Storms.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="bot2"> The information obtained from Karana is written in a language that you cannot comprehend.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="bot3"> As you think back to your meeting with Karana the Talisman in your chest warms and a light rain falls from the sky.</label>
-                    </div>
+                        <div class="pop-section-header">Tier 3 — Bastion of Thunder (Agnarr)</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="bot1"> You recall meeting with Karana, but the memory is clouded. You sense that the answer you seek may be in Storms.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="bot2"> The information obtained from Karana is written in a language that you cannot comprehend.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="bot3"> As you think back to your meeting with Karana the Talisman in your chest warms and a light rain falls from the sky.</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 3 — Halls of Honor</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="hoh1"> You have beaten Rydda'Dar in the first of Honor's trials.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="hoh2"> You have saved the villagers in the second of Honor's trials.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="hoh3"> You have defeated the nomads in the third of Honor's trials.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="hoh4"> You have completed all of Honor's Trials. (shortcut — checks all three above)</label>
-                    </div>
+                        <div class="pop-section-header">Tier 3 — Halls of Honor</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="hoh1"> You have beaten Rydda'Dar in the first of Honor's trials.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="hoh2"> You have saved the villagers in the second of Honor's trials.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="hoh3"> You have defeated the nomads in the third of Honor's trials.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="hoh4"> You have completed all of Honor's Trials. (shortcut — checks all three above)</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 3b — Temple of Marr (Mithaniel Marr)</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="marr1"> An image of Mithaniel flashes before you, "you have yet to earn a place of Honor. When you have, we will speak again."</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="marr2"> An image of Mithaniel flashes before you. He looks up from a small book... "You have not yet earned the Honor to see these words."</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="marr3"> The information obtained from Mithaniel is written in a language that you cannot comprehend.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="marr4"> Mithaniel has been bested. An aura surrounds the mystical symbols that have appeared on your arm.</label>
-                    </div>
+                        <div class="pop-section-header">Tier 3b — Temple of Marr (Mithaniel Marr)</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="marr1"> An image of Mithaniel flashes before you, "you have yet to earn a place of Honor. When you have, we will speak again."</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="marr2"> An image of Mithaniel flashes before you. He looks up from a small book... "You have not yet earned the Honor to see these words."</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="marr3"> The information obtained from Mithaniel is written in a language that you cannot comprehend.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="marr4"> Mithaniel has been bested. An aura surrounds the mystical symbols that have appeared on your arm.</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 3 — Combined (Librarian Maelin)</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="combined1"> The History translated for you reveals the fate of Zebuxoruk. Trapped in the Plane of Time you must gain the power of the elements to gain entrance.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="combined2"> The Cipher of the Divine Language appears on your arms for a brief moment then fades.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="combined3"> The words of Maelin echo in your mind, 'The Zeks and Solusek are planning an invasion in Norrath...'</label>
-                    </div>
+                        <div class="pop-section-header">Tier 3 — Combined (Librarian Maelin)</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="combined1"> The History translated for you reveals the fate of Zebuxoruk. Trapped in the Plane of Time you must gain the power of the elements to gain entrance.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="combined2"> The Cipher of the Divine Language appears on your arms for a brief moment then fades.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="combined3"> The words of Maelin echo in your mind, 'The Zeks and Solusek are planning an invasion in Norrath...'</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 3 — Tower of Solusek Ro</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="tosr_pre"> The portal into the Plane of Fire has been altered. Miak needs you to find the correct way to channel the portal.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="tosr_arly"> Arlyxir's wealth of knowledge flows through your mind.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="tosr_jiva"> Jiva's strength fills your body.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="tosr_dres"> The power of Dresolik surges through you.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="tosr_xuzl"> Xuzl's arcane wisdom pulses in your mind.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="tosr_rizl"> Rizlona's song slips through your thoughts.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="tosr_solro"> Besting the Burning Prince proves your might, but you still must prove your warrior's spirit.</label>
-                    </div>
+                        <div class="pop-section-header">Tier 3 — Tower of Solusek Ro</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="tosr_pre"> The portal into the Plane of Fire has been altered. Miak needs you to find the correct way to channel the portal.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="tosr_arly"> Arlyxir's wealth of knowledge flows through your mind.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="tosr_jiva"> Jiva's strength fills your body.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="tosr_dres"> The power of Dresolik surges through you.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="tosr_xuzl"> Xuzl's arcane wisdom pulses in your mind.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="tosr_rizl"> Rizlona's song slips through your thoughts.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="tosr_solro"> Besting the Burning Prince proves your might, but you still must prove your warrior's spirit.</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 4 — Elemental Planes</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="elem1"> Learning of Zebuxoruk's fate, the only way to save him is gather materials... Maelin has charged you with finding an elemental power source.</label>
-                        <label class="pop-cb-row"><input type="checkbox" id="elem2"> The true route to the Plane of Fire is now clear in your mind.</label>
-                    </div>
+                        <div class="pop-section-header">Tier 4 — Elemental Planes</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="elem1"> Learning of Zebuxoruk's fate, the only way to save him is gather materials... Maelin has charged you with finding an elemental power source.</label>
+                            <label class="pop-cb-row"><input type="checkbox" id="elem2"> The true route to the Plane of Fire is now clear in your mind.</label>
+                        </div>
 
-                    <div class="pop-section-header">Tier 5 — Plane of Time</div>
-                    <div class="pop-cb-grid">
-                        <label class="pop-cb-row"><input type="checkbox" id="potime"> Your soul has formed a bond with the Plane of Time. You can now pass through the portal in the Plane of Tranquility safely.</label>
-                    </div>
+                        <div class="pop-section-header">Tier 5 — Plane of Time</div>
+                        <div class="pop-cb-grid">
+                            <label class="pop-cb-row"><input type="checkbox" id="potime"> Your soul has formed a bond with the Plane of Time. You can now pass through the portal in the Plane of Tranquility safely.</label>
+                        </div>
 
-                </div>
+                    </div><!-- /#cb-scroll -->
+                </div><!-- /.pop-cb-scroll-wrap -->
             </div>
         </div>
 
@@ -306,7 +353,12 @@
 
     <!-- Results -->
     <div id="flagResults" style="display:none; margin-top:20px;">
-        <div id="status-banner"></div>
+        <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+            <div id="pop-progress-label" class="pop-progress-label"></div>
+            <a href="#" class="pop-adjust-link" onclick="scrollToForm(); return false;">&#8593; adjust inputs &amp; recheck</a>
+        </div>
+        <div class="pop-progress-wrap"><div class="pop-progress-bar" id="pop-progress-bar" style="width:0%"></div></div>
+        <div id="status-banner" style="margin-top:10px;"></div>
         <div id="result-solo"></div>
         <div id="result-group"></div>
         <div id="result-raid"></div>
@@ -325,7 +377,21 @@ document.addEventListener('DOMContentLoaded', function () {
         const cb = document.getElementById(id);
         if (cb) cb.checked = true;
     });
+
+    // Checkbox scroll fade hint
+    const cbScroll = document.getElementById('cb-scroll');
+    const cbWrap   = cbScroll.closest('.pop-cb-scroll-wrap');
+    function updateCbFade() {
+        const atBottom = cbScroll.scrollTop + cbScroll.clientHeight >= cbScroll.scrollHeight - 4;
+        cbWrap.classList.toggle('at-bottom', atBottom);
+    }
+    cbScroll.addEventListener('scroll', updateCbFade);
+    updateCbFade();
 });
+
+function scrollToForm() {
+    document.querySelector('.eq-window-nested-tan').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
 
 function loadCharacter() {
     const name = document.getElementById('char-select').value;
@@ -377,7 +443,7 @@ function calcFlags() {
     if (has("terris5", "saved from a world of eternal nightmares, thelin is forever in your debt")) nightmare = 5;
 
     // ---- Plane of Innovation ----
-    const poi_factory = has("poi1", "you remember nitram's words") ? 1 : 0;
+    let poi_factory = has("poi1", "you remember nitram's words") ? 1 : 0;
     let behemoth = has("poi2", "giwin would like you to find him in drunder so he can present you to rallos zek") ? 1 : 0;
 
     // ---- Aerin'Dar / Plane of Valor ----
@@ -814,6 +880,25 @@ function calcFlags() {
     }
 
     if (potime) done.push("Plane of Time flag done.");
+
+    // ---- Progress counter ----
+    const flagChecks = [
+        poj_trial >= 3, grummus >= 4,
+        nightmare >= 2, nightmare >= 5,
+        !!poi_factory, behemoth >= 1,
+        aerin >= 2, bertox >= 4, saryrn >= 5,
+        askr >= 2, bot >= 2,
+        !!hoh1, !!hoh2, !!hoh3, marr >= 3,
+        vallon >= 1, tallon >= 1, !!(rztw1 || rztw2),
+        !!tosr_pre, !!tosr_arly, !!tosr_jiva, !!tosr_dres, !!tosr_xuzl, !!tosr_rizl, !!tosr_solro,
+        !!elem1, !!elem2, !!potime
+    ];
+    const flagsDone  = flagChecks.filter(Boolean).length;
+    const flagsTotal = flagChecks.length;
+    const pct = Math.round(flagsDone / flagsTotal * 100);
+
+    document.getElementById('pop-progress-bar').style.width = pct + '%';
+    document.getElementById('pop-progress-label').textContent = flagsDone + ' / ' + flagsTotal + ' milestones complete';
 
     // ---- Status Banner ----
     const statusLines = [];
