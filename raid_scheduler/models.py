@@ -28,12 +28,24 @@ RAID_TZ_CHOICES = [
 
 
 class RaidTarget(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+    TYPE_BOSS    = 'boss'
+    TYPE_EVENT   = 'event'
+    TYPE_FARMING = 'farming'
+
+    TYPE_CHOICES = [
+        (TYPE_BOSS,    'Boss Kill'),
+        (TYPE_EVENT,   'Event / Trial'),
+        (TYPE_FARMING, 'Farming Run'),
+    ]
+
+    name        = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
+    zone        = models.CharField(max_length=100, blank=True)
+    target_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default=TYPE_BOSS)
+    is_active   = models.BooleanField(default=True)
 
     class Meta:
-        ordering = ['name']
+        ordering = ['zone', 'name']
 
     def __str__(self):
         return self.name
