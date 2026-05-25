@@ -51,7 +51,21 @@ Edit `.env` — see [Configuration](#configuration) below for a description of e
 python manage.py migrate
 ```
 
-### 4. Populate app data
+### 4. Load seed data
+
+The repository includes a fixture with reference data (patch tags, spell scrolls and vendors, quest content, zone and NPC pages, petition categories, etc.) so you aren't starting from scratch:
+
+```bash
+python manage.py loaddata fixtures/seed_data.json
+```
+
+> **Maintainers:** to regenerate the fixture from a populated database, run:
+> ```bash
+> python manage.py dump_seed_data
+> ```
+> This writes `fixtures/seed_data.json` and can be committed to keep the repo up to date.
+
+### 5. Populate app data
 
 After migrating, run the bootstrap script to generate spell data, import Best-in-Slot entries, and build the item expansion table:
 
@@ -73,7 +87,7 @@ This runs the following commands in order — you can also run them individually
 
 **Adjusting item expansion ranges:** Edit the ranges via the Django admin (*Item Expansion ID Ranges*), then run `python manage.py compute_item_expansions --force` to recompute. Individual item exceptions can be pinned by setting `is_override=True` on the item's *Item Expansion* admin entry.
 
-### 5. Collect static files
+### 6. Collect static files
 
 ```bash
 python manage.py collectstatic
@@ -81,7 +95,7 @@ python manage.py collectstatic
 
 This assembles all static assets (including Django admin and third-party app assets) into `staticfiles/`. Your web server should be pointed at that directory.
 
-### 6. Run (development)
+### 7. Run (development)
 
 ```bash
 python manage.py runserver
