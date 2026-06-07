@@ -84,26 +84,22 @@
                                     <img src="/static/images/icons/{{ spell.custom_icon }}.gif"
                                          alt="{{ spell.custom_icon }}.gif">
                                 </span>
-                                                            {% if spell.spell_id in character_spells %}
-                                                                <span class="ml-3"
-                                                                      style="color: #00FF00; position: relative; top: -10px;">
-                                        {{ spell.name }}&nbsp;
-                                    </span>
-                                                                <span class="ml-3"
-                                                                      style="color:#FFF; position: relative; top: -10px;">
-                                        [<a href="https://lucy.alkabor.com/spell_{{ spell.spell_id }}.html"
+                                {% if spell.spell_id in character_spells %}
+                                <span class="ml-3"
+                                      style="color: #00FF00; position: relative; top: -10px;">
+                                        <a href="/spells/view/{{ spell.spell_id }}">{{ spell.name }}</a>
+                                </span>
+                                {% else %}
+                                <span class="ml-3"
+                                      style="color: #FFF; position: relative; top: -10px;">
+                                        <a href="/spells/view/{{ spell.spell_id }}" style="text-decoration: none;">{{ spell.name }}</a>
+                                </span>
+                                {% endif %}
+                                &nbsp;<span class="ml-3"
+                                      style="color:#FFF; position: relative; top: -10px;">
+                                        [<a href="https://lucy.allakhazam.com/spell.html?id={{ spell.spell_id }}&source=Live"
                                             target="_blank">Lucy</a>]
-                                    </span>
-                                                            {% else %}
-                                                                <span class="ml-3"
-                                                                      style="color: #FFF; position: relative; top: -10px;">
-                                        {{ spell.name }}&nbsp;
-                                        <span style="color:#FFF">
-                                              [<a href="https://lucy.alkabor.com/spell_{{ spell.spell_id }}.html"
-                                                  target="_blank">Lucy</a>]
-                                        </span>
-                                    </span>
-                                                            {% endif %}
+                                </span>
                                                         </td>
                                                         <td>
                                                             {% if spell.classes1 != 255 %}
