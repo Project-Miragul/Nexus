@@ -56,18 +56,38 @@
 .result-section-body li { margin-bottom: 4px; }
 .tier-badge {
     display: inline-block;
-    font-size: 11px;
-    font-family: menuetto, serif;
-    letter-spacing: 0.04em;
-    color: #c8a860;
-    background: rgba(100,80,20,0.35);
-    border: 1px solid rgba(160,130,50,0.5);
-    border-radius: 2px;
-    padding: 0 5px;
+    font-size: 13px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    border-radius: 3px;
+    padding: 1px 6px;
     margin-right: 7px;
     vertical-align: middle;
-    line-height: 1.6;
+    line-height: 1.55;
     white-space: nowrap;
+    min-width: 2.2em;
+    text-align: center;
+}
+.tier-badge[data-tier="1"] {
+    color: #a8bfd0;
+    background: rgba(60,90,120,0.40);
+    border: 1px solid rgba(100,150,190,0.55);
+}
+.tier-badge[data-tier="2"] {
+    color: #78a8e8;
+    background: rgba(25,55,120,0.45);
+    border: 1px solid rgba(70,120,210,0.60);
+}
+.tier-badge[data-tier="3"] {
+    color: #d4a840;
+    background: rgba(90,65,10,0.45);
+    border: 1px solid rgba(180,140,40,0.60);
+}
+.tier-badge[data-tier="4"] {
+    color: #e87840;
+    background: rgba(110,40,10,0.45);
+    border: 1px solid rgba(210,90,30,0.60);
 }
 .sect-solo .result-section-title    { background: rgba(30,55,80,0.5);  color: #80b4d8; }
 .sect-solo .result-section-body     { color: #80b4d8; }
@@ -1069,7 +1089,7 @@ function calcFlags() {
             '<div class="result-section-body"><ul>' +
             items.map(i => {
                 if (i && typeof i === 'object')
-                    return '<li><span class="tier-badge">T' + i.tier + '</span>' + i.text + '</li>';
+                    return '<li><span class="tier-badge" data-tier="' + i.tier + '">T' + i.tier + '</span>' + i.text + '</li>';
                 return '<li>' + i + '</li>';
             }).join('') +
             '</ul></div></div>';
