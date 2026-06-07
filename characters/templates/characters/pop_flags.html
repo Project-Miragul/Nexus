@@ -489,7 +489,7 @@ function calcFlags() {
 
     // ---- Grummus / Plane of Disease ----
     let grummus = 0;
-    if (has("grummus1", "fuirstel wishes you to obtain the ward from the plane of disease and take it to his ill brother milyk")) grummus = 1;
+    if (has("grummus1", "you have talked to adler fuirstel outside of the plane of disease")) grummus = 1;
     if (has("grummus2", "for a moment you pause, sticking your hand into your pocket")) grummus = 2;
     if (has("grummus3", "grummus has been destroyed, about his corpse you found a small ward to protect from disease")) grummus = 3;
     if (has("grummus4", "now that grummus has been destroyed, the entrance to the crypt of bertoxxulous should open before your might")) grummus = 4;
@@ -621,7 +621,7 @@ function calcFlags() {
 
     if (seer.includes("you have killed bertox and hailed the planar projection"))
         bertox = Math.max(bertox, 2);
-    if (seer.includes("you have talked to adler fuirstel after killing bertox"))
+    if (seer.includes("you have killed bertox and talked to adler fuirstel"))
         bertox = Math.max(bertox, 3);
 
     if (seer.includes("you have talked to shadyglade within the plane of tranquility"))
@@ -630,12 +630,12 @@ function calcFlags() {
         saryrn = Math.max(saryrn, 3);
     if (seer.includes("you have killed saryrn and hailed the planar projection"))
         saryrn = Math.max(saryrn, 6);
-    if (seer.includes("you have talked to shadyglade after killing saryrn"))
+    if (seer.includes("you have killed saryrn, hailed the planar projection, and then talked to shadyglade once more"))
         saryrn = Math.max(saryrn, 6);
 
     if (seer.includes("you have completed part one of askr"))
         askr = Math.max(askr, 1);
-    if (seer.includes("you have killed the giants within the plane of storms to complete askr"))
+    if (seer.includes("you have killed the giants within the plane of storms and completed askr's task"))
         askr = Math.max(askr, 2);
 
     if (seer.includes("you have defeated agnarr, the storm lord"))
@@ -657,11 +657,11 @@ function calcFlags() {
     if (seer.includes("you have defeated jiva within the tower of solusek ro"))                      tosr_jiva  = 1;
     if (seer.includes("you have defeated rizlona within the tower of solusek ro"))                   tosr_rizl  = 1;
     if (seer.includes("you have defeated xuzl within the tower of solusek ro"))                      tosr_xuzl  = 1;
-    if (seer.includes("you have defeated solusek ro within the tower of solusek ro"))                tosr_solro = 1;
+    if (seer.includes("you have defeated solusek ro within his own tower"))                          tosr_solro = 1;
 
     if (seer.includes("you have spoken with the grand librarian to receive access to the elemental planes"))
         elem1 = 1;
-    if (seer.includes("you have completed your plane of time flag"))
+    if (seer.includes("you have completed the plane of time flag"))
         potime = 1;
 
     // ---- Implied flag propagation ----

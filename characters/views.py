@@ -86,6 +86,68 @@ _ZONE_FLAG_CHECKBOXES = {
     223: ['potime'],
 }
 
+# Character qglobal name → checkbox IDs to pre-check.
+# Each entry represents: "having this qglobal set means these quest steps are complete."
+# Higher qglobals imply all lower ones in the same chain (e.g. Grummus killed → ward looted → pre-flag done).
+# pop_pos_askr_the_lost is only counted when its value equals '3' (enforced in the view).
+_QGLOBAL_CHECKBOXES = {
+    # Nightmare / Terris Thule chain
+    'pop_pon_hedge_jezith':              ['terris1'],
+    'pop_pon_construct':                 ['terris1', 'terris2'],
+    'pop_ponb_terris':                   ['terris1', 'terris2', 'terris3', 'terris4'],
+    'pop_ponb_poxbourne':                ['terris1', 'terris2', 'terris3', 'terris4', 'terris5'],
+    # Innovation / Manaetic Behemoth chain
+    'pop_poi_behometh_preflag':          ['poi1'],
+    'pop_poi_behometh_flag':             ['poi1', 'poi2'],
+    # Grummus / Plane of Disease chain
+    'pop_pod_alder_fuirstel':            ['grummus1'],
+    'pop_pod_grimmus_planar_projection': ['grummus1', 'grummus2', 'grummus3'],
+    'pop_pod_elder_fuirstel':            ['grummus1', 'grummus2', 'grummus3', 'grummus4'],
+    # Plane of Justice chain
+    'pop_poj_mavuin':                    ['poj1'],
+    'pop_poj_tribunal':                  ['poj1', 'poj2'],
+    'pop_poj_valor_storms':              ['poj1', 'poj2', 'poj3'],
+    # Plane of Valor / Aerin'Dar
+    'pop_pov_aerin_dar':                 ['aerin1', 'aerin2'],
+    # Plane of Storms / Askr  (value must equal '3' — enforced in view)
+    'pop_pos_askr_the_lost':             ['pos1'],
+    'pop_pos_askr_the_lost_final':       ['pos1', 'pos2'],
+    # Crypt of Decay / Bertoxxulous chain
+    'pop_cod_preflag':                   ['bert1'],
+    'pop_cod_bertox':                    ['bert1', 'bert2'],
+    'pop_cod_final':                     ['bert1', 'bert2', 'bert3'],
+    # Plane of Torment / Saryrn chain
+    'pop_pot_shadyglade':                ['saryrn1'],
+    'pop_pot_newleaf':                   ['saryrn1', 'saryrn2', 'saryrn3'],
+    'pop_pot_saryrn':                    ['saryrn1', 'saryrn2', 'saryrn3', 'saryrn4', 'saryrn5', 'saryrn6'],
+    'pop_pot_saryrn_final':              ['saryrn1', 'saryrn2', 'saryrn3', 'saryrn4', 'saryrn5', 'saryrn6'],
+    # Halls of Honor trials
+    'pop_hoh_faye':                      ['hoh1'],
+    'pop_hoh_trell':                     ['hoh2'],
+    'pop_hoh_garn':                      ['hoh3'],
+    # Temple of Marr / Mithaniel Marr
+    'pop_hohb_marr':                     ['hoh1', 'hoh2', 'hoh3', 'hoh4', 'marr1', 'marr2', 'marr3', 'marr4'],
+    # Bastion of Thunder / Agnarr
+    'pop_bot_agnarr':                    ['bot1', 'bot2', 'bot3'],
+    # Plane of Tactics
+    'pop_tactics_tallon':                ['tallon1', 'tallon2'],
+    'pop_tactics_vallon':                ['vallon1', 'vallon2'],
+    'pop_tactics_ralloz':                ['rztw1'],
+    # Librarian Maelin / Elemental flag
+    'pop_elemental_grand_librarian':     ['combined1', 'combined3', 'elem1'],
+    # Tower of Solusek Ro
+    'pop_sol_ro_arlyxir':                ['tosr_arly'],
+    'pop_sol_ro_dresolik':               ['tosr_dres'],
+    'pop_sol_ro_jiva':                   ['tosr_jiva'],
+    'pop_sol_ro_rizlona':                ['tosr_rizl'],
+    'pop_sol_ro_xuzl':                   ['tosr_xuzl'],
+    'pop_sol_ro_solusk':                 ['tosr_solro', 'tosr_pre', 'tosr_arly', 'tosr_jiva', 'tosr_dres', 'tosr_xuzl', 'tosr_rizl'],
+    # Elemental Planes (Plane of Fire boss)
+    'pop_fire_fennin_projection':        ['elem2'],
+    # Plane of Time
+    'pop_time_maelin':                   ['potime'],
+}
+
 
 def pop_flags(request):
     pre_checked = []
@@ -110,9 +172,21 @@ def pop_flags(request):
                             [character.id],
                         )
                         zone_ids = {row[0] for row in cur.fetchall()}
+                        try:
+                            cur.execute(
+                                "SELECT name, value FROM quest_globals WHERE charid = %s",
+                                [character.id],
+                            )
+                            qglobal_rows = cur.fetchall()
+                        except Exception:
+                            qglobal_rows = []
                     checked = set()
                     for zid in zone_ids:
                         checked.update(_ZONE_FLAG_CHECKBOXES.get(zid, []))
+                    for name, value in qglobal_rows:
+                        if name == 'pop_pos_askr_the_lost' and str(value) != '3':
+                            continue
+                        checked.update(_QGLOBAL_CHECKBOXES.get(name, []))
                     pre_checked = sorted(checked)
                     loaded_character = character_name
 
