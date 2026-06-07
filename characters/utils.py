@@ -1,21 +1,23 @@
 """
 utils.py - reusable utility functions used in character views
 """
-import json
-
 from collections import namedtuple
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connections
+from django.db.models import F
 
 from accounts.models import Account
 from accounts.utils import get_owned_login_account_ids
+from characters.templatetags.data_utilities import player_skill, spell_target_type
 from common.faction import FactionMods
 from common.models.characters import CharacterSkills
 from common.models.characters import CharacterSpells
 from common.models.faction import FactionListMod
 from common.models.guilds import Guilds
 from common.models.guilds import GuildMembers
+from common.models.spells import SpellsNew
+from spells.models import SpellExpansion, SpellScroll
 
 
 def get_character_inventory(character_id: int) -> tuple:
@@ -105,9 +107,57 @@ def get_spell_information(character_id: int, class_id: int):
             character_spells.append(spell.spell_id.id)
         except ObjectDoesNotExist:
             continue
-    filename = f'static/spell_data/{class_id}.json'
-    with open(filename, 'r') as json_file:
-        spell_list = json.load(json_file)
+
+    class_level_field = f'classes{class_id}'
+    spell_qs = (
+        SpellsNew.objects
+        .filter(**{f'{class_level_field}__gte': 1, f'{class_level_field}__lte': 65})
+        .annotate(level=F(class_level_field))
+        .order_by(class_level_field, 'name')
+    )
+
+    expansion_map = {se.id: se.expansion for se in SpellExpansion.objects.all()}
+
+    spell_ids = list(spell_qs.values_list('id', flat=True))
+    scroll_map = {
+        ss.spell_id: (ss.scroll_item_id, ss.scroll_item_name)
+        for ss in SpellScroll.objects.filter(spell_id__in=spell_ids)
+    }
+
+    spell_list = {}
+    for spell in spell_qs:
+        level = spell.level
+        spell_data = {
+            'name': spell.name,
+            'spell_id': spell.id,
+            'level': level,
+            'expansion': expansion_map.get(spell.id, 0),
+            'custom_icon': spell.custom_icon,
+            'classes1': spell.classes1,
+            'classes2': spell.classes2,
+            'classes3': spell.classes3,
+            'classes4': spell.classes4,
+            'classes5': spell.classes5,
+            'classes6': spell.classes6,
+            'classes7': spell.classes7,
+            'classes8': spell.classes8,
+            'classes9': spell.classes9,
+            'classes10': spell.classes10,
+            'classes11': spell.classes11,
+            'classes12': spell.classes12,
+            'classes13': spell.classes13,
+            'classes14': spell.classes14,
+            'classes15': spell.classes15,
+            'mana': spell.mana,
+            'skill': player_skill(spell.skill),
+            'target_type': spell_target_type(spell.target_type),
+            'scrolls': [scroll_map[spell.id]] if spell.id in scroll_map else [],
+        }
+        if level in spell_list:
+            spell_list[level].append(spell_data)
+        else:
+            spell_list[level] = [spell_data]
+
     return character_spells, spell_list
 
 
