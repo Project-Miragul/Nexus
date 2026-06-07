@@ -24,6 +24,15 @@ class SpellExpansion(models.Model):
         (8, 'Omens of War'),
         (9, 'Dragons of Norrath'),
         (10, 'Depths of Darkhollow'),
+        (11, 'Prophecy of Ro'),
+        (12, 'The Serpent\'s Spine'),
+        (13, 'The Buried Sea'),
+        (14, 'Secrets of Faydwer'),
+        (15, 'Seeds of Destruction'),
+        (16, 'Underfoot'),
+        (17, 'House of Thule'),
+        (18, 'Veil of Alaris'),
+        (19, 'Rain of Fear')
     ]
 
     # Spells introduced in expansions beyond this value are hidden from class lists.
