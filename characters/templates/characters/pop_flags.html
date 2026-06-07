@@ -54,6 +54,21 @@
 }
 .result-section-body ul { margin: 0; padding-left: 20px; }
 .result-section-body li { margin-bottom: 4px; }
+.tier-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-family: menuetto, serif;
+    letter-spacing: 0.04em;
+    color: #6a5a40;
+    background: rgba(106,90,64,0.15);
+    border: 1px solid rgba(106,90,64,0.28);
+    border-radius: 2px;
+    padding: 0 4px;
+    margin-right: 7px;
+    vertical-align: middle;
+    line-height: 1.6;
+    white-space: nowrap;
+}
 .sect-solo .result-section-title    { background: rgba(30,55,80,0.5);  color: #80b4d8; }
 .sect-solo .result-section-body     { color: #80b4d8; }
 .sect-group .result-section-title   { background: rgba(60,55,25,0.5);  color: #c4a050; }
@@ -708,9 +723,9 @@ function calcFlags() {
     // Grummus
     if (grummus === 0) {
         solo.push("Talk to Adler Fuirstel just outside the Plane of Disease entrance and say \"What ward\" for the Grummus pre-flag.");
-        blocked.push("Grummus (missing pre-flag)");
+        blocked.push({tier:1, text:"Grummus (missing pre-flag)"});
     } else if (grummus === 1) {
-        raid.push("Grummus (Plane of Disease)");
+        raid.push({tier:1, text:"Grummus (Plane of Disease)"});
         done.push("Grummus pre-flag done.");
     } else if (grummus === 2) {
         solo.push("Return to Adler Fuirstel outside Plane of Disease and say \"What ward\".");
@@ -725,17 +740,17 @@ function calcFlags() {
     // Nightmare / Terris
     if (nightmare === 0) {
         solo.push("Hail Elder Poxbourne in the sick bay, then hail Adroha Jezith and say 'tortured by nightmares' for the Hedge pre-flag.");
-        blocked.push("Hedge (missing pre-flag)");
-        blocked.push("Terris Thule (cannot enter zone without completing the Hedge event)");
+        blocked.push({tier:1, text:"Hedge (missing pre-flag)"});
+        blocked.push({tier:1, text:"Terris Thule (cannot enter zone without completing the Hedge event)"});
     } else if (nightmare === 1) {
-        raid.push("Hedge event, then return to sick bay and hail Elder Poxbourne and Adroha Jezith.");
+        raid.push({tier:1, text:"Hedge event, then return to sick bay and hail Elder Poxbourne and Adroha Jezith."});
         done.push("Hedge pre-flag done.");
-        blocked.push("Terris Thule (cannot enter zone without completing the Hedge event)");
+        blocked.push({tier:1, text:"Terris Thule (cannot enter zone without completing the Hedge event)"});
     } else if (nightmare === 2) {
-        raid.push("Terris Thule (Plane of Nightmare B)");
+        raid.push({tier:1, text:"Terris Thule (Plane of Nightmare B)"});
         done.push("Hedge flag done — you can now zone into Plane of Nightmare B.");
     } else if (nightmare === 3) {
-        raid.push("Hedge event, then return to sick bay and hail Elder Poxbourne and Adroha Jezith.");
+        raid.push({tier:1, text:"Hedge event, then return to sick bay and hail Elder Poxbourne and Adroha Jezith."});
         done.push("Terris Thule flag partially complete.");
     } else if (nightmare === 4) {
         solo.push("Visit the sick bay in Plane of Tranquility and hail Elder Poxbourne.");
@@ -747,12 +762,12 @@ function calcFlags() {
     if (poi_factory) done.push("You can open the door to the Plane of Innovation factory.");
 
     if (behemoth >= 1) done.push("Manaetic Behemoth done.");
-    else raid.push("Manaetic Behemoth (Plane of Innovation)");
+    else raid.push({tier:1, text:"Manaetic Behemoth (Plane of Innovation)"});
 
     // Aerin'Dar
     if (aerin === 0) {
-        if (poj_trial >= 3) raid.push("Aerin'Dar (Plane of Valor)");
-        else blocked.push("Aerin'Dar (cannot enter zone without PoJ trial)");
+        if (poj_trial >= 3) raid.push({tier:2, text:"Aerin'Dar (Plane of Valor)"});
+        else blocked.push({tier:2, text:"Aerin'Dar (cannot enter zone without PoJ trial)"});
     } else if (aerin === 1) {
         done.push("Aerin'Dar flag partly done — missing PoJ trial.");
     } else {
@@ -763,12 +778,12 @@ function calcFlags() {
     if (bertox === 0) {
         if (grummus >= 4) {
             solo.push("Hail both Adler Fuirstel and Elder Fuirstel for the Bertoxxulous pre-flag.");
-            blocked.push("Bertoxxulous (missing pre-flag — talk to the Fuirstels first)");
+            blocked.push({tier:2, text:"Bertoxxulous (missing pre-flag — talk to the Fuirstels first)"});
         } else {
-            blocked.push("Bertoxxulous (need Grummus first)");
+            blocked.push({tier:2, text:"Bertoxxulous (need Grummus first)"});
         }
     } else if (bertox === 1) {
-        raid.push("Bertoxxulous (Crypt of Decay)");
+        raid.push({tier:2, text:"Bertoxxulous (Crypt of Decay)"});
         done.push("Bertoxxulous pre-flag done.");
     } else if (bertox === 2) {
         solo.push("Hail both Adler Fuirstel and Elder Fuirstel.");
@@ -783,18 +798,18 @@ function calcFlags() {
     if (saryrn === 0) {
         if (bertox >= 4 && nightmare >= 5) {
             solo.push("Hail Fahlia Shadyglade in the sick bay and say 'I will go' for the Saryrn pre-flag.");
-            blocked.push("Saryrn and Keeper of Sorrows (missing pre-flag)");
+            blocked.push({tier:2, text:"Saryrn and Keeper of Sorrows (missing pre-flag)"});
         } else {
             const missing = [];
             if (bertox < 4) missing.push("Bertoxxulous");
             if (nightmare < 5) missing.push("Terris Thule");
-            blocked.push("Saryrn and Keeper of Sorrows (need: " + missing.join(" and ") + ")");
+            blocked.push({tier:2, text:"Saryrn and Keeper of Sorrows (need: " + missing.join(" and ") + ")"});
         }
     } else if (saryrn === 1) {
-        raid.push("Saryrn and Keeper of Sorrows (Plane of Torment)");
+        raid.push({tier:2, text:"Saryrn and Keeper of Sorrows (Plane of Torment)"});
         done.push("Saryrn pre-flag done.");
     } else if (saryrn <= 3) {
-        raid.push("Saryrn (Plane of Torment)");
+        raid.push({tier:2, text:"Saryrn (Plane of Torment)"});
         done.push("Got Keeper of Sorrows flag but not Saryrn yet.");
     } else if (saryrn === 4) {
         done.push("Got Saryrn flag but an earlier flag is missing.");
@@ -804,10 +819,10 @@ function calcFlags() {
 
     // Askr / Storms
     if (askr === 0) {
-        if (poj_trial >= 3) ele.push("Askr quest (Plane of Storms)");
-        else blocked.push("Askr quest in Plane of Storms (need PoJ trial first)");
+        if (poj_trial >= 3) ele.push({tier:2, text:"Askr quest (Plane of Storms)"});
+        else blocked.push({tier:2, text:"Askr quest in Plane of Storms (need PoJ trial first)"});
     } else if (askr === 1) {
-        ele.push("Finish Askr quest (Plane of Storms)");
+        ele.push({tier:2, text:"Finish Askr quest (Plane of Storms)"});
         done.push("Askr quest partially done.");
     } else {
         done.push("Askr quest in Plane of Storms done.");
@@ -815,8 +830,8 @@ function calcFlags() {
 
     // Agnarr / BoT
     if (bot === 0) {
-        if (poj_trial >= 3 && askr >= 2) ele.push("Agnarr (Bastion of Thunder)");
-        else blocked.push("Agnarr (need PoJ trial and Askr quest)");
+        if (poj_trial >= 3 && askr >= 2) ele.push({tier:3, text:"Agnarr (Bastion of Thunder)"});
+        else blocked.push({tier:3, text:"Agnarr (need PoJ trial and Askr quest)"});
     } else if (bot === 1) {
         done.push("Agnarr partly done — missing Plane of Storms Askr quest.");
     } else {
@@ -826,24 +841,24 @@ function calcFlags() {
     // HoH Trials
     if (hoh1) done.push("HoH trial 1 — Rydda'Dar done.");
     else {
-        if (aerin >= 2) raid.push("HoH trial 1 — Rydda'Dar (Halls of Honor)");
-        else blocked.push("HoH trial 1 — Rydda'Dar (need Aerin'Dar first)");
+        if (aerin >= 2) raid.push({tier:3, text:"HoH trial 1 — Rydda'Dar (Halls of Honor)"});
+        else blocked.push({tier:3, text:"HoH trial 1 — Rydda'Dar (need Aerin'Dar first)"});
     }
     if (hoh2) done.push("HoH trial 2 — Villagers done.");
     else {
-        if (aerin >= 2) raid.push("HoH trial 2 — Villagers (Halls of Honor)");
-        else blocked.push("HoH trial 2 — Villagers (need Aerin'Dar first)");
+        if (aerin >= 2) raid.push({tier:3, text:"HoH trial 2 — Villagers (Halls of Honor)"});
+        else blocked.push({tier:3, text:"HoH trial 2 — Villagers (need Aerin'Dar first)"});
     }
     if (hoh3) done.push("HoH trial 3 — Nomads done.");
     else {
-        if (aerin >= 2) raid.push("HoH trial 3 — Nomads (Halls of Honor)");
-        else blocked.push("HoH trial 3 — Nomads (need Aerin'Dar first)");
+        if (aerin >= 2) raid.push({tier:3, text:"HoH trial 3 — Nomads (Halls of Honor)"});
+        else blocked.push({tier:3, text:"HoH trial 3 — Nomads (need Aerin'Dar first)"});
     }
 
     // Mithaniel Marr
     if (marr === 0) {
-        if (hoh1 && hoh2 && hoh3) raid.push("Mithaniel Marr (Temple of Marr)");
-        else blocked.push("Mithaniel Marr (need all 3 Halls of Honor trials)");
+        if (hoh1 && hoh2 && hoh3) raid.push({tier:3, text:"Mithaniel Marr (Temple of Marr)"});
+        else blocked.push({tier:3, text:"Mithaniel Marr (need all 3 Halls of Honor trials)"});
     } else if (marr <= 2) {
         done.push("Mithaniel Marr partly done — missing earlier flags.");
     } else {
@@ -852,20 +867,20 @@ function calcFlags() {
 
     // Vallon / Tallon
     if (vallon === 0) {
-        if (behemoth >= 1) raid.push("Vallon Zek (Plane of Tactics)");
-        else blocked.push("Vallon Zek (need Manaetic Behemoth first)");
+        if (behemoth >= 1) raid.push({tier:3, text:"Vallon Zek (Plane of Tactics)"});
+        else blocked.push({tier:3, text:"Vallon Zek (need Manaetic Behemoth first)"});
     } else done.push("Vallon Zek done.");
 
     if (tallon === 0) {
-        if (behemoth >= 1) raid.push("Tallon Zek (Plane of Tactics)");
-        else blocked.push("Tallon Zek (need Manaetic Behemoth first)");
+        if (behemoth >= 1) raid.push({tier:3, text:"Tallon Zek (Plane of Tactics)"});
+        else blocked.push({tier:3, text:"Tallon Zek (need Manaetic Behemoth first)"});
     } else done.push("Tallon Zek done.");
 
     // Rallos Zek the Warlord
     if (rztw1 || rztw2) done.push("Rallos Zek the Warlord done.");
     else {
-        if (behemoth >= 1) raid.push("Rallos Zek the Warlord (Plane of Tactics)");
-        else blocked.push("Rallos Zek the Warlord (need Manaetic Behemoth first)");
+        if (behemoth >= 1) raid.push({tier:3, text:"Rallos Zek the Warlord (Plane of Tactics)"});
+        else blocked.push({tier:3, text:"Rallos Zek the Warlord (need Manaetic Behemoth first)"});
     }
 
     // Librarian Maelin
@@ -877,9 +892,9 @@ function calcFlags() {
     if (tosr_pre) {
         done.push("Tower of Solusek Ro pre-flag done.");
     } else if (can_enter_tosr) {
-        fire.push("Hail Miak in Plane of Tranquility and say \"portal's destination\" for the Tower of Solusek Ro pre-flag.");
+        fire.push({tier:4, text:"Hail Miak in Plane of Tranquility and say \"portal's destination\" for the Tower of Solusek Ro pre-flag."});
     } else {
-        blocked.push("Tower of Solusek Ro pre-flag (Hail Miak) — requires all Tier 1–3 flags first.");
+        blocked.push({tier:4, text:"Tower of Solusek Ro pre-flag (Hail Miak) — requires all Tier 1–3 flags first."});
     }
 
     const tosrNames = ["Arlyxir", "Jiva", "Dresolik", "Xuzl", "Rizlona"];
@@ -888,9 +903,9 @@ function calcFlags() {
         if (tosrDone[i]) {
             done.push(name + " (Tower of Solusek Ro) done.");
         } else if (can_enter_tosr) {
-            fire.push(name + " (Tower of Solusek Ro)" + (tosr_pre ? "" : " — get Miak pre-flag first"));
+            fire.push({tier:4, text:name + " (Tower of Solusek Ro)" + (tosr_pre ? "" : " — get Miak pre-flag first")});
         } else {
-            blocked.push(name + " in Tower of Solusek Ro (not yet flagged for zone)");
+            blocked.push({tier:4, text:name + " in Tower of Solusek Ro (not yet flagged for zone)"});
         }
     });
 
@@ -898,29 +913,29 @@ function calcFlags() {
         done.push("Solusek Ro done.");
     } else if (can_enter_tosr) {
         if (tosr_arly && tosr_jiva && tosr_dres && tosr_xuzl && tosr_rizl && (rztw1 || rztw2)) {
-            fire.push("Solusek Ro (Tower of Solusek Ro)");
+            fire.push({tier:4, text:"Solusek Ro (Tower of Solusek Ro)"});
         } else {
-            blocked.push("Solusek Ro (need all 5 ToSR mini-bosses and Rallos Zek the Warlord first)");
+            blocked.push({tier:4, text:"Solusek Ro (need all 5 ToSR mini-bosses and Rallos Zek the Warlord first)"});
         }
     } else {
-        blocked.push("Solusek Ro (not yet flagged for Tower of Solusek Ro)");
+        blocked.push({tier:4, text:"Solusek Ro (not yet flagged for Tower of Solusek Ro)"});
     }
 
     // Elemental Planes
     if (elem1) {
         done.push("Elemental Planes flag (Earth, Air, Water) done.");
     } else if (can_enter_tosr && bot >= 2 && (rztw1 || rztw2)) {
-        ele.push("Elemental Planes (Earth, Air, Water) — hail Librarian Maelin after completing the qualifying raids");
+        ele.push({tier:4, text:"Elemental Planes (Earth, Air, Water) — hail Librarian Maelin after completing the qualifying raids"});
     } else {
-        blocked.push("Elemental Planes (Earth, Air, Water) — need ToSR flagged + Agnarr + Rallos Zek the Warlord");
+        blocked.push({tier:4, text:"Elemental Planes (Earth, Air, Water) — need ToSR flagged + Agnarr + Rallos Zek the Warlord"});
     }
 
     if (elem2) {
         done.push("Plane of Fire flag done.");
     } else if (tosr_solro) {
-        fire.push("Plane of Fire — hail Librarian Maelin after defeating Solusek Ro");
+        fire.push({tier:4, text:"Plane of Fire — hail Librarian Maelin after defeating Solusek Ro"});
     } else {
-        blocked.push("Plane of Fire — need Solusek Ro first");
+        blocked.push({tier:4, text:"Plane of Fire — need Solusek Ro first"});
     }
 
     if (potime) done.push("Plane of Time flag done.");
@@ -1052,7 +1067,11 @@ function calcFlags() {
         el.innerHTML = '<div class="result-section ' + cls + '">' +
             '<div class="result-section-title">' + title + '</div>' +
             '<div class="result-section-body"><ul>' +
-            items.map(i => '<li>' + i + '</li>').join('') +
+            items.map(i => {
+                if (i && typeof i === 'object')
+                    return '<li><span class="tier-badge">T' + i.tier + '</span>' + i.text + '</li>';
+                return '<li>' + i + '</li>';
+            }).join('') +
             '</ul></div></div>';
     }
 
